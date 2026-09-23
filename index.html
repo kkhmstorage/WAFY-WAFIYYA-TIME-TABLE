@@ -1060,19 +1060,94 @@
             saveToCloud();
         }
 
-        function addConstraint(teacherId) {
-            if(!isAdminLoggedIn) return;
-            const day = parseInt(document.getElementById(`const-day-${teacherId}`).value);
-            const periodStr = document.getElementById(`const-period-${teacherId}`).value;
-            const period = periodStr === 'all' ? 'all' : parseInt(periodStr);
-            const teacher = appState.teachers.find(t => t.id === teacherId);
-            if(!teacher) return;
-            const exists = teacher.constraints.find(c => c.day === day && c.period === period);
-            if(!exists) {
-                teacher.constraints.push({ day, period });
-                renderTeachersList();
-                saveToCloud();
+        let teacherSelectedDay = {}; // Map of teacherId -> dayIndex (defaults to 0: Monday)
+
+        function getTeacherDay(teacherId) {
+            if (teacherSelectedDay[teacherId] === undefined) {
+                teacherSelectedDay[teacherId] = 0;
             }
+            return teacherSelectedDay[teacherId];
+        }
+
+        function updateTeacherDayView(teacherId, day) {
+            teacherSelectedDay[teacherId] = parseInt(day);
+            renderTeacherConstraintRow(teacherId);
+        }
+
+        function togglePeriodBlock(teacherId, day, period, isChecked) {
+            if (!isAdminLoggedIn) return;
+            const teacher = appState.teachers.find(t => t.id === teacherId);
+            if (!teacher) return;
+
+            day = parseInt(day);
+
+            if (period === 'all') {
+                if (isChecked) {
+                    teacher.constraints = teacher.constraints.filter(c => c.day !== day);
+                    teacher.constraints.push({ day, period: 'all' });
+                } else {
+                    teacher.constraints = teacher.constraints.filter(c => c.day !== day);
+                }
+            } else {
+                period = parseInt(period);
+                const hasAll = teacher.constraints.some(c => c.day === day && c.period === 'all');
+                if (hasAll) {
+                    teacher.constraints = teacher.constraints.filter(c => !(c.day === day && c.period === 'all'));
+                    for (let p = 0; p < appState.periods; p++) {
+                        if (p !== period) {
+                            teacher.constraints.push({ day, period: p });
+                        }
+                    }
+                } else {
+                    if (isChecked) {
+                        if (!teacher.constraints.some(c => c.day === day && c.period === period)) {
+                            teacher.constraints.push({ day, period });
+                        }
+                    } else {
+                        teacher.constraints = teacher.constraints.filter(c => !(c.day === day && c.period === period));
+                    }
+                }
+            }
+
+            renderTeacherConstraintRow(teacherId);
+            saveToCloud();
+        }
+
+        function copyDayBlocksToAllDays(teacherId, sourceDay) {
+            if (!isAdminLoggedIn) return;
+            const teacher = appState.teachers.find(t => t.id === teacherId);
+            if (!teacher) return;
+            sourceDay = parseInt(sourceDay);
+
+            const sourceConstraints = teacher.constraints.filter(c => c.day === sourceDay);
+            
+            // Clear other days
+            teacher.constraints = teacher.constraints.filter(c => c.day === sourceDay);
+
+            // Copy to all working days
+            for (let d = 0; d < appState.days; d++) {
+                if (d !== sourceDay) {
+                    sourceConstraints.forEach(sc => {
+                        teacher.constraints.push({ day: d, period: sc.period });
+                    });
+                }
+            }
+
+            renderTeacherConstraintRow(teacherId);
+            saveToCloud();
+            showToast("Blocks Copied", `Copied ${dayNames[sourceDay]}'s period blocks to all working days.`);
+        }
+
+        function clearDayBlocks(teacherId, day) {
+            if (!isAdminLoggedIn) return;
+            const teacher = appState.teachers.find(t => t.id === teacherId);
+            if (!teacher) return;
+            day = parseInt(day);
+
+            teacher.constraints = teacher.constraints.filter(c => c.day !== day);
+            renderTeacherConstraintRow(teacherId);
+            saveToCloud();
+            showToast("Day Cleared", `Cleared all blocks for ${dayNames[day]}.`);
         }
 
         function removeConstraint(teacherId, index) {
@@ -1080,9 +1155,68 @@
             const teacher = appState.teachers.find(t => t.id === teacherId);
             if(teacher) {
                 teacher.constraints.splice(index, 1);
-                renderTeachersList();
+                renderTeacherConstraintRow(teacherId);
                 saveToCloud();
             }
+        }
+
+        function renderTeacherConstraintRow(teacherId) {
+            const teacher = appState.teachers.find(t => t.id === teacherId);
+            if (!teacher) return;
+
+            const badgesContainer = document.getElementById(`teacher-badges-${teacherId}`);
+            const gridContainer = document.getElementById(`day-periods-grid-${teacherId}`);
+            if (!badgesContainer || !gridContainer) {
+                renderTeachersList();
+                return;
+            }
+
+            // 1. Badges
+            badgesContainer.innerHTML = teacher.constraints.map((c, idx) => `
+                <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
+                    <i class="fas fa-ban mr-1 text-[10px]"></i>
+                    ${dayNames[c.day]} : ${c.period === 'all' ? 'All Day' : 'P' + (c.period + 1)}
+                    ${isAdminLoggedIn ? `<button onclick="window.removeConstraint('${teacher.id}', ${idx})" class="ml-1 text-red-400 hover:text-red-700"><i class="fas fa-times"></i></button>` : ''}
+                </span>
+            `).join('') || '<span class="text-xs text-slate-400 italic">Available on all periods (No blocks)</span>';
+
+            // 2. Period Checkboxes for selected day
+            const selectedDay = getTeacherDay(teacherId);
+            const isAllBlocked = teacher.constraints.some(c => c.day === selectedDay && c.period === 'all');
+
+            let periodsHtml = `
+                <div class="flex flex-wrap items-center gap-2 pt-1">
+                    <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer border select-none transition ${isAllBlocked ? 'bg-red-600 text-white border-red-600 font-bold shadow-sm' : 'bg-white text-slate-700 border-slate-300 hover:bg-slate-50'}">
+                        <input type="checkbox" ${isAllBlocked ? 'checked' : ''} onchange="window.togglePeriodBlock('${teacher.id}', ${selectedDay}, 'all', this.checked)" class="w-3.5 h-3.5 text-red-600 rounded">
+                        <span><i class="fas fa-ban text-[10px] mr-1"></i> Whole Day</span>
+                    </label>
+            `;
+
+            for (let p = 0; p < appState.periods; p++) {
+                const isBlocked = isAllBlocked || teacher.constraints.some(c => c.day === selectedDay && c.period === p);
+                const timing = appState.periodTimings[p] || '';
+
+                periodsHtml += `
+                    <label class="flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs cursor-pointer border select-none transition ${isBlocked ? 'bg-red-50 text-red-800 border-red-300 font-bold shadow-xs' : 'bg-white text-slate-600 border-slate-200 hover:bg-slate-50'}">
+                        <input type="checkbox" ${isBlocked ? 'checked' : ''} onchange="window.togglePeriodBlock('${teacher.id}', ${selectedDay}, ${p}, this.checked)" class="w-3.5 h-3.5 text-red-600 rounded">
+                        <span>P${p+1} ${timing ? `<span class="text-[10px] font-normal text-slate-400 ml-0.5">(${timing})</span>` : ''}</span>
+                    </label>
+                `;
+            }
+
+            periodsHtml += `
+                    <div class="flex items-center gap-1.5 ml-auto pt-1 sm:pt-0">
+                        <button onclick="window.copyDayBlocksToAllDays('${teacher.id}', ${selectedDay})" class="text-[11px] bg-slate-100 hover:bg-slate-200 text-slate-700 px-2.5 py-1 rounded-lg border border-slate-300 flex items-center gap-1 transition" title="Copy this day's blocked periods to all working days">
+                            <i class="fas fa-copy text-slate-500"></i> Copy to All Days
+                        </button>
+                        <button onclick="window.clearDayBlocks('${teacher.id}', ${selectedDay})" class="text-[11px] bg-slate-100 hover:bg-red-50 text-slate-600 hover:text-red-700 px-2 py-1 rounded-lg border border-slate-300 flex items-center gap-1 transition" title="Clear all blocks for this day">
+                            <i class="fas fa-undo text-[10px]"></i> Clear Day
+                        </button>
+                    </div>
+                </div>
+            `;
+
+            gridContainer.innerHTML = periodsHtml;
         }
 
         function renderTeachersList() {
@@ -1098,52 +1232,54 @@
             container.innerHTML = '';
             appState.teachers.forEach(teacher => {
                 const div = document.createElement('div');
-                div.className = 'p-4 flex flex-col md:flex-row gap-4 hover:bg-slate-50/70 transition';
+                div.className = 'p-5 flex flex-col md:flex-row gap-4 hover:bg-slate-50/70 transition';
                 
-                let constraintsHtml = teacher.constraints.map((c, idx) => `
-                    <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
-                        <i class="fas fa-ban mr-1 text-[10px]"></i>
-                        ${dayNames[c.day]} : ${c.period === 'all' ? 'All Day' : 'P' + (c.period + 1)}
-                        ${isAdminLoggedIn ? `<button onclick="window.removeConstraint('${teacher.id}', ${idx})" class="ml-1 text-red-400 hover:text-red-700"><i class="fas fa-times"></i></button>` : ''}
-                    </span>
-                `).join('');
+                const selectedDay = getTeacherDay(teacher.id);
 
-                let periodOpts = `<option value="all">Whole Day</option>`;
-                for(let p=0; p<appState.periods; p++) periodOpts += `<option value="${p}">Period ${p+1}</option>`;
-                
                 let dayOpts = '';
-                for(let d=0; d<appState.days; d++) dayOpts += `<option value="${d}">${dayNames[d]}</option>`;
+                for(let d=0; d<appState.days; d++) {
+                    dayOpts += `<option value="${d}" ${d === selectedDay ? 'selected' : ''}>${dayNames[d]}</option>`;
+                }
 
                 div.innerHTML = `
                     <div class="w-full md:w-1/3 flex justify-between items-start">
                         <div>
                             <div class="font-semibold text-slate-800 text-sm flex items-center gap-2">
-                                <span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs border border-emerald-200">
+                                <span class="w-8 h-8 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs border border-emerald-200">
                                     ${teacher.shortName || 'T'}
                                 </span>
                                 <div>
-                                    <div>${teacher.name}</div>
-                                    <div class="text-[10px] text-slate-400">Code: <span class="font-bold text-slate-600">${teacher.shortName}</span></div>
+                                    <div class="text-sm font-bold text-slate-800">${teacher.name}</div>
+                                    <div class="text-[11px] text-slate-500">Code: <span class="font-mono font-bold text-slate-700">${teacher.shortName}</span></div>
                                 </div>
                             </div>
                         </div>
-                        ${isAdminLoggedIn ? `<button onclick="window.deleteTeacher('${teacher.id}')" class="text-slate-400 hover:text-red-600 p-1" title="Remove Faculty"><i class="fas fa-trash-alt text-xs"></i></button>` : ''}
+                        ${isAdminLoggedIn ? `<button onclick="window.deleteTeacher('${teacher.id}')" class="text-slate-400 hover:text-red-600 p-1.5" title="Remove Faculty"><i class="fas fa-trash-alt text-xs"></i></button>` : ''}
                     </div>
-                    <div class="w-full md:w-2/3 border-t md:border-t-0 md:border-l pt-2 md:pt-0 md:pl-4 border-slate-200">
-                        <div class="text-[11px] font-semibold text-slate-500 mb-1">Unavailability Slots:</div>
-                        <div class="flex flex-wrap gap-1 mb-2">${constraintsHtml || '<span class="text-xs text-slate-400 italic">Available on all periods</span>'}</div>
-                        
+                    <div class="w-full md:w-2/3 border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-5 border-slate-200 space-y-3">
+                        <div>
+                            <div class="text-[11px] font-semibold text-slate-500 mb-1.5">Current Blocked Slots:</div>
+                            <div id="teacher-badges-${teacher.id}" class="flex flex-wrap gap-1"></div>
+                        </div>
+
                         ${isAdminLoggedIn ? `
-                        <div class="flex flex-wrap gap-2 items-center bg-slate-50 p-1.5 rounded-lg border border-slate-200">
-                            <select id="const-day-${teacher.id}" class="text-xs border border-slate-300 rounded p-1 bg-white text-slate-700">${dayOpts}</select>
-                            <select id="const-period-${teacher.id}" class="text-xs border border-slate-300 rounded p-1 bg-white text-slate-700">${periodOpts}</select>
-                            <button onclick="window.addConstraint('${teacher.id}')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
-                                <i class="fas fa-plus text-[10px] mr-1"></i> Block Slot
-                            </button>
+                        <div class="bg-slate-50 p-3 rounded-xl border border-slate-200 space-y-2">
+                            <div class="flex flex-wrap items-center gap-2">
+                                <label class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                    <i class="fas fa-calendar-day text-emerald-600"></i> Select Day:
+                                </label>
+                                <select id="const-day-${teacher.id}" onchange="window.updateTeacherDayView('${teacher.id}', this.value)" class="text-xs font-bold border border-slate-300 rounded-lg p-1.5 bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
+                                    ${dayOpts}
+                                </select>
+                                <span class="text-[11px] text-slate-500">Check periods below to block:</span>
+                            </div>
+
+                            <div id="day-periods-grid-${teacher.id}"></div>
                         </div>` : ''}
                     </div>
                 `;
                 container.appendChild(div);
+                renderTeacherConstraintRow(teacher.id);
             });
         }
 
@@ -1847,7 +1983,11 @@
         window.updatePeriodTiming = updatePeriodTiming;
         window.addTeacher = addTeacher;
         window.deleteTeacher = deleteTeacher;
-        window.addConstraint = addConstraint;
+        window.updateTeacherDayView = updateTeacherDayView;
+        window.togglePeriodBlock = togglePeriodBlock;
+        window.copyDayBlocksToAllDays = copyDayBlocksToAllDays;
+        window.clearDayBlocks = clearDayBlocks;
+        window.renderTeacherConstraintRow = renderTeacherConstraintRow;
         window.removeConstraint = removeConstraint;
         window.addAllotment = addAllotment;
         window.deleteAllotment = deleteAllotment;
