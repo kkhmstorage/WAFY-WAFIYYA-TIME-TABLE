@@ -11,7 +11,7 @@
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .tab-btn.active { border-color: #059669; color: #059669; background-color: #ecfdf5; font-weight: 600; }
-        .period-cell { min-height: 80px; transition: all 0.15s ease; }
+        .period-cell { min-height: 82px; transition: all 0.15s ease; }
         .period-cell:hover { transform: scale(1.01); z-index: 10; }
         @media print {
             .no-print { display: none !important; }
@@ -20,7 +20,7 @@
             table { page-break-inside: auto; width: 100% !important; border-collapse: collapse; }
             tr { page-break-inside: avoid; page-break-after: auto; }
             thead { display: table-header-group; }
-            .period-cell { min-height: 50px !important; }
+            .period-cell { min-height: 52px !important; }
         }
     </style>
 </head>
@@ -35,34 +35,45 @@
             <div>
                 <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
                     WAFY & WAFIYYA TIME TABLE
-                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Academic Cloud</span>
+                    <span id="role-badge" class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600">Public View</span>
                 </h1>
-                <p class="text-xs text-emerald-200/80">Coordinated Multi-College Timetable & Faculty Management</p>
+                <p class="text-xs text-emerald-200/80">Coordinated Timetable Portal • Wafy & Wafiyya</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-2.5">
+        <div class="flex items-center gap-2">
             <!-- Academic Year Selector -->
             <div class="flex items-center bg-slate-900/60 border border-emerald-500/30 rounded-lg px-2.5 py-1 text-xs">
-                <i class="fas fa-graduation-cap text-emerald-400 mr-2"></i>
+                <i class="fas fa-graduation-cap text-emerald-400 mr-1.5"></i>
                 <label for="year-selector" class="text-emerald-200 mr-1 hidden sm:inline">Year:</label>
                 <select id="year-selector" onchange="window.switchAcademicYear(this.value)" class="bg-transparent text-emerald-100 font-bold outline-none cursor-pointer pr-1">
                     <!-- Populated dynamically -->
                 </select>
-                <button onclick="window.openNewYearModal()" class="ml-1.5 text-emerald-300 hover:text-white p-0.5" title="Add New Academic Year">
+                <button id="btn-add-year" onclick="window.openNewYearModal()" class="ml-1 text-emerald-300 hover:text-white p-0.5 hidden" title="Add New Academic Year">
                     <i class="fas fa-plus-circle"></i>
                 </button>
             </div>
 
-            <!-- Cloud Database Status Pill -->
-            <div id="cloud-status-pill" class="hidden sm:flex items-center gap-2 bg-emerald-950/60 border border-emerald-500/40 text-xs px-2.5 py-1 rounded-full transition-all">
-                <span id="cloud-indicator" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="cloud-status-text" class="text-emerald-200 text-[11px] font-medium">Connecting...</span>
-            </div>
-
-            <button onclick="window.saveToCloud()" id="btn-save-cloud" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3 py-1.5 rounded-lg border border-emerald-400/40 flex items-center gap-1.5 transition shadow">
-                <i class="fas fa-cloud-upload-alt"></i> <span class="hidden sm:inline">Save</span>
+            <!-- Share Link Button -->
+            <button onclick="window.openShareModal()" class="text-xs bg-slate-800/80 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow">
+                <i class="fas fa-share-alt"></i> <span class="hidden sm:inline">Share</span>
             </button>
+
+            <!-- Admin Mode / Login Control -->
+            <div id="admin-auth-controls" class="flex items-center gap-1.5">
+                <button id="btn-admin-login" onclick="window.openAdminLoginModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 font-medium px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                    <i class="fas fa-lock text-xs"></i> Admin Login
+                </button>
+
+                <div id="admin-logged-group" class="hidden items-center gap-2">
+                    <button onclick="window.saveToCloud()" id="btn-save-cloud" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3 py-1.5 rounded-lg border border-emerald-400/40 flex items-center gap-1.5 transition shadow">
+                        <i class="fas fa-cloud-upload-alt"></i> <span class="hidden md:inline">Save Cloud</span>
+                    </button>
+                    <button onclick="window.adminLogout()" class="text-xs bg-red-900/40 hover:bg-red-800/60 text-red-200 border border-red-500/30 px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition" title="Logout from Admin">
+                        <i class="fas fa-sign-out-alt"></i> <span class="hidden md:inline">Logout</span>
+                    </button>
+                </div>
+            </div>
         </div>
     </header>
 
@@ -73,8 +84,8 @@
                 <i class="fas fa-check text-xs"></i>
             </div>
             <div>
-                <div class="font-bold text-slate-100" id="toast-title">Cloud Synchronized</div>
-                <div class="text-slate-400 text-[11px]" id="toast-message">Data successfully updated in Firestore database.</div>
+                <div class="font-bold text-slate-100" id="toast-title">Notice</div>
+                <div class="text-slate-400 text-[11px]" id="toast-message">Message details.</div>
             </div>
         </div>
     </div>
@@ -83,41 +94,116 @@
         <!-- Sidebar Navigation -->
         <aside class="w-64 bg-white border-r border-slate-200 flex flex-col shrink-0 no-print shadow-sm">
             <nav class="flex-1 py-4 space-y-1 px-3">
-                <button onclick="window.switchTab('setup')" id="tab-setup" class="tab-btn active w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-left transition duration-150">
-                    <i class="fas fa-sliders-h w-6 text-emerald-600"></i> Configuration
+                <!-- Timetable is always visible to everyone -->
+                <button onclick="window.switchTab('timetable')" id="tab-timetable" class="tab-btn active w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-left transition duration-150">
+                    <i class="fas fa-table w-6 text-emerald-600"></i> View & Print
                 </button>
-                <button onclick="window.switchTab('teachers')" id="tab-teachers" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
-                    <i class="fas fa-chalkboard-teacher w-6 text-slate-400"></i> Teachers & Codes
-                </button>
-                <button onclick="window.switchTab('classes')" id="tab-classes" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
-                    <i class="fas fa-book-open w-6 text-slate-400"></i> Subject Allotment
-                </button>
-                <button onclick="window.switchTab('timetable')" id="tab-timetable" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
-                    <i class="fas fa-table w-6 text-slate-400"></i> View & Print
-                </button>
+
+                <!-- Admin Only Tabs -->
+                <div id="admin-only-nav" class="hidden space-y-1 pt-2 border-t border-slate-100">
+                    <div class="px-4 py-1 text-[10px] font-bold text-slate-400 uppercase tracking-wider">Admin Management</div>
+                    <button onclick="window.switchTab('setup')" id="tab-setup" class="tab-btn w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
+                        <i class="fas fa-sliders-h w-6 text-slate-400"></i> Configuration & Times
+                    </button>
+                    <button onclick="window.switchTab('teachers')" id="tab-teachers" class="tab-btn w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
+                        <i class="fas fa-chalkboard-teacher w-6 text-slate-400"></i> Faculty & Codes
+                    </button>
+                    <button onclick="window.switchTab('classes')" id="tab-classes" class="tab-btn w-full flex items-center px-4 py-2.5 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
+                        <i class="fas fa-book-open w-6 text-slate-400"></i> Subject Allotments
+                    </button>
+                </div>
             </nav>
 
-            <div class="p-4 border-t border-slate-200 bg-slate-50/50">
-                <button onclick="window.generateTimetable()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2">
+            <!-- Admin Generator Widget -->
+            <div id="admin-generator-box" class="p-4 border-t border-slate-200 bg-slate-50/50 hidden">
+                <button onclick="window.generateTimetable()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-2.5 px-4 rounded-lg shadow-md hover:shadow-lg transition duration-200 flex items-center justify-center gap-2 text-sm">
                     <i class="fas fa-magic text-emerald-200"></i> Generate Schedule
                 </button>
                 <div class="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 mt-2">
-                    <i class="fas fa-shield-alt text-emerald-600"></i> Travel buffer & zero clashes
+                    <i class="fas fa-shield-alt text-emerald-600"></i> Anti-clash engine active
                 </div>
+            </div>
+
+            <!-- Public Visitor Note -->
+            <div id="public-visitor-box" class="p-4 border-t border-slate-200 bg-slate-50/50 text-center">
+                <div class="text-[11px] text-slate-500">
+                    <i class="fas fa-eye text-emerald-600 mr-1"></i> Public Schedule Viewer
+                </div>
+                <div class="text-[10px] text-slate-400 mt-1">Select Teacher, Class, or College view to inspect and print.</div>
             </div>
         </aside>
 
         <!-- Content Area -->
-        <div class="flex-1 overflow-y-auto p-6 bg-slate-50">
+        <div class="flex-1 overflow-y-auto p-4 md:p-6 bg-slate-50">
             
-            <!-- Setup Section -->
-            <section id="setup-section" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-4xl mx-auto space-y-6">
+            <!-- Timetable Section (Default for Everyone) -->
+            <section id="timetable-section" class="space-y-4">
+                
+                <!-- View Mode Controls -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3 no-print">
+                    <div class="flex items-center gap-2">
+                        <!-- Mode Tabs -->
+                        <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
+                            <button id="mode-btn-teacher" onclick="window.setTimetableViewMode('teacher')" class="px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900">
+                                <i class="fas fa-user-tie mr-1 text-emerald-600"></i> By Teacher
+                            </button>
+                            <button id="mode-btn-class" onclick="window.setTimetableViewMode('class')" class="px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900">
+                                <i class="fas fa-chalkboard mr-1 text-emerald-600"></i> By Class
+                            </button>
+                            <button id="mode-btn-college" onclick="window.setTimetableViewMode('college')" class="px-3 py-1.5 rounded-md transition bg-white text-emerald-800 shadow-sm font-bold">
+                                <i class="fas fa-university mr-1 text-emerald-600"></i> By College / Master
+                            </button>
+                        </div>
+                    </div>
+                    
+                    <div class="flex flex-wrap items-center gap-2">
+                        <!-- Dynamic Sub-Filter (Teacher Select or Class Select or College Select) -->
+                        <div id="sub-filter-container" class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2.5 py-1 text-xs">
+                            <!-- Populated dynamically -->
+                        </div>
+
+                        <button onclick="window.exportToCSV()" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
+                            <i class="fas fa-file-csv text-emerald-600"></i> CSV
+                        </button>
+                        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow">
+                            <i class="fas fa-print"></i> Print
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Printable Academic Header -->
+                <div class="hidden print:block text-center py-4 border-b border-slate-300">
+                    <h1 class="text-xl font-bold uppercase tracking-wider text-slate-900">WAFY & WAFIYYA TIME TABLE</h1>
+                    <p class="text-xs text-slate-600" id="print-header-details">Academic Schedule</p>
+                </div>
+
+                <!-- Schedule Container -->
+                <div id="timetable-container" class="overflow-x-auto bg-white border border-slate-200 rounded-xl shadow-sm print:border-none print:shadow-none p-4">
+                    <div class="p-12 text-center text-slate-400">
+                        <i class="fas fa-calendar-times text-5xl mb-3 text-slate-300"></i>
+                        <h3 class="text-base font-medium text-slate-600">Loading Timetable...</h3>
+                    </div>
+                </div>
+
+                <!-- Generation Warnings -->
+                <div id="generation-messages" class="mt-4 hidden no-print">
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
+                        <h3 class="font-semibold text-amber-800 text-sm mb-1 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle text-amber-600"></i> Scheduling Constraint Notices:
+                        </h3>
+                        <ul id="messages-list" class="list-disc pl-5 text-xs text-amber-700 space-y-1"></ul>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Setup Section (Admin Only) -->
+            <section id="setup-section" class="hidden bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-4xl mx-auto space-y-6">
                 <div class="border-b border-slate-100 pb-4 flex justify-between items-center">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Academic Configuration</h2>
-                        <p class="text-sm text-slate-500">Configure colleges, classes, and schedule structure for academic year <span id="current-year-badge" class="font-bold text-emerald-700">2026-2027</span>.</p>
+                        <h2 class="text-2xl font-bold text-slate-800">Academic & Period Configuration</h2>
+                        <p class="text-sm text-slate-500">Configure institutions, period timings, and batches for <span id="current-year-badge" class="font-bold text-emerald-700">2026-2027</span>.</p>
                     </div>
-                    <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full border border-emerald-200 font-medium">Year Settings</span>
+                    <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full border border-emerald-200 font-medium">Admin Settings</span>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -126,11 +212,11 @@
                             <i class="fas fa-school text-emerald-600"></i> Institutions / Sections
                         </h3>
                         <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Institution 1</label>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Institution 1 Name</label>
                             <input type="text" id="inst1-name" value="Wafy" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Institution 2</label>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Institution 2 Name</label>
                             <input type="text" id="inst2-name" value="Wafiyya" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
 
@@ -141,11 +227,17 @@
                             </label>
                             <p class="text-xs text-slate-500 pl-6 mt-1">Prevents assigning Period P in Wafy and Period P+1 in Wafiyya for the same faculty member.</p>
                         </div>
+
+                        <!-- Class Management -->
+                        <div class="pt-2">
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Classes / Batches (Comma Separated)</label>
+                            <textarea id="classes-list-input" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Wafy Prep, Wafy Thanawiyya, Wafiyya Prep, Wafiyya Thanawiyya"></textarea>
+                        </div>
                     </div>
                     
                     <div class="space-y-4">
                         <h3 class="text-base font-semibold text-slate-700 flex items-center gap-2">
-                            <i class="fas fa-clock text-emerald-600"></i> Schedule Parameters
+                            <i class="fas fa-clock text-emerald-600"></i> Days & Period Parameters
                         </h3>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
@@ -158,31 +250,47 @@
                             </div>
                         </div>
 
-                        <!-- Class Management -->
-                        <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Classes / Batches (Comma Separated)</label>
-                            <textarea id="classes-list-input" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Wafy Preparatory, Wafy Thanawiyya, Wafiyya Preparatory, Wafiyya Thanawiyya"></textarea>
-                            <p class="text-[11px] text-slate-400 mt-1">Separate classes by commas to make them available in subject allotment.</p>
+                        <!-- Period Timings Customization -->
+                        <div class="pt-2">
+                            <h4 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                                <i class="fas fa-stopwatch text-emerald-600"></i> Period Timings (Start - End Time)
+                            </h4>
+                            <div id="period-timings-container" class="grid grid-cols-2 gap-2 text-xs">
+                                <!-- Populated dynamically based on period count -->
+                            </div>
+                        </div>
+
+                        <!-- Admin Password Change Option -->
+                        <div class="pt-3 border-t border-slate-100">
+                            <h4 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
+                                <i class="fas fa-key text-amber-600"></i> Admin Security
+                            </h4>
+                            <div class="flex gap-2">
+                                <input type="password" id="new-admin-password" placeholder="New Admin Password" class="border border-slate-300 rounded-lg p-2 text-xs flex-1 outline-none">
+                                <button onclick="window.updateAdminPassword()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 py-2 rounded-lg transition whitespace-nowrap">
+                                    Change Password
+                                </button>
+                            </div>
                         </div>
                     </div>
                 </div>
 
                 <div class="border-t border-slate-100 pt-4 flex justify-between items-center">
                     <button onclick="window.resetYearData()" class="text-xs text-red-600 hover:text-red-700 font-medium">
-                        <i class="fas fa-trash-alt mr-1"></i> Reset Active Year to Default
+                        <i class="fas fa-trash-alt mr-1"></i> Reset Year Data to Default
                     </button>
                     <button onclick="window.switchTab('teachers')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
-                        Next: Teachers & Short Names <i class="fas fa-arrow-right text-xs"></i>
+                        Next: Faculty & Short Names <i class="fas fa-arrow-right text-xs"></i>
                     </button>
                 </div>
             </section>
 
-            <!-- Teachers Section -->
+            <!-- Teachers Section (Admin Only) -->
             <section id="teachers-section" class="hidden max-w-5xl mx-auto space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <div class="border-b border-slate-100 pb-3 mb-4">
                         <h2 class="text-xl font-bold text-slate-800">Add Faculty Member</h2>
-                        <p class="text-xs text-slate-500">Register faculty name and short code (e.g., AR, SF) used in compact timetable displays.</p>
+                        <p class="text-xs text-slate-500">Register faculty name and short code (e.g., AR, SF) for timetable displays.</p>
                     </div>
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
                         <div class="sm:col-span-2">
@@ -224,7 +332,7 @@
                 </div>
             </section>
 
-            <!-- Classes/Subjects Section -->
+            <!-- Classes/Subjects Section (Admin Only) -->
             <section id="classes-section" class="hidden max-w-5xl mx-auto space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <div class="border-b border-slate-100 pb-3 mb-4">
@@ -241,9 +349,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Class / Batch</label>
-                            <select id="new-class-batch" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <!-- Populated dynamically -->
-                            </select>
+                            <select id="new-class-batch" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select>
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Subject Name</label>
@@ -251,9 +357,7 @@
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Assigned Teacher</label>
-                            <select id="new-class-teacher" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <!-- Populated dynamically -->
-                            </select>
+                            <select id="new-class-teacher" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select>
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Periods / Wk</label>
@@ -273,9 +377,7 @@
                             <h2 class="text-lg font-bold text-slate-800">Current Subject Allocations</h2>
                             <p class="text-xs text-slate-500">Edit faculty or period count anytime by clicking the Edit button.</p>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <span id="allotment-count-badge" class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-medium">0 Allotments</span>
-                        </div>
+                        <span id="allotment-count-badge" class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-medium">0 Allotments</span>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-200 text-sm">
@@ -306,69 +408,81 @@
                 </div>
             </section>
 
-            <!-- Timetable Section -->
-            <section id="timetable-section" class="hidden space-y-4">
-                
-                <!-- View Mode Controls -->
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3 no-print">
-                    <div class="flex items-center gap-2">
-                        <!-- Mode Tabs -->
-                        <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
-                            <button id="mode-btn-teacher" onclick="window.setTimetableViewMode('teacher')" class="px-3 py-1.5 rounded-md transition text-slate-600">
-                                <i class="fas fa-user-tie mr-1 text-emerald-600"></i> By Teacher
-                            </button>
-                            <button id="mode-btn-class" onclick="window.setTimetableViewMode('class')" class="px-3 py-1.5 rounded-md transition text-slate-600">
-                                <i class="fas fa-chalkboard mr-1 text-emerald-600"></i> By Class
-                            </button>
-                            <button id="mode-btn-college" onclick="window.setTimetableViewMode('college')" class="px-3 py-1.5 rounded-md transition bg-white text-emerald-800 shadow-sm font-bold">
-                                <i class="fas fa-university mr-1 text-emerald-600"></i> By College / Master
-                            </button>
-                        </div>
-                    </div>
-                    
-                    <div class="flex flex-wrap items-center gap-2">
-                        <!-- Dynamic Sub-Filter (Teacher Select or Class Select or College Select) -->
-                        <div id="sub-filter-container" class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
-                            <!-- Populated dynamically -->
-                        </div>
-
-                        <button onclick="window.exportToCSV()" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
-                            <i class="fas fa-file-csv text-emerald-600"></i> CSV
-                        </button>
-                        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow">
-                            <i class="fas fa-print"></i> Print
-                        </button>
-                    </div>
-                </div>
-
-                <!-- Printable Academic Header -->
-                <div class="hidden print:block text-center py-4 border-b border-slate-300">
-                    <h1 class="text-xl font-bold uppercase tracking-wider text-slate-900">WAFY & WAFIYYA TIME TABLE</h1>
-                    <p class="text-xs text-slate-600" id="print-header-details">Academic Year: 2026-2027</p>
-                </div>
-
-                <!-- Schedule Container -->
-                <div id="timetable-container" class="overflow-x-auto bg-white border border-slate-200 rounded-xl shadow-sm print:border-none print:shadow-none p-4">
-                    <div class="p-12 text-center text-slate-400">
-                        <i class="fas fa-calendar-times text-5xl mb-3 text-slate-300"></i>
-                        <h3 class="text-base font-medium text-slate-600">No timetable generated yet</h3>
-                        <p class="text-xs text-slate-400 mt-1">Click "Generate Schedule" to compute optimal conflict-free schedule.</p>
-                    </div>
-                </div>
-
-                <!-- Generation Warnings -->
-                <div id="generation-messages" class="mt-4 hidden no-print">
-                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                        <h3 class="font-semibold text-amber-800 text-sm mb-1 flex items-center gap-2">
-                            <i class="fas fa-exclamation-triangle text-amber-600"></i> Scheduling Constraint Notices:
-                        </h3>
-                        <ul id="messages-list" class="list-disc pl-5 text-xs text-amber-700 space-y-1"></ul>
-                    </div>
-                </div>
-            </section>
-
         </div>
     </main>
+
+    <!-- ADMIN LOGIN MODAL -->
+    <div id="admin-login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white rounded-2xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-amber-100 text-amber-700 flex items-center justify-center font-bold text-sm">
+                        <i class="fas fa-user-shield"></i>
+                    </div>
+                    <h3 class="text-base font-bold text-slate-800">Admin Authentication</h3>
+                </div>
+                <button onclick="window.closeAdminLoginModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-500 mb-4">Sign in to edit allocations, manage faculty, and generate schedules.</p>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Username</label>
+                    <input type="text" id="admin-username" placeholder="admin" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Password</label>
+                    <input type="password" id="admin-password" placeholder="••••••••" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500">
+                </div>
+                <div id="admin-login-error" class="text-[11px] text-red-600 hidden font-medium">Invalid username or password.</div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-2">
+                <button onclick="window.closeAdminLoginModal()" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                <button onclick="window.adminLogin()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-lg transition shadow">Login as Admin</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SHARE LINK MODAL -->
+    <div id="share-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white rounded-2xl p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-3">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-share-alt text-emerald-600"></i> Share Timetable Portal
+                </h3>
+                <button onclick="window.closeShareModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <p class="text-xs text-slate-500 mb-3">Share this link with faculty and students to view and print their schedules on any device.</p>
+
+            <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 mb-4">
+                <label class="block text-[11px] font-semibold text-slate-600 mb-1">Direct Web URL:</label>
+                <div class="flex items-center gap-2">
+                    <input type="text" id="share-url-input" readonly value="https://kkhmstorage.github.io/WAFY-WAFIYYA-TIME-TABLE/" class="w-full bg-white border border-slate-300 rounded-lg p-2 text-xs font-mono text-emerald-800 font-medium outline-none select-all">
+                    <button onclick="window.copyShareUrl()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-2 rounded-lg text-xs font-semibold transition shrink-0">
+                        <i class="fas fa-copy mr-1"></i> Copy
+                    </button>
+                </div>
+            </div>
+
+            <div class="flex flex-col gap-2">
+                <a id="whatsapp-share-btn" href="#" target="_blank" class="w-full bg-emerald-600 hover:bg-emerald-700 text-white py-2.5 px-4 rounded-xl text-xs font-semibold flex items-center justify-center gap-2 transition shadow">
+                    <i class="fab fa-whatsapp text-sm"></i> Share via WhatsApp
+                </a>
+            </div>
+
+            <div class="mt-4 p-3 bg-amber-50 border border-amber-200 rounded-xl text-[11px] text-amber-900 leading-relaxed">
+                <strong><i class="fas fa-info-circle mr-1"></i> GitHub Pages Tip:</strong>
+                If the link does not open yet, go to your GitHub repository -> <strong>Settings</strong> -> <strong>Pages</strong> -> under <em>Branch</em> select <strong>main</strong> and click <strong>Save</strong>. It will be live instantly!
+            </div>
+        </div>
+    </div>
 
     <!-- EDIT ALLOTMENT MODAL -->
     <div id="edit-allotment-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
@@ -384,7 +498,7 @@
             
             <input type="hidden" id="edit-allotment-id">
             
-            <div class="space-y-3.5 text-xs">
+            <div class="space-y-3 text-xs">
                 <div>
                     <label class="block font-medium text-slate-700 mb-1">College</label>
                     <select id="edit-allotment-inst" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white outline-none">
@@ -449,7 +563,7 @@
     <!-- FIREBASE MODULE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
         // Firebase Configuration (KKHM Project)
         const firebaseConfig = {
@@ -470,6 +584,13 @@
         let availableYears = ["2026-2027", "2025-2026", "2024-2025"];
         let timetableViewMode = 'college'; // 'teacher' | 'class' | 'college'
         let isSaving = false;
+        let isAdminLoggedIn = false;
+
+        // Default Admin Credentials
+        let adminAuth = {
+            username: "admin",
+            password: "kkhmadmin123"
+        };
 
         let appState = {
             institutions: ["Wafy", "Wafiyya"],
@@ -477,9 +598,19 @@
             periods: 6,
             enableTravelBuffer: true,
             classesList: ["Wafy Prep", "Wafy Thanawiyya", "Wafiyya Prep", "Wafiyya Thanawiyya"],
+            periodTimings: [
+                "09:00 - 09:45",
+                "09:45 - 10:30",
+                "10:45 - 11:30",
+                "11:30 - 12:15",
+                "01:30 - 02:15",
+                "02:15 - 03:00",
+                "03:00 - 03:45",
+                "03:45 - 04:30"
+            ],
             teachers: [],
-            classes: [], // allotments
-            timetable: null // matrix of scheduled slots
+            classes: [],
+            timetable: null
         };
 
         const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
@@ -500,35 +631,149 @@
             }, 3000);
         }
 
-        function setCloudStatus(status, text) {
-            const indicator = document.getElementById('cloud-indicator');
-            const statusText = document.getElementById('cloud-status-text');
-            const pill = document.getElementById('cloud-status-pill');
-            if(!indicator) return;
+        // Authentication & Role Control
+        function updateRoleUI() {
+            const roleBadge = document.getElementById('role-badge');
+            const adminNav = document.getElementById('admin-only-nav');
+            const adminGen = document.getElementById('admin-generator-box');
+            const publicBox = document.getElementById('public-visitor-box');
+            const loginBtn = document.getElementById('btn-admin-login');
+            const loggedGroup = document.getElementById('admin-logged-group');
+            const addYearBtn = document.getElementById('btn-add-year');
 
-            if (status === 'connected') {
-                indicator.className = 'w-2 h-2 rounded-full bg-emerald-400';
-                statusText.className = 'text-emerald-200 text-[11px] font-medium';
-                statusText.innerText = text || 'Cloud Synced';
-                pill.className = 'hidden sm:flex items-center gap-2 bg-emerald-950/60 border border-emerald-500/40 text-xs px-2.5 py-1 rounded-full transition-all';
-            } else if (status === 'syncing') {
-                indicator.className = 'w-2 h-2 rounded-full bg-amber-400 animate-spin';
-                statusText.className = 'text-amber-200 text-[11px] font-medium';
-                statusText.innerText = text || 'Syncing...';
-                pill.className = 'hidden sm:flex items-center gap-2 bg-amber-950/60 border border-amber-500/40 text-xs px-2.5 py-1 rounded-full transition-all';
+            if (isAdminLoggedIn) {
+                roleBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40";
+                roleBadge.innerHTML = '<i class="fas fa-crown text-[9px] mr-1"></i> Admin Mode';
+                adminNav.classList.remove('hidden');
+                adminGen.classList.remove('hidden');
+                publicBox.classList.add('hidden');
+                loginBtn.classList.add('hidden');
+                loggedGroup.classList.remove('hidden');
+                loggedGroup.classList.add('flex');
+                if(addYearBtn) addYearBtn.classList.remove('hidden');
             } else {
-                indicator.className = 'w-2 h-2 rounded-full bg-yellow-400';
-                statusText.className = 'text-yellow-200 text-[11px] font-medium';
-                statusText.innerText = text || 'Offline Mode';
-                pill.className = 'hidden sm:flex items-center gap-2 bg-yellow-950/60 border border-yellow-500/40 text-xs px-2.5 py-1 rounded-full transition-all';
+                roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600";
+                roleBadge.innerText = "Public View";
+                adminNav.classList.add('hidden');
+                adminGen.classList.add('hidden');
+                publicBox.classList.remove('hidden');
+                loginBtn.classList.remove('hidden');
+                loggedGroup.classList.add('hidden');
+                loggedGroup.classList.remove('flex');
+                if(addYearBtn) addYearBtn.classList.add('hidden');
+                
+                // If on an admin tab, redirect to timetable
+                const activeTab = document.querySelector('.tab-btn.active');
+                if(activeTab && activeTab.id !== 'tab-timetable') {
+                    switchTab('timetable');
+                }
+            }
+            renderAllotmentsList();
+        }
+
+        function openAdminLoginModal() {
+            document.getElementById('admin-login-error').classList.add('hidden');
+            document.getElementById('admin-password').value = '';
+            document.getElementById('admin-login-modal').classList.remove('hidden');
+            document.getElementById('admin-login-modal').classList.add('flex');
+        }
+
+        function closeAdminLoginModal() {
+            document.getElementById('admin-login-modal').classList.add('hidden');
+            document.getElementById('admin-login-modal').classList.remove('flex');
+        }
+
+        function adminLogin() {
+            const u = document.getElementById('admin-username').value.trim();
+            const p = document.getElementById('admin-password').value.trim();
+
+            if (u === adminAuth.username && p === adminAuth.password) {
+                isAdminLoggedIn = true;
+                sessionStorage.setItem('wafy_admin_logged', 'true');
+                closeAdminLoginModal();
+                updateRoleUI();
+                showToast("Admin Authenticated", "You now have full editing and configuration privileges.");
+            } else {
+                document.getElementById('admin-login-error').classList.remove('hidden');
             }
         }
 
-        // Initialize Meta & Load Current Year from Cloud
-        async function initSystem() {
-            setCloudStatus('syncing', 'Connecting...');
+        function adminLogout() {
+            isAdminLoggedIn = false;
+            sessionStorage.removeItem('wafy_admin_logged');
+            updateRoleUI();
+            showToast("Logged Out", "Switched back to Public Viewer mode.");
+        }
+
+        async function updateAdminPassword() {
+            const newP = document.getElementById('new-admin-password').value.trim();
+            if(!newP || newP.length < 6) {
+                showAlert("Password Weak", "Please enter a password with at least 6 characters.");
+                return;
+            }
+            adminAuth.password = newP;
+            document.getElementById('new-admin-password').value = '';
             try {
-                // Load meta doc for academic years
+                const authRef = doc(firestore, "timetable_system", "auth");
+                await setDoc(authRef, { username: adminAuth.username, password: newP, updatedAt: serverTimestamp() }, { merge: true });
+                showAlert("Success", "Admin password has been updated securely in the cloud.");
+            } catch(e) {
+                showAlert("Notice", "Password updated for current session.");
+            }
+        }
+
+        // Sharing System
+        function openShareModal() {
+            const fullUrl = window.location.href.split('#')[0];
+            const displayUrl = fullUrl.startsWith('http') ? fullUrl : "https://kkhmstorage.github.io/WAFY-WAFIYYA-TIME-TABLE/";
+            document.getElementById('share-url-input').value = displayUrl;
+
+            const shareText = `WAFY & WAFIYYA Academic Timetable (${currentYear}): ${displayUrl}`;
+            document.getElementById('whatsapp-share-btn').href = `https://api.whatsapp.com/send?text=${encodeURIComponent(shareText)}`;
+
+            document.getElementById('share-modal').classList.remove('hidden');
+            document.getElementById('share-modal').classList.add('flex');
+        }
+
+        function closeShareModal() {
+            document.getElementById('share-modal').classList.add('hidden');
+            document.getElementById('share-modal').classList.remove('flex');
+        }
+
+        function copyShareUrl() {
+            const input = document.getElementById('share-url-input');
+            input.select();
+            input.setSelectionRange(0, 99999);
+            navigator.clipboard.writeText(input.value).then(() => {
+                showToast("Link Copied!", "Share link copied to clipboard.");
+            }).catch(() => {
+                document.execCommand('copy');
+                showToast("Link Copied!", "Share link copied to clipboard.");
+            });
+        }
+
+        // System Initialization
+        async function initSystem() {
+            // Check session login
+            if (sessionStorage.getItem('wafy_admin_logged') === 'true') {
+                isAdminLoggedIn = true;
+            }
+
+            // Load Admin Auth from Firestore
+            try {
+                const authRef = doc(firestore, "timetable_system", "auth");
+                const authSnap = await getDoc(authRef);
+                if(authSnap.exists()) {
+                    adminAuth = Object.assign(adminAuth, authSnap.data());
+                } else {
+                    await setDoc(authRef, adminAuth);
+                }
+            } catch(e) {
+                console.warn("Auth doc fetch notice, using default credentials", e);
+            }
+
+            // Load Meta Doc
+            try {
                 const metaRef = doc(firestore, "timetable_system", "meta");
                 const metaSnap = await getDoc(metaRef);
                 if (metaSnap.exists()) {
@@ -543,10 +788,11 @@
                     });
                 }
             } catch(e) {
-                console.warn("Could not load cloud metadata, using cached years", e);
+                console.warn("Meta fetch notice", e);
             }
 
             renderYearDropdown();
+            updateRoleUI();
             await loadAcademicYear(currentYear);
         }
 
@@ -569,14 +815,13 @@
             currentYear = year;
             renderYearDropdown();
             await loadAcademicYear(year);
-            showToast("Academic Year Changed", `Switched to ${year} timetable.`);
+            showToast("Year Switched", `Viewing ${year} timetable.`);
         }
 
         async function loadAcademicYear(year) {
-            setCloudStatus('syncing', `Loading ${year}...`);
             const yearDocRef = doc(firestore, "timetable_system", `year_${year.replace('-', '_')}`);
             
-            // Check local cache
+            // Local cache check
             const cached = localStorage.getItem(getStorageKey(year));
             if(cached) {
                 try {
@@ -590,9 +835,7 @@
                 if(snap.exists()) {
                     appState = Object.assign(appState, snap.data());
                     localStorage.setItem(getStorageKey(year), JSON.stringify(appState));
-                    setCloudStatus('connected', 'Cloud Synced');
                 } else {
-                    // Seed initial data for this year
                     loadInitialTemplates();
                     await setDoc(yearDocRef, {
                         ...appState,
@@ -600,11 +843,9 @@
                         lastUpdated: serverTimestamp()
                     });
                     localStorage.setItem(getStorageKey(year), JSON.stringify(appState));
-                    setCloudStatus('connected', 'Initialized');
                 }
             } catch(err) {
-                console.error("Firestore year load notice:", err);
-                setCloudStatus('offline', 'Offline Mode');
+                console.error("Firestore load notice:", err);
                 if(appState.teachers.length === 0) loadInitialTemplates();
             }
 
@@ -613,8 +854,14 @@
         }
 
         async function saveToCloud() {
+            if(!isAdminLoggedIn) {
+                showAlert("Access Denied", "Only administrators can save changes to cloud database.");
+                return;
+            }
             isSaving = true;
-            setCloudStatus('syncing', 'Uploading...');
+            const btn = document.getElementById('btn-save-cloud');
+            if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+
             const yearDocRef = doc(firestore, "timetable_system", `year_${currentYear.replace('-', '_')}`);
 
             try {
@@ -625,25 +872,26 @@
                     periods: appState.periods,
                     enableTravelBuffer: appState.enableTravelBuffer,
                     classesList: appState.classesList,
+                    periodTimings: appState.periodTimings,
                     teachers: appState.teachers,
                     classes: appState.classes,
                     timetable: appState.timetable,
                     lastUpdated: serverTimestamp()
                 }, { merge: true });
 
-                setCloudStatus('connected', 'Cloud Synced');
-                showToast("Saved to Cloud", `Timetable for ${currentYear} updated in Firestore.`);
+                showToast("Cloud Synced", `Timetable for ${currentYear} updated in Firestore.`);
             } catch(err) {
                 console.error("Cloud save failed:", err);
-                setCloudStatus('offline', 'Saved Locally');
                 showToast("Saved Locally", "Saved in browser cache.");
             } finally {
                 isSaving = false;
+                if(btn) btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> <span class="hidden md:inline">Save Cloud</span>';
             }
         }
 
-        // Academic Year Modals
+        // Modals
         function openNewYearModal() {
+            if(!isAdminLoggedIn) return;
             document.getElementById('new-year-modal').classList.remove('hidden');
             document.getElementById('new-year-modal').classList.add('flex');
         }
@@ -653,7 +901,7 @@
         }
         async function confirmNewAcademicYear() {
             const val = document.getElementById('new-year-input').value.trim();
-            if(!val) { showAlert("Required", "Please enter academic year label (e.g. 2027-2028)."); return; }
+            if(!val) { showAlert("Required", "Please enter year label (e.g. 2027-2028)."); return; }
             if(availableYears.includes(val)) { showAlert("Exists", "This academic year already exists."); return; }
             
             availableYears.unshift(val);
@@ -686,22 +934,32 @@
         }
 
         function switchTab(tabId) {
+            if(!isAdminLoggedIn && tabId !== 'timetable') {
+                showAlert("Admin Required", "Please log in as Admin to access management settings.");
+                return;
+            }
+
             ['setup', 'teachers', 'classes', 'timetable'].forEach(t => {
                 const btn = document.getElementById(`tab-${t}`);
-                if (t === tabId) {
-                    btn.classList.add('active', 'text-emerald-700', 'bg-emerald-50/80');
-                    btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
-                    const icon = btn.querySelector('i');
-                    if(icon) icon.className = icon.className.replace('text-slate-400', 'text-emerald-600');
-                } else {
-                    btn.classList.remove('active', 'text-emerald-700', 'bg-emerald-50/80');
-                    btn.classList.add('text-slate-600', 'hover:bg-slate-50');
-                    const icon = btn.querySelector('i');
-                    if(icon) icon.className = icon.className.replace('text-emerald-600', 'text-slate-400');
+                if (btn) {
+                    if (t === tabId) {
+                        btn.classList.add('active', 'text-emerald-700', 'bg-emerald-50/80');
+                        btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
+                        const icon = btn.querySelector('i');
+                        if(icon) icon.className = icon.className.replace('text-slate-400', 'text-emerald-600');
+                    } else {
+                        btn.classList.remove('active', 'text-emerald-700', 'bg-emerald-50/80');
+                        btn.classList.add('text-slate-600', 'hover:bg-slate-50');
+                        const icon = btn.querySelector('i');
+                        if(icon) icon.className = icon.className.replace('text-emerald-600', 'text-slate-400');
+                    }
                 }
-                document.getElementById(`${t}-section`).classList.add('hidden');
+                const sec = document.getElementById(`${t}-section`);
+                if(sec) sec.classList.add('hidden');
             });
-            document.getElementById(`${tabId}-section`).classList.remove('hidden');
+            const activeSec = document.getElementById(`${tabId}-section`);
+            if(activeSec) activeSec.classList.remove('hidden');
+
             if(tabId === 'classes') updateDropdowns();
             if(tabId === 'timetable') renderSubFilters();
         }
@@ -724,7 +982,11 @@
         });
         document.getElementById('periods-count').addEventListener('change', (e) => {
             let val = parseInt(e.target.value);
-            if(val >= 1 && val <= 10) { appState.periods = val; renderTeachersList(); }
+            if(val >= 1 && val <= 10) { 
+                appState.periods = val; 
+                renderPeriodTimingInputs();
+                renderTeachersList(); 
+            }
         });
         document.getElementById('classes-list-input').addEventListener('change', (e) => {
             const list = e.target.value.split(',').map(s=>s.trim()).filter(Boolean);
@@ -735,13 +997,34 @@
             }
         });
 
+        // Period Timing Customization Inputs
+        function renderPeriodTimingInputs() {
+            const container = document.getElementById('period-timings-container');
+            container.innerHTML = '';
+            for(let p=0; p<appState.periods; p++) {
+                const current = appState.periodTimings[p] || `Period ${p+1}`;
+                const div = document.createElement('div');
+                div.innerHTML = `
+                    <label class="block text-[11px] text-slate-500 font-medium mb-0.5">P${p+1} Time</label>
+                    <input type="text" value="${current}" onchange="window.updatePeriodTiming(${p}, this.value)" class="w-full border border-slate-300 rounded p-1.5 text-xs outline-none focus:border-emerald-500">
+                `;
+                container.appendChild(div);
+            }
+        }
+
+        function updatePeriodTiming(index, value) {
+            appState.periodTimings[index] = value;
+            if(appState.timetable) renderTimetable();
+            saveToCloud();
+        }
+
         // Faculty Management
         function addTeacher() {
+            if(!isAdminLoggedIn) return;
             const name = document.getElementById('new-teacher-name').value.trim();
             let short = document.getElementById('new-teacher-short').value.trim().toUpperCase();
             if(!name) { showAlert("Required", "Please enter faculty member's name."); return; }
             if(!short) {
-                // Auto generate short name from initial letters
                 short = name.split(' ').map(w=>w[0]).join('').substring(0, 3).toUpperCase();
             }
 
@@ -765,9 +1048,10 @@
         }
 
         function deleteTeacher(id) {
+            if(!isAdminLoggedIn) return;
             const isAssigned = appState.classes.some(c => c.teacherId === id);
             if(isAssigned) {
-                showAlert("Action Denied", "Cannot remove teacher who is currently assigned to subjects. Remove or reassign those subjects first.");
+                showAlert("Action Denied", "Cannot remove teacher who is currently assigned to subjects.");
                 return;
             }
             appState.teachers = appState.teachers.filter(t => t.id !== id);
@@ -777,6 +1061,7 @@
         }
 
         function addConstraint(teacherId) {
+            if(!isAdminLoggedIn) return;
             const day = parseInt(document.getElementById(`const-day-${teacherId}`).value);
             const periodStr = document.getElementById(`const-period-${teacherId}`).value;
             const period = periodStr === 'all' ? 'all' : parseInt(periodStr);
@@ -791,6 +1076,7 @@
         }
 
         function removeConstraint(teacherId, index) {
+            if(!isAdminLoggedIn) return;
             const teacher = appState.teachers.find(t => t.id === teacherId);
             if(teacher) {
                 teacher.constraints.splice(index, 1);
@@ -805,7 +1091,7 @@
             countBadge.innerText = `${appState.teachers.length} Teachers`;
 
             if(appState.teachers.length === 0) {
-                container.innerHTML = '<div class="p-8 text-center text-slate-400 italic text-sm">No teachers registered for this academic year yet.</div>';
+                container.innerHTML = '<div class="p-8 text-center text-slate-400 italic text-sm">No teachers registered yet.</div>';
                 return;
             }
 
@@ -818,7 +1104,7 @@
                     <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
                         <i class="fas fa-ban mr-1 text-[10px]"></i>
                         ${dayNames[c.day]} : ${c.period === 'all' ? 'All Day' : 'P' + (c.period + 1)}
-                        <button onclick="window.removeConstraint('${teacher.id}', ${idx})" class="ml-1 text-red-400 hover:text-red-700"><i class="fas fa-times"></i></button>
+                        ${isAdminLoggedIn ? `<button onclick="window.removeConstraint('${teacher.id}', ${idx})" class="ml-1 text-red-400 hover:text-red-700"><i class="fas fa-times"></i></button>` : ''}
                     </span>
                 `).join('');
 
@@ -841,30 +1127,28 @@
                                 </div>
                             </div>
                         </div>
-                        <button onclick="window.deleteTeacher('${teacher.id}')" class="text-slate-400 hover:text-red-600 p-1" title="Remove Faculty">
-                            <i class="fas fa-trash-alt text-xs"></i>
-                        </button>
+                        ${isAdminLoggedIn ? `<button onclick="window.deleteTeacher('${teacher.id}')" class="text-slate-400 hover:text-red-600 p-1" title="Remove Faculty"><i class="fas fa-trash-alt text-xs"></i></button>` : ''}
                     </div>
                     <div class="w-full md:w-2/3 border-t md:border-t-0 md:border-l pt-2 md:pt-0 md:pl-4 border-slate-200">
                         <div class="text-[11px] font-semibold text-slate-500 mb-1">Unavailability Slots:</div>
                         <div class="flex flex-wrap gap-1 mb-2">${constraintsHtml || '<span class="text-xs text-slate-400 italic">Available on all periods</span>'}</div>
                         
+                        ${isAdminLoggedIn ? `
                         <div class="flex flex-wrap gap-2 items-center bg-slate-50 p-1.5 rounded-lg border border-slate-200">
                             <select id="const-day-${teacher.id}" class="text-xs border border-slate-300 rounded p-1 bg-white text-slate-700">${dayOpts}</select>
                             <select id="const-period-${teacher.id}" class="text-xs border border-slate-300 rounded p-1 bg-white text-slate-700">${periodOpts}</select>
                             <button onclick="window.addConstraint('${teacher.id}')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
-                                <i class="fas fa-plus text-[10px] mr-1"></i> Block
+                                <i class="fas fa-plus text-[10px] mr-1"></i> Block Slot
                             </button>
-                        </div>
+                        </div>` : ''}
                     </div>
                 `;
                 container.appendChild(div);
             });
         }
 
-        // Allotment Management with Full Edit
+        // Allotment Management
         function updateDropdowns() {
-            // College Selects
             ['new-class-inst', 'edit-allotment-inst'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
@@ -875,7 +1159,6 @@
                 }
             });
 
-            // Class/Batch Selects
             ['new-class-batch', 'edit-allotment-batch'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
@@ -889,7 +1172,6 @@
                 }
             });
 
-            // Teacher Selects
             ['new-class-teacher', 'edit-allotment-teacher'].forEach(id => {
                 const el = document.getElementById(id);
                 if(el) {
@@ -907,6 +1189,7 @@
         }
 
         function addAllotment() {
+            if(!isAdminLoggedIn) return;
             const college = document.getElementById('new-class-inst').value;
             const batch = document.getElementById('new-class-batch').value;
             const subject = document.getElementById('new-class-subject').value.trim();
@@ -914,7 +1197,7 @@
             const hours = parseInt(document.getElementById('new-class-hours').value);
 
             if(!subject) { showAlert("Required", "Please enter subject name."); return; }
-            if(!teacherId) { showAlert("Required", "Please select a faculty member. Add teachers first."); return; }
+            if(!teacherId) { showAlert("Required", "Please select a teacher."); return; }
             if(isNaN(hours) || hours <= 0) { showAlert("Error", "Hours must be greater than zero."); return; }
 
             appState.classes.push({
@@ -932,12 +1215,14 @@
         }
 
         function deleteAllotment(id) {
+            if(!isAdminLoggedIn) return;
             appState.classes = appState.classes.filter(c => c.id !== id);
             renderAllotmentsList();
             saveToCloud();
         }
 
         function openEditAllotmentModal(id) {
+            if(!isAdminLoggedIn) return;
             const item = appState.classes.find(c => c.id === id);
             if(!item) return;
 
@@ -960,6 +1245,7 @@
         }
 
         function saveEditedAllotment() {
+            if(!isAdminLoggedIn) return;
             const id = document.getElementById('edit-allotment-id').value;
             const item = appState.classes.find(c => c.id === id);
             if(!item) return;
@@ -992,7 +1278,7 @@
             tbody.innerHTML = '';
 
             if(appState.classes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-6 text-center text-slate-400 italic text-sm">No subjects allocated yet. Use the form above to add allocations.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-6 text-center text-slate-400 italic text-sm">No subjects allocated yet.</td></tr>';
                 return;
             }
 
@@ -1015,12 +1301,14 @@
                     </td>
                     <td class="px-5 py-3 whitespace-nowrap text-xs text-center font-bold text-slate-700">${c.hours}</td>
                     <td class="px-5 py-3 whitespace-nowrap text-right text-xs space-x-1">
-                        <button onclick="window.openEditAllotmentModal('${c.id}')" class="text-emerald-600 hover:text-emerald-800 p-1" title="Edit Allotment">
-                            <i class="fas fa-edit"></i>
-                        </button>
-                        <button onclick="window.deleteAllotment('${c.id}')" class="text-slate-400 hover:text-red-600 p-1" title="Delete">
-                            <i class="fas fa-trash-alt"></i>
-                        </button>
+                        ${isAdminLoggedIn ? `
+                            <button onclick="window.openEditAllotmentModal('${c.id}')" class="text-emerald-600 hover:text-emerald-800 p-1" title="Edit Allotment">
+                                <i class="fas fa-edit"></i>
+                            </button>
+                            <button onclick="window.deleteAllotment('${c.id}')" class="text-slate-400 hover:text-red-600 p-1" title="Delete">
+                                <i class="fas fa-trash-alt"></i>
+                            </button>
+                        ` : `<span class="text-slate-300 italic text-[11px]">View only</span>`}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1033,23 +1321,28 @@
             document.getElementById('days-count').value = appState.days;
             document.getElementById('periods-count').value = appState.periods;
             document.getElementById('enable-travel-buffer').checked = appState.enableTravelBuffer;
+            renderPeriodTimingInputs();
             updateDropdowns();
             renderTeachersList();
             renderAllotmentsList();
         }
 
-        // Reset Active Year
         function resetYearData() {
+            if(!isAdminLoggedIn) return;
             if(confirm(`Reset data for academic year ${currentYear} to default templates?`)) {
                 loadInitialTemplates();
                 updateUI();
                 saveToCloud();
-                showAlert("Reset", `Data for ${currentYear} reset to default.`);
+                showAlert("Reset", `Data for ${currentYear} reset.`);
             }
         }
 
-        // Timetable Scheduling Engine
+        // Multi-Class Scheduling Engine
         function generateTimetable() {
+            if(!isAdminLoggedIn) {
+                showAlert("Access Denied", "Only administrators can generate schedules.");
+                return;
+            }
             if(appState.classes.length === 0) {
                 showAlert("Notice", "Please add subject allocations before generating timetable.");
                 return;
@@ -1069,9 +1362,8 @@
         }
 
         function runMultiClassAlgorithm() {
-            const { days, periods, teachers, classes, enableTravelBuffer, classesList, institutions } = appState;
+            const { days, periods, teachers, classes, enableTravelBuffer } = appState;
 
-            // Schedule structure: schedule[day][period][className] = slotObject
             let schedule = Array(days).fill(null).map(() => 
                 Array(periods).fill(null).map(() => ({}))
             );
@@ -1083,7 +1375,6 @@
                 }
             });
 
-            // Sort slots: Hardest constraints first
             slotsToSchedule.sort((a, b) => {
                 const tA = teachers.find(t=>t.id===a.teacherId);
                 const tB = teachers.find(t=>t.id===b.teacherId);
@@ -1101,7 +1392,6 @@
                 for(let d of dayOrder) {
                     if(placed) break;
 
-                    // Avoid same subject more than twice in same class in a single day
                     let subjectDayCount = 0;
                     for(let p=0; p<periods; p++) {
                         const s = schedule[d][p][slot.className];
@@ -1112,12 +1402,10 @@
                     let periodOrder = Array.from({length: periods}, (_, i) => i).sort(() => Math.random() - 0.5);
 
                     for(let p of periodOrder) {
-                        // 1. Is this class already occupied in this period?
                         if(schedule[d][p][slot.className]) continue;
 
                         const teacher = teachers.find(t => t.id === slot.teacherId);
 
-                        // 2. Is teacher unavailable at this day/period?
                         let isUnavailable = false;
                         if(teacher) {
                             isUnavailable = teacher.constraints.some(c => 
@@ -1126,7 +1414,6 @@
                         }
                         if(isUnavailable) continue;
 
-                        // 3. Is teacher already teaching ANY other class at this exact period?
                         let teacherBusy = false;
                         for(let cls in schedule[d][p]) {
                             if(schedule[d][p][cls] && schedule[d][p][cls].teacherId === slot.teacherId) {
@@ -1136,7 +1423,6 @@
                         }
                         if(teacherBusy) continue;
 
-                        // 4. Campus Travel Buffer
                         if(enableTravelBuffer) {
                             let travelClash = false;
                             const checkPeriodForOtherCollege = (pIndex) => {
@@ -1155,7 +1441,6 @@
                             if(travelClash) continue;
                         }
 
-                        // Place successfully
                         schedule[d][p][slot.className] = slot;
                         placed = true;
                         break;
@@ -1188,7 +1473,7 @@
             saveToCloud();
         }
 
-        // VIEW & PRINT ENGINE (Teacher / Class / College)
+        // VIEW & PRINT ENGINE
         function setTimetableViewMode(mode) {
             timetableViewMode = mode;
             ['teacher', 'class', 'college'].forEach(m => {
@@ -1236,7 +1521,6 @@
 
         function renderTimetable() {
             if(!appState.timetable) return;
-
             const container = document.getElementById('timetable-container');
             const { days, periods, timetable } = appState;
 
@@ -1249,7 +1533,7 @@
             }
         }
 
-        // 1. TEACHER TIMETABLE VIEW & PRINT
+        // 1. Teacher Timetable with Period Timings
         function renderTeacherTimetable(container, days, periods, timetable) {
             const filterEl = document.getElementById('teacher-view-filter');
             const selectedTeacherId = filterEl ? filterEl.value : 'all';
@@ -1282,7 +1566,12 @@
                             <thead class="bg-slate-50 text-slate-600 text-xs font-semibold">
                                 <tr>
                                     <th class="px-3 py-2.5 border border-slate-200 text-left w-24">Day</th>
-                                    ${Array.from({length: periods}, (_, i) => `<th class="px-2 py-2.5 border border-slate-200">Period ${i+1}</th>`).join('')}
+                                    ${Array.from({length: periods}, (_, i) => `
+                                        <th class="px-2 py-2 border border-slate-200">
+                                            <div>Period ${i+1}</div>
+                                            <div class="text-[10px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
+                                        </th>
+                                    `).join('')}
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200 text-xs bg-white">
@@ -1327,7 +1616,7 @@
             container.innerHTML = html;
         }
 
-        // 2. CLASS TIMETABLE VIEW & PRINT
+        // 2. Class Timetable with Period Timings
         function renderClassTimetable(container, days, periods, timetable) {
             const filterEl = document.getElementById('class-view-filter');
             const targetClass = filterEl ? filterEl.value : appState.classesList[0];
@@ -1346,14 +1635,19 @@
                             </h3>
                             <p class="text-xs text-slate-500">Academic Schedule • Year ${currentYear}</p>
                         </div>
-                        <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded font-semibold">Class Noticeboard</span>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded font-semibold">Classroom Noticeboard</span>
                     </div>
 
                     <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
                         <thead class="bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider">
                             <tr>
                                 <th class="px-4 py-3 border border-slate-200 text-left w-28 bg-slate-100">Day</th>
-                                ${Array.from({length: periods}, (_, i) => `<th class="px-3 py-3 border border-slate-200 bg-slate-50">Period ${i+1}</th>`).join('')}
+                                ${Array.from({length: periods}, (_, i) => `
+                                    <th class="px-3 py-2.5 border border-slate-200 bg-slate-50">
+                                        <div>Period ${i+1}</div>
+                                        <div class="text-[10px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
+                                    </th>
+                                `).join('')}
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 text-xs bg-white">
@@ -1391,7 +1685,7 @@
             container.innerHTML = html;
         }
 
-        // 3. COLLEGE / MASTER TIMETABLE VIEW
+        // 3. College / Master Timetable with Period Timings
         function renderCollegeTimetable(container, days, periods, timetable) {
             const filterEl = document.getElementById('college-view-filter');
             const targetCollege = filterEl ? filterEl.value : 'combined';
@@ -1419,9 +1713,14 @@
                     <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
                         <thead class="bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider">
                             <tr>
-                                <th class="px-3 py-3 border border-slate-200 text-left w-24 bg-slate-100">Day</th>
-                                <th class="px-3 py-3 border border-slate-200 text-left w-32 bg-slate-100">Class</th>
-                                ${Array.from({length: periods}, (_, i) => `<th class="px-2 py-3 border border-slate-200 bg-slate-50">P ${i+1}</th>`).join('')}
+                                <th class="px-3 py-2.5 border border-slate-200 text-left w-24 bg-slate-100">Day</th>
+                                <th class="px-3 py-2.5 border border-slate-200 text-left w-32 bg-slate-100">Class</th>
+                                ${Array.from({length: periods}, (_, i) => `
+                                    <th class="px-2 py-2 border border-slate-200 bg-slate-50">
+                                        <div>P ${i+1}</div>
+                                        <div class="text-[9px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
+                                    </th>
+                                `).join('')}
                             </tr>
                         </thead>
                         <tbody class="divide-y divide-slate-200 text-xs bg-white">
@@ -1466,7 +1765,7 @@
             if(!appState.timetable) { showAlert("Notice", "No timetable generated to export."); return; }
             const { days, periods, timetable, classesList } = appState;
             let csv = ["Academic Year," + currentYear];
-            csv.push("Day,Class," + Array.from({length: periods}, (_, i) => `Period ${i+1}`).join(','));
+            csv.push("Day,Class," + Array.from({length: periods}, (_, i) => `Period ${i+1} (${appState.periodTimings[i]||''})`).join(','));
 
             for(let d=0; d<days; d++) {
                 classesList.forEach(cls => {
@@ -1493,13 +1792,21 @@
             URL.revokeObjectURL(url);
         }
 
-        // Default Initial Templates
+        // Initial Templates
         function loadInitialTemplates() {
             appState.institutions = ["Wafy", "Wafiyya"];
             appState.days = 5;
             appState.periods = 6;
             appState.enableTravelBuffer = true;
             appState.classesList = ["Wafy Prep", "Wafy Thanawiyya", "Wafiyya Prep", "Wafiyya Thanawiyya"];
+            appState.periodTimings = [
+                "09:00 - 09:45",
+                "09:45 - 10:30",
+                "10:45 - 11:30",
+                "11:30 - 12:15",
+                "01:30 - 02:15",
+                "02:15 - 03:00"
+            ];
 
             appState.teachers = [
                 { id: 't1', name: 'Usthad Abdul Rahman', shortName: 'AR', constraints: [{day: 0, period: 0}] },
@@ -1523,12 +1830,21 @@
             ];
         }
 
-        // Expose functions to window
+        // Window Handlers
         window.switchTab = switchTab;
         window.switchAcademicYear = switchAcademicYear;
         window.openNewYearModal = openNewYearModal;
         window.closeNewYearModal = closeNewYearModal;
         window.confirmNewAcademicYear = confirmNewAcademicYear;
+        window.openAdminLoginModal = openAdminLoginModal;
+        window.closeAdminLoginModal = closeAdminLoginModal;
+        window.adminLogin = adminLogin;
+        window.adminLogout = adminLogout;
+        window.updateAdminPassword = updateAdminPassword;
+        window.openShareModal = openShareModal;
+        window.closeShareModal = closeShareModal;
+        window.copyShareUrl = copyShareUrl;
+        window.updatePeriodTiming = updatePeriodTiming;
         window.addTeacher = addTeacher;
         window.deleteTeacher = deleteTeacher;
         window.addConstraint = addConstraint;
