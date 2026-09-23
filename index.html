@@ -6,54 +6,62 @@
     <title>WAFY & WAFIYYA TIME TABLE</title>
     <!-- Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <style>
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
-        .tab-btn.active { border-color: #059669; color: #059669; background-color: #ecfdf5; }
-        .period-cell { min-height: 85px; transition: all 0.2s ease; }
+        .tab-btn.active { border-color: #059669; color: #059669; background-color: #ecfdf5; font-weight: 600; }
+        .period-cell { min-height: 80px; transition: all 0.15s ease; }
         .period-cell:hover { transform: scale(1.01); z-index: 10; }
         @media print {
             .no-print { display: none !important; }
-            body { background: white !important; font-size: 11px; }
+            body { background: white !important; font-size: 11px; margin: 0; padding: 0; }
             .print-full { width: 100% !important; margin: 0 !important; padding: 0 !important; }
-            table { page-break-inside: auto; }
+            table { page-break-inside: auto; width: 100% !important; border-collapse: collapse; }
             tr { page-break-inside: avoid; page-break-after: auto; }
             thead { display: table-header-group; }
-            .period-cell { min-height: 55px !important; }
+            .period-cell { min-height: 50px !important; }
         }
     </style>
 </head>
 <body class="text-slate-800 h-screen flex flex-col antialiased">
 
     <!-- Top Header -->
-    <header class="bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 text-white p-4 shadow-lg flex justify-between items-center shrink-0 border-b border-emerald-700 no-print">
+    <header class="bg-gradient-to-r from-emerald-800 via-teal-800 to-slate-900 text-white p-3.5 shadow-lg flex justify-between items-center shrink-0 border-b border-emerald-700 no-print">
         <div class="flex items-center space-x-3">
             <div class="w-10 h-10 rounded-lg bg-emerald-500/20 border border-emerald-400/30 flex items-center justify-center text-emerald-300 text-xl font-bold shadow-inner">
                 <i class="fas fa-calendar-alt"></i>
             </div>
             <div>
-                <h1 class="text-xl font-bold tracking-tight text-white flex items-center gap-2">
+                <h1 class="text-lg md:text-xl font-bold tracking-tight text-white flex items-center gap-2">
                     WAFY & WAFIYYA TIME TABLE
-                    <span class="text-xs font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Pro Cloud</span>
+                    <span class="text-[10px] font-semibold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/30">Academic Cloud</span>
                 </h1>
-                <p class="text-xs text-emerald-200/80">Coordinated Smart Timetable & Faculty Clash Management</p>
+                <p class="text-xs text-emerald-200/80">Coordinated Multi-College Timetable & Faculty Management</p>
             </div>
         </div>
 
-        <div class="flex items-center gap-3">
-            <!-- Cloud Database Status Pill -->
-            <div id="cloud-status-pill" class="flex items-center gap-2 bg-emerald-950/60 border border-emerald-500/40 text-xs px-3 py-1.5 rounded-full transition-all">
-                <span id="cloud-indicator" class="w-2.5 h-2.5 rounded-full bg-emerald-400 animate-pulse"></span>
-                <span id="cloud-status-text" class="text-emerald-200 font-medium">Connecting to Cloud DB...</span>
+        <div class="flex items-center gap-2.5">
+            <!-- Academic Year Selector -->
+            <div class="flex items-center bg-slate-900/60 border border-emerald-500/30 rounded-lg px-2.5 py-1 text-xs">
+                <i class="fas fa-graduation-cap text-emerald-400 mr-2"></i>
+                <label for="year-selector" class="text-emerald-200 mr-1 hidden sm:inline">Year:</label>
+                <select id="year-selector" onchange="window.switchAcademicYear(this.value)" class="bg-transparent text-emerald-100 font-bold outline-none cursor-pointer pr-1">
+                    <!-- Populated dynamically -->
+                </select>
+                <button onclick="window.openNewYearModal()" class="ml-1.5 text-emerald-300 hover:text-white p-0.5" title="Add New Academic Year">
+                    <i class="fas fa-plus-circle"></i>
+                </button>
             </div>
 
-            <button onclick="window.saveToCloud()" id="btn-save-cloud" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3.5 py-1.5 rounded-lg border border-emerald-400/40 flex items-center gap-1.5 transition shadow">
-                <i class="fas fa-cloud-upload-alt"></i> Save to Cloud
-            </button>
+            <!-- Cloud Database Status Pill -->
+            <div id="cloud-status-pill" class="hidden sm:flex items-center gap-2 bg-emerald-950/60 border border-emerald-500/40 text-xs px-2.5 py-1 rounded-full transition-all">
+                <span id="cloud-indicator" class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
+                <span id="cloud-status-text" class="text-emerald-200 text-[11px] font-medium">Connecting...</span>
+            </div>
 
-            <button onclick="window.resetData()" class="text-xs bg-red-900/40 hover:bg-red-800/60 text-red-200 px-3 py-1.5 rounded-lg border border-red-500/30 flex items-center gap-1.5 transition">
-                <i class="fas fa-undo"></i> Reset
+            <button onclick="window.saveToCloud()" id="btn-save-cloud" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-3 py-1.5 rounded-lg border border-emerald-400/40 flex items-center gap-1.5 transition shadow">
+                <i class="fas fa-cloud-upload-alt"></i> <span class="hidden sm:inline">Save</span>
             </button>
         </div>
     </header>
@@ -79,13 +87,13 @@
                     <i class="fas fa-sliders-h w-6 text-emerald-600"></i> Configuration
                 </button>
                 <button onclick="window.switchTab('teachers')" id="tab-teachers" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
-                    <i class="fas fa-chalkboard-teacher w-6 text-slate-400"></i> Teachers & Constraints
+                    <i class="fas fa-chalkboard-teacher w-6 text-slate-400"></i> Teachers & Codes
                 </button>
                 <button onclick="window.switchTab('classes')" id="tab-classes" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
-                    <i class="fas fa-book-open w-6 text-slate-400"></i> Subjects & Allotment
+                    <i class="fas fa-book-open w-6 text-slate-400"></i> Subject Allotment
                 </button>
                 <button onclick="window.switchTab('timetable')" id="tab-timetable" class="tab-btn w-full flex items-center px-4 py-3 text-sm font-medium rounded-lg text-left text-slate-600 hover:bg-slate-50 transition duration-150">
-                    <i class="fas fa-table w-6 text-slate-400"></i> View Timetable
+                    <i class="fas fa-table w-6 text-slate-400"></i> View & Print
                 </button>
             </nav>
 
@@ -94,7 +102,7 @@
                     <i class="fas fa-magic text-emerald-200"></i> Generate Schedule
                 </button>
                 <div class="flex items-center justify-center gap-1.5 text-[11px] text-slate-500 mt-2">
-                    <i class="fas fa-shield-alt text-emerald-600"></i> Zero clashes & travel buffer
+                    <i class="fas fa-shield-alt text-emerald-600"></i> Travel buffer & zero clashes
                 </div>
             </div>
         </aside>
@@ -103,13 +111,13 @@
         <div class="flex-1 overflow-y-auto p-6 bg-slate-50">
             
             <!-- Setup Section -->
-            <section id="setup-section" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-4xl mx-auto">
-                <div class="border-b border-slate-100 pb-4 mb-6 flex justify-between items-center">
+            <section id="setup-section" class="bg-white p-6 rounded-xl shadow-sm border border-slate-200 max-w-4xl mx-auto space-y-6">
+                <div class="border-b border-slate-100 pb-4 flex justify-between items-center">
                     <div>
-                        <h2 class="text-2xl font-bold text-slate-800">Basic Configuration</h2>
-                        <p class="text-sm text-slate-500">Configure institutions, working days, and period structure.</p>
+                        <h2 class="text-2xl font-bold text-slate-800">Academic Configuration</h2>
+                        <p class="text-sm text-slate-500">Configure colleges, classes, and schedule structure for academic year <span id="current-year-badge" class="font-bold text-emerald-700">2026-2027</span>.</p>
                     </div>
-                    <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full border border-emerald-200 font-medium">Step 1 of 3</span>
+                    <span class="bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full border border-emerald-200 font-medium">Year Settings</span>
                 </div>
                 
                 <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
@@ -118,20 +126,20 @@
                             <i class="fas fa-school text-emerald-600"></i> Institutions / Sections
                         </h3>
                         <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Institution 1 (e.g. Boys / Wafy)</label>
-                            <input type="text" id="inst1-name" value="Wafy" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Institution 1</label>
+                            <input type="text" id="inst1-name" value="Wafy" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-600 mb-1">Institution 2 (e.g. Girls / Wafiyya)</label>
-                            <input type="text" id="inst2-name" value="Wafiyya" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Institution 2</label>
+                            <input type="text" id="inst2-name" value="Wafiyya" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
 
                         <div class="pt-2">
                             <label class="flex items-center gap-2 cursor-pointer text-sm text-slate-700">
                                 <input type="checkbox" id="enable-travel-buffer" checked class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
-                                <span>Enforce Travel Buffer (No back-to-back periods across campuses)</span>
+                                <span>Enforce Travel Buffer (No back-to-back across campuses)</span>
                             </label>
-                            <p class="text-xs text-slate-500 pl-6 mt-1">Prevents assigning Period P in Wafy and Period P+1 in Wafiyya for the same faculty.</p>
+                            <p class="text-xs text-slate-500 pl-6 mt-1">Prevents assigning Period P in Wafy and Period P+1 in Wafiyya for the same faculty member.</p>
                         </div>
                     </div>
                     
@@ -142,45 +150,52 @@
                         <div class="grid grid-cols-2 gap-4">
                             <div>
                                 <label class="block text-xs font-medium text-slate-600 mb-1">Working Days/Week</label>
-                                <input type="number" id="days-count" value="5" min="1" max="7" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                                <input type="number" id="days-count" value="5" min="1" max="7" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                             <div>
                                 <label class="block text-xs font-medium text-slate-600 mb-1">Periods/Day</label>
-                                <input type="number" id="periods-count" value="6" min="1" max="10" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 outline-none">
+                                <input type="number" id="periods-count" value="6" min="1" max="10" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                             </div>
                         </div>
 
-                        <div class="p-4 bg-emerald-50/70 border border-emerald-200 rounded-lg text-xs text-emerald-900 leading-relaxed">
-                            <div class="font-semibold flex items-center gap-1.5 mb-1 text-emerald-800">
-                                <i class="fas fa-database text-emerald-600"></i> Cloud Database Integrated:
-                            </div>
-                            Connected to KKHM Firestore cloud database (`timetable_system/wafy_wafiyya`). Any edits are automatically synced and accessible anywhere.
-                        </div>
-
-                        <div class="flex justify-end pt-4">
-                            <button onclick="window.switchTab('teachers')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
-                                Next: Add Teachers <i class="fas fa-arrow-right text-xs"></i>
-                            </button>
+                        <!-- Class Management -->
+                        <div>
+                            <label class="block text-xs font-medium text-slate-600 mb-1">Classes / Batches (Comma Separated)</label>
+                            <textarea id="classes-list-input" rows="2" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Wafy Preparatory, Wafy Thanawiyya, Wafiyya Preparatory, Wafiyya Thanawiyya"></textarea>
+                            <p class="text-[11px] text-slate-400 mt-1">Separate classes by commas to make them available in subject allotment.</p>
                         </div>
                     </div>
+                </div>
+
+                <div class="border-t border-slate-100 pt-4 flex justify-between items-center">
+                    <button onclick="window.resetYearData()" class="text-xs text-red-600 hover:text-red-700 font-medium">
+                        <i class="fas fa-trash-alt mr-1"></i> Reset Active Year to Default
+                    </button>
+                    <button onclick="window.switchTab('teachers')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                        Next: Teachers & Short Names <i class="fas fa-arrow-right text-xs"></i>
+                    </button>
                 </div>
             </section>
 
             <!-- Teachers Section -->
             <section id="teachers-section" class="hidden max-w-5xl mx-auto space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
-                    <div class="border-b border-slate-100 pb-3 mb-4 flex justify-between items-center">
+                    <div class="border-b border-slate-100 pb-3 mb-4">
+                        <h2 class="text-xl font-bold text-slate-800">Add Faculty Member</h2>
+                        <p class="text-xs text-slate-500">Register faculty name and short code (e.g., AR, SF) used in compact timetable displays.</p>
+                    </div>
+                    <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end">
+                        <div class="sm:col-span-2">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Teacher Full Name / Title</label>
+                            <input type="text" id="new-teacher-name" placeholder="e.g. Usthad Abdul Rahman / Prof. Maya" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
                         <div>
-                            <h2 class="text-xl font-bold text-slate-800">Add Teacher / Faculty</h2>
-                            <p class="text-xs text-slate-500">Register faculty who teach in Wafy and/or Wafiyya institutions.</p>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Short Name / Code (2-4 letters)</label>
+                            <input type="text" id="new-teacher-short" placeholder="e.g. AR, MY, SF" maxlength="6" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm uppercase focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                     </div>
-                    <div class="flex flex-col sm:flex-row gap-3 items-end">
-                        <div class="flex-1 w-full">
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Teacher Name / Designation</label>
-                            <input type="text" id="new-teacher-name" placeholder="e.g. Usthad Abdul Rahman / Prof. Rasheed" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                        </div>
-                        <button onclick="window.addTeacher()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2 shrink-0">
+                    <div class="mt-4 flex justify-end">
+                        <button onclick="window.addTeacher()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2">
                             <i class="fas fa-plus"></i> Add Teacher
                         </button>
                     </div>
@@ -190,7 +205,7 @@
                     <div class="p-6 border-b border-slate-100 flex justify-between items-center">
                         <div>
                             <h2 class="text-lg font-bold text-slate-800">Registered Faculty & Availability Constraints</h2>
-                            <p class="text-xs text-slate-500">Block specific days or periods when faculty is unavailable.</p>
+                            <p class="text-xs text-slate-500">Block specific days or periods when faculty cannot take classes.</p>
                         </div>
                         <span id="teacher-count-badge" class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-medium">0 Teachers</span>
                     </div>
@@ -204,7 +219,7 @@
                         <i class="fas fa-arrow-left text-xs"></i> Back to Config
                     </button>
                     <button onclick="window.switchTab('classes')" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2 rounded-lg text-sm font-medium transition flex items-center gap-2">
-                        Next: Assign Subjects <i class="fas fa-arrow-right text-xs"></i>
+                        Next: Subject Allotments <i class="fas fa-arrow-right text-xs"></i>
                     </button>
                 </div>
             </section>
@@ -213,60 +228,69 @@
             <section id="classes-section" class="hidden max-w-5xl mx-auto space-y-6">
                 <div class="bg-white p-6 rounded-xl shadow-sm border border-slate-200">
                     <div class="border-b border-slate-100 pb-3 mb-4">
-                        <h2 class="text-xl font-bold text-slate-800">Assign Subject to Teacher</h2>
-                        <p class="text-xs text-slate-500">Assign subjects for Wafy or Wafiyya campus along with required weekly hours.</p>
+                        <h2 class="text-xl font-bold text-slate-800">Subject Allocation Entry</h2>
+                        <p class="text-xs text-slate-500">Assign subjects to classes and faculty with total weekly period requirement.</p>
                     </div>
-                    <div class="grid grid-cols-1 md:grid-cols-4 gap-4 items-end">
+                    <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-5 gap-3 items-end">
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Institution</label>
-                            <select id="new-class-inst" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <option value="0">Wafy</option>
-                                <option value="1">Wafiyya</option>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">College</label>
+                            <select id="new-class-inst" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <option value="Wafy">Wafy</option>
+                                <option value="Wafiyya">Wafiyya</option>
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Subject Name</label>
-                            <input type="text" id="new-class-subject" placeholder="e.g. Fiqh, Tafseer, English" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
-                        </div>
-                        <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Assigned Teacher</label>
-                            <select id="new-class-teacher" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Class / Batch</label>
+                            <select id="new-class-batch" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
                         <div>
-                            <label class="block text-xs font-medium text-slate-700 mb-1">Periods / Week</label>
-                            <input type="number" id="new-class-hours" value="4" min="1" max="30" class="w-full border border-slate-300 rounded-lg p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Subject Name</label>
+                            <input type="text" id="new-class-subject" placeholder="e.g. Fiqh, Tafseer" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Assigned Teacher</label>
+                            <select id="new-class-teacher" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
+                        <div>
+                            <label class="block text-xs font-medium text-slate-700 mb-1">Periods / Wk</label>
+                            <input type="number" id="new-class-hours" value="4" min="1" max="25" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                     </div>
                     <div class="mt-4 flex justify-end">
-                        <button onclick="window.addClass()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2">
-                            <i class="fas fa-plus"></i> Add Subject Assignment
+                        <button onclick="window.addAllotment()" class="bg-emerald-600 hover:bg-emerald-700 text-white px-5 py-2.5 rounded-lg text-sm font-medium transition flex items-center gap-2">
+                            <i class="fas fa-plus"></i> Add Allotment
                         </button>
                     </div>
                 </div>
 
                 <div class="bg-white rounded-xl shadow-sm border border-slate-200 overflow-hidden">
-                    <div class="p-6 border-b border-slate-100 flex justify-between items-center">
+                    <div class="p-6 border-b border-slate-100 flex flex-wrap justify-between items-center gap-3">
                         <div>
-                            <h2 class="text-lg font-bold text-slate-800">Current Subject Allotments</h2>
-                            <p class="text-xs text-slate-500">Summary of all subjects allocated to faculty across institutions.</p>
+                            <h2 class="text-lg font-bold text-slate-800">Current Subject Allocations</h2>
+                            <p class="text-xs text-slate-500">Edit faculty or period count anytime by clicking the Edit button.</p>
                         </div>
-                        <span id="allotment-count-badge" class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-medium">0 Allotments</span>
+                        <div class="flex items-center gap-2">
+                            <span id="allotment-count-badge" class="bg-slate-100 text-slate-700 text-xs px-2.5 py-1 rounded-full font-medium">0 Allotments</span>
+                        </div>
                     </div>
                     <div class="overflow-x-auto">
                         <table class="min-w-full divide-y divide-slate-200 text-sm">
                             <thead class="bg-slate-50">
                                 <tr>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Institution</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Subject</th>
-                                    <th class="px-6 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Teacher</th>
-                                    <th class="px-6 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Hrs / Wk</th>
-                                    <th class="px-6 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Action</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">College</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Class</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Subject</th>
+                                    <th class="px-5 py-3 text-left text-xs font-semibold text-slate-500 uppercase tracking-wider">Faculty (Code)</th>
+                                    <th class="px-5 py-3 text-center text-xs font-semibold text-slate-500 uppercase tracking-wider">Hrs / Wk</th>
+                                    <th class="px-5 py-3 text-right text-xs font-semibold text-slate-500 uppercase tracking-wider">Actions</th>
                                 </tr>
                             </thead>
                             <tbody id="classes-list" class="bg-white divide-y divide-slate-100">
-                                <!-- Classes listed here -->
+                                <!-- Allotments rendered here -->
                             </tbody>
                         </table>
                     </div>
@@ -284,64 +308,59 @@
 
             <!-- Timetable Section -->
             <section id="timetable-section" class="hidden space-y-4">
-                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-4 no-print">
-                    <div class="flex items-center gap-3">
-                        <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
-                            <i class="fas fa-calendar-check"></i>
-                        </div>
-                        <div>
-                            <h2 class="text-lg font-bold text-slate-800">Generated Schedule</h2>
-                            <p class="text-xs text-slate-500" id="schedule-subtitle">All conflicts analyzed and resolved.</p>
+                
+                <!-- View Mode Controls -->
+                <div class="bg-white p-4 rounded-xl shadow-sm border border-slate-200 flex flex-wrap justify-between items-center gap-3 no-print">
+                    <div class="flex items-center gap-2">
+                        <!-- Mode Tabs -->
+                        <div class="flex bg-slate-100 p-1 rounded-lg border border-slate-200 text-xs font-medium">
+                            <button id="mode-btn-teacher" onclick="window.setTimetableViewMode('teacher')" class="px-3 py-1.5 rounded-md transition text-slate-600">
+                                <i class="fas fa-user-tie mr-1 text-emerald-600"></i> By Teacher
+                            </button>
+                            <button id="mode-btn-class" onclick="window.setTimetableViewMode('class')" class="px-3 py-1.5 rounded-md transition text-slate-600">
+                                <i class="fas fa-chalkboard mr-1 text-emerald-600"></i> By Class
+                            </button>
+                            <button id="mode-btn-college" onclick="window.setTimetableViewMode('college')" class="px-3 py-1.5 rounded-md transition bg-white text-emerald-800 shadow-sm font-bold">
+                                <i class="fas fa-university mr-1 text-emerald-600"></i> By College / Master
+                            </button>
                         </div>
                     </div>
                     
                     <div class="flex flex-wrap items-center gap-2">
-                        <div class="flex items-center gap-1 bg-slate-100 p-1 rounded-lg border border-slate-200">
-                            <label class="text-xs text-slate-500 pl-2">View:</label>
-                            <select id="view-selector" onchange="window.renderTimetable()" class="border-0 bg-transparent text-xs font-semibold text-slate-700 p-1.5 focus:ring-0 outline-none cursor-pointer">
-                                <option value="combined">Combined View (Both Institutions)</option>
-                                <option value="inst0">Wafy Only</option>
-                                <option value="inst1">Wafiyya Only</option>
-                                <option value="teacher">By Teacher</option>
-                            </select>
-                        </div>
-
-                        <!-- Teacher Filter (visible when By Teacher is selected) -->
-                        <div id="teacher-filter-wrap" class="hidden">
-                            <select id="teacher-filter" onchange="window.renderTimetable()" class="border border-slate-300 rounded-lg p-1.5 text-xs bg-white text-slate-700 outline-none">
-                                <!-- Populated dynamically -->
-                            </select>
+                        <!-- Dynamic Sub-Filter (Teacher Select or Class Select or College Select) -->
+                        <div id="sub-filter-container" class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg px-2 py-1 text-xs">
+                            <!-- Populated dynamically -->
                         </div>
 
                         <button onclick="window.exportToCSV()" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
-                            <i class="fas fa-file-csv text-emerald-600"></i> Export CSV
+                            <i class="fas fa-file-csv text-emerald-600"></i> CSV
                         </button>
-                        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition">
-                            <i class="fas fa-print"></i> Print Schedule
+                        <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow">
+                            <i class="fas fa-print"></i> Print
                         </button>
                     </div>
                 </div>
 
-                <!-- Printable Institution Header for Print View -->
+                <!-- Printable Academic Header -->
                 <div class="hidden print:block text-center py-4 border-b border-slate-300">
-                    <h1 class="text-2xl font-bold uppercase tracking-wider text-slate-900">WAFY & WAFIYYA TIME TABLE</h1>
-                    <p class="text-sm text-slate-600" id="print-subhead">Academic Timetable</p>
+                    <h1 class="text-xl font-bold uppercase tracking-wider text-slate-900">WAFY & WAFIYYA TIME TABLE</h1>
+                    <p class="text-xs text-slate-600" id="print-header-details">Academic Year: 2026-2027</p>
                 </div>
 
-                <div id="timetable-container" class="overflow-x-auto bg-white border border-slate-200 rounded-xl shadow-sm print:border-none print:shadow-none">
-                    <!-- Timetable grid will be rendered here -->
+                <!-- Schedule Container -->
+                <div id="timetable-container" class="overflow-x-auto bg-white border border-slate-200 rounded-xl shadow-sm print:border-none print:shadow-none p-4">
                     <div class="p-12 text-center text-slate-400">
                         <i class="fas fa-calendar-times text-5xl mb-3 text-slate-300"></i>
                         <h3 class="text-base font-medium text-slate-600">No timetable generated yet</h3>
-                        <p class="text-xs text-slate-400 mt-1">Configure subjects, faculty and click "Generate Schedule" to compute optimal timetable.</p>
+                        <p class="text-xs text-slate-400 mt-1">Click "Generate Schedule" to compute optimal conflict-free schedule.</p>
                     </div>
                 </div>
-                
-                <!-- Messages/Warnings -->
+
+                <!-- Generation Warnings -->
                 <div id="generation-messages" class="mt-4 hidden no-print">
                     <div class="bg-amber-50 border border-amber-200 rounded-xl p-4">
-                        <h3 class="font-semibold text-amber-800 text-sm mb-1.5 flex items-center gap-2">
-                            <i class="fas fa-exclamation-triangle text-amber-600"></i> Constraints Notice:
+                        <h3 class="font-semibold text-amber-800 text-sm mb-1 flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle text-amber-600"></i> Scheduling Constraint Notices:
                         </h3>
                         <ul id="messages-list" class="list-disc pl-5 text-xs text-amber-700 space-y-1"></ul>
                     </div>
@@ -351,9 +370,74 @@
         </div>
     </main>
 
-    <!-- Alert Modal -->
+    <!-- EDIT ALLOTMENT MODAL -->
+    <div id="edit-allotment-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white rounded-xl p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-100">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <h3 class="text-base font-bold text-slate-800 flex items-center gap-2">
+                    <i class="fas fa-edit text-emerald-600"></i> Edit Subject Allocation
+                </h3>
+                <button onclick="window.closeEditAllotmentModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <input type="hidden" id="edit-allotment-id">
+            
+            <div class="space-y-3.5 text-xs">
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">College</label>
+                    <select id="edit-allotment-inst" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white outline-none">
+                        <option value="Wafy">Wafy</option>
+                        <option value="Wafiyya">Wafiyya</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Class / Batch</label>
+                    <select id="edit-allotment-batch" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white outline-none"></select>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Subject Name</label>
+                    <input type="text" id="edit-allotment-subject" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs outline-none">
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Assigned Teacher</label>
+                    <select id="edit-allotment-teacher" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs bg-white outline-none"></select>
+                </div>
+                <div>
+                    <label class="block font-medium text-slate-700 mb-1">Periods per Week</label>
+                    <input type="number" id="edit-allotment-hours" min="1" max="25" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs outline-none">
+                </div>
+            </div>
+
+            <div class="mt-6 flex justify-end gap-2">
+                <button onclick="window.closeEditAllotmentModal()" class="px-4 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                <button onclick="window.saveEditedAllotment()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-4 py-2 rounded-lg transition">Save Changes</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- NEW ACADEMIC YEAR MODAL -->
+    <div id="new-year-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-slate-100">
+            <h3 class="text-base font-bold text-slate-800 mb-2 flex items-center gap-2">
+                <i class="fas fa-plus-circle text-emerald-600"></i> Add Academic Year
+            </h3>
+            <p class="text-xs text-slate-500 mb-4">Create a new academic year timetable archive.</p>
+            <div class="mb-4">
+                <label class="block text-xs font-medium text-slate-700 mb-1">Academic Year Label</label>
+                <input type="text" id="new-year-input" placeholder="e.g. 2027-2028" class="w-full border border-slate-300 rounded-lg p-2.5 text-xs outline-none">
+            </div>
+            <div class="flex justify-end gap-2">
+                <button onclick="window.closeNewYearModal()" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                <button onclick="window.confirmNewAcademicYear()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-medium px-4 py-1.5 rounded-lg transition">Create Year</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- General Alert Modal -->
     <div id="alert-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
-        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-slate-100 transform transition-all">
+        <div class="bg-white rounded-xl p-6 max-w-sm w-full mx-4 shadow-2xl border border-slate-100">
             <h3 id="alert-title" class="text-base font-bold text-slate-800 mb-2">Notice</h3>
             <p id="alert-message" class="text-sm text-slate-600 mb-5 leading-relaxed"></p>
             <div class="flex justify-end">
@@ -380,11 +464,11 @@
 
         const app = initializeApp(firebaseConfig);
         const firestore = getFirestore(app);
-        
-        // Dedicated, isolated document for Timetable
-        const dbRef = doc(firestore, "timetable_system", "wafy_wafiyya");
 
-        const STORAGE_KEY = 'wafy_wafiyya_timetable_cloud_cache';
+        // State Management
+        let currentYear = "2026-2027";
+        let availableYears = ["2026-2027", "2025-2026", "2024-2025"];
+        let timetableViewMode = 'college'; // 'teacher' | 'class' | 'college'
         let isSaving = false;
 
         let appState = {
@@ -392,170 +476,196 @@
             days: 5,
             periods: 6,
             enableTravelBuffer: true,
+            classesList: ["Wafy Prep", "Wafy Thanawiyya", "Wafiyya Prep", "Wafiyya Thanawiyya"],
             teachers: [],
-            classes: [],
-            timetable: null
+            classes: [], // allotments
+            timetable: null // matrix of scheduled slots
         };
 
         const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
 
-        // Toast helper
-        function showToast(title, message, isSuccess = true) {
+        function getStorageKey(year) {
+            return `wafy_wafiyya_tt_${year}`;
+        }
+
+        function showToast(title, message) {
             const toast = document.getElementById('toast');
             document.getElementById('toast-title').innerText = title;
             document.getElementById('toast-message').innerText = message;
-            
             toast.classList.remove('opacity-0', 'translate-y-[-10px]', 'pointer-events-none');
             toast.classList.add('opacity-100', 'translate-y-0');
-
             setTimeout(() => {
                 toast.classList.remove('opacity-100', 'translate-y-0');
                 toast.classList.add('opacity-0', 'translate-y-[-10px]', 'pointer-events-none');
             }, 3000);
         }
 
-        // Update Cloud Connection Status Indicator
         function setCloudStatus(status, text) {
             const indicator = document.getElementById('cloud-indicator');
             const statusText = document.getElementById('cloud-status-text');
             const pill = document.getElementById('cloud-status-pill');
+            if(!indicator) return;
 
             if (status === 'connected') {
-                indicator.className = 'w-2.5 h-2.5 rounded-full bg-emerald-400';
-                statusText.className = 'text-emerald-200 font-medium';
-                statusText.innerText = text || 'Cloud DB Connected';
-                pill.className = 'flex items-center gap-2 bg-emerald-950/60 border border-emerald-500/40 text-xs px-3 py-1.5 rounded-full transition-all';
+                indicator.className = 'w-2 h-2 rounded-full bg-emerald-400';
+                statusText.className = 'text-emerald-200 text-[11px] font-medium';
+                statusText.innerText = text || 'Cloud Synced';
+                pill.className = 'hidden sm:flex items-center gap-2 bg-emerald-950/60 border border-emerald-500/40 text-xs px-2.5 py-1 rounded-full transition-all';
             } else if (status === 'syncing') {
-                indicator.className = 'w-2.5 h-2.5 rounded-full bg-amber-400 animate-spin';
-                statusText.className = 'text-amber-200 font-medium';
-                statusText.innerText = text || 'Syncing to Cloud...';
-                pill.className = 'flex items-center gap-2 bg-amber-950/60 border border-amber-500/40 text-xs px-3 py-1.5 rounded-full transition-all';
-            } else if (status === 'offline') {
-                indicator.className = 'w-2.5 h-2.5 rounded-full bg-yellow-400';
-                statusText.className = 'text-yellow-200 font-medium';
-                statusText.innerText = text || 'Offline Cache Mode';
-                pill.className = 'flex items-center gap-2 bg-yellow-950/60 border border-yellow-500/40 text-xs px-3 py-1.5 rounded-full transition-all';
-            } else if (status === 'error') {
-                indicator.className = 'w-2.5 h-2.5 rounded-full bg-rose-500';
-                statusText.className = 'text-rose-200 font-medium';
-                statusText.innerText = text || 'Cloud Connection Error';
-                pill.className = 'flex items-center gap-2 bg-rose-950/60 border border-rose-500/40 text-xs px-3 py-1.5 rounded-full transition-all';
+                indicator.className = 'w-2 h-2 rounded-full bg-amber-400 animate-spin';
+                statusText.className = 'text-amber-200 text-[11px] font-medium';
+                statusText.innerText = text || 'Syncing...';
+                pill.className = 'hidden sm:flex items-center gap-2 bg-amber-950/60 border border-amber-500/40 text-xs px-2.5 py-1 rounded-full transition-all';
+            } else {
+                indicator.className = 'w-2 h-2 rounded-full bg-yellow-400';
+                statusText.className = 'text-yellow-200 text-[11px] font-medium';
+                statusText.innerText = text || 'Offline Mode';
+                pill.className = 'hidden sm:flex items-center gap-2 bg-yellow-950/60 border border-yellow-500/40 text-xs px-2.5 py-1 rounded-full transition-all';
             }
         }
 
-        // Initialize from Cloud Firestore with fallback to LocalStorage
-        async function loadDatabase() {
-            setCloudStatus('syncing', 'Connecting to Cloud DB...');
+        // Initialize Meta & Load Current Year from Cloud
+        async function initSystem() {
+            setCloudStatus('syncing', 'Connecting...');
             try {
-                // First check local cache for instantaneous UI rendering
-                const localCache = localStorage.getItem(STORAGE_KEY);
-                if (localCache) {
-                    try {
-                        const parsed = JSON.parse(localCache);
-                        appState = Object.assign(appState, parsed);
-                        updateUI();
-                        renderTeachersList();
-                    } catch(e) { }
-                }
-
-                // Fetch from Firestore
-                const docSnap = await getDoc(dbRef);
-                if (docSnap.exists()) {
-                    const data = docSnap.data();
-                    appState = Object.assign(appState, data);
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-                    setCloudStatus('connected', 'Cloud DB Connected');
+                // Load meta doc for academic years
+                const metaRef = doc(firestore, "timetable_system", "meta");
+                const metaSnap = await getDoc(metaRef);
+                if (metaSnap.exists()) {
+                    const metaData = metaSnap.data();
+                    if(metaData.years && metaData.years.length > 0) availableYears = metaData.years;
+                    if(metaData.activeYear) currentYear = metaData.activeYear;
                 } else {
-                    // Seed initial defaults in cloud
+                    await setDoc(metaRef, {
+                        activeYear: currentYear,
+                        years: availableYears,
+                        updatedAt: serverTimestamp()
+                    });
+                }
+            } catch(e) {
+                console.warn("Could not load cloud metadata, using cached years", e);
+            }
+
+            renderYearDropdown();
+            await loadAcademicYear(currentYear);
+        }
+
+        function renderYearDropdown() {
+            const sel = document.getElementById('year-selector');
+            sel.innerHTML = '';
+            availableYears.forEach(y => {
+                const opt = document.createElement('option');
+                opt.value = y;
+                opt.innerText = y;
+                if(y === currentYear) opt.selected = true;
+                sel.appendChild(opt);
+            });
+            document.getElementById('current-year-badge').innerText = currentYear;
+            const printHead = document.getElementById('print-header-details');
+            if(printHead) printHead.innerText = `Academic Year: ${currentYear}`;
+        }
+
+        async function switchAcademicYear(year) {
+            currentYear = year;
+            renderYearDropdown();
+            await loadAcademicYear(year);
+            showToast("Academic Year Changed", `Switched to ${year} timetable.`);
+        }
+
+        async function loadAcademicYear(year) {
+            setCloudStatus('syncing', `Loading ${year}...`);
+            const yearDocRef = doc(firestore, "timetable_system", `year_${year.replace('-', '_')}`);
+            
+            // Check local cache
+            const cached = localStorage.getItem(getStorageKey(year));
+            if(cached) {
+                try {
+                    appState = Object.assign(appState, JSON.parse(cached));
+                    updateUI();
+                } catch(e){}
+            }
+
+            try {
+                const snap = await getDoc(yearDocRef);
+                if(snap.exists()) {
+                    appState = Object.assign(appState, snap.data());
+                    localStorage.setItem(getStorageKey(year), JSON.stringify(appState));
+                    setCloudStatus('connected', 'Cloud Synced');
+                } else {
+                    // Seed initial data for this year
                     loadInitialTemplates();
-                    await setDoc(dbRef, {
+                    await setDoc(yearDocRef, {
                         ...appState,
                         createdAt: serverTimestamp(),
                         lastUpdated: serverTimestamp()
                     });
-                    localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-                    setCloudStatus('connected', 'Cloud Initialized');
+                    localStorage.setItem(getStorageKey(year), JSON.stringify(appState));
+                    setCloudStatus('connected', 'Initialized');
                 }
-                
-                updateUI();
-                renderTeachersList();
-                if (appState.timetable) {
-                    renderTimetable();
-                }
-
-                // Attach real-time Firestore listener for multi-device sync
-                onSnapshot(dbRef, (snapshot) => {
-                    if (snapshot.exists() && !isSaving) {
-                        const updatedData = snapshot.data();
-                        appState = Object.assign(appState, updatedData);
-                        localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-                        updateUI();
-                        renderTeachersList();
-                        if (appState.timetable) renderTimetable();
-                        setCloudStatus('connected', 'Cloud DB Synced');
-                    }
-                }, (error) => {
-                    console.warn("Snapshot listener notice:", error);
-                    setCloudStatus('offline', 'Offline Mode (Local Cache)');
-                });
-
-            } catch (error) {
-                console.error("Firestore initialization notice:", error);
-                setCloudStatus('offline', 'Offline Mode (Local Cache)');
-                // If not loaded yet, use default template
-                if (appState.teachers.length === 0) {
-                    loadInitialTemplates();
-                    updateUI();
-                    renderTeachersList();
-                }
+            } catch(err) {
+                console.error("Firestore year load notice:", err);
+                setCloudStatus('offline', 'Offline Mode');
+                if(appState.teachers.length === 0) loadInitialTemplates();
             }
+
+            updateUI();
+            if(appState.timetable) renderTimetable();
         }
 
-        // Save to Firestore Cloud Database
         async function saveToCloud() {
             isSaving = true;
-            setCloudStatus('syncing', 'Uploading to Cloud...');
-            const btn = document.getElementById('btn-save-cloud');
-            if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
+            setCloudStatus('syncing', 'Uploading...');
+            const yearDocRef = doc(firestore, "timetable_system", `year_${currentYear.replace('-', '_')}`);
 
             try {
-                // Save locally first
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(appState));
-
-                // Save to Firestore
-                await setDoc(dbRef, {
+                localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
+                await setDoc(yearDocRef, {
                     institutions: appState.institutions,
                     days: appState.days,
                     periods: appState.periods,
                     enableTravelBuffer: appState.enableTravelBuffer,
+                    classesList: appState.classesList,
                     teachers: appState.teachers,
                     classes: appState.classes,
                     timetable: appState.timetable,
                     lastUpdated: serverTimestamp()
                 }, { merge: true });
 
-                setCloudStatus('connected', 'Cloud DB Synced');
-                showToast("Cloud Synchronized", "Timetable and faculty allocations saved to Firestore.");
-            } catch (error) {
-                console.error("Failed to save to cloud:", error);
-                setCloudStatus('offline', 'Saved Locally (Offline)');
-                showToast("Saved Locally", "Saved in browser cache. Will sync to cloud once connected.");
+                setCloudStatus('connected', 'Cloud Synced');
+                showToast("Saved to Cloud", `Timetable for ${currentYear} updated in Firestore.`);
+            } catch(err) {
+                console.error("Cloud save failed:", err);
+                setCloudStatus('offline', 'Saved Locally');
+                showToast("Saved Locally", "Saved in browser cache.");
             } finally {
                 isSaving = false;
-                if (btn) btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> Save to Cloud';
             }
         }
 
-        // Reset Data
-        async function resetData() {
-            if (confirm("Are you sure you want to reset all data in the Cloud Database to default Wafy & Wafiyya templates?")) {
-                loadInitialTemplates();
-                updateUI();
-                renderTeachersList();
-                renderClassesList();
-                await saveToCloud();
-                showAlert("Reset", "Data successfully reset to default Wafy & Wafiyya templates across Cloud and local storage.");
-            }
+        // Academic Year Modals
+        function openNewYearModal() {
+            document.getElementById('new-year-modal').classList.remove('hidden');
+            document.getElementById('new-year-modal').classList.add('flex');
+        }
+        function closeNewYearModal() {
+            document.getElementById('new-year-modal').classList.add('hidden');
+            document.getElementById('new-year-modal').classList.remove('flex');
+        }
+        async function confirmNewAcademicYear() {
+            const val = document.getElementById('new-year-input').value.trim();
+            if(!val) { showAlert("Required", "Please enter academic year label (e.g. 2027-2028)."); return; }
+            if(availableYears.includes(val)) { showAlert("Exists", "This academic year already exists."); return; }
+            
+            availableYears.unshift(val);
+            closeNewYearModal();
+            document.getElementById('new-year-input').value = '';
+
+            try {
+                const metaRef = doc(firestore, "timetable_system", "meta");
+                await setDoc(metaRef, { years: availableYears, activeYear: val }, { merge: true });
+            } catch(e){}
+
+            await switchAcademicYear(val);
         }
 
         function showAlert(title, message) {
@@ -565,7 +675,6 @@
             modal.classList.remove('hidden');
             modal.classList.add('flex');
         }
-
         function closeAlert() {
             const modal = document.getElementById('alert-modal');
             modal.classList.add('hidden');
@@ -592,62 +701,51 @@
                 }
                 document.getElementById(`${t}-section`).classList.add('hidden');
             });
-            
             document.getElementById(`${tabId}-section`).classList.remove('hidden');
-            if(tabId === 'classes') updateTeacherDropdown();
-            if(tabId === 'timetable') updateViewSelectorLabels();
+            if(tabId === 'classes') updateDropdowns();
+            if(tabId === 'timetable') renderSubFilters();
         }
 
-        // Configuration Event Listeners
+        // Configuration Listeners
         document.getElementById('inst1-name').addEventListener('input', (e) => {
             appState.institutions[0] = e.target.value || "Wafy";
-            updateUI();
-            debouncedSave();
+            updateDropdowns();
         });
         document.getElementById('inst2-name').addEventListener('input', (e) => {
             appState.institutions[1] = e.target.value || "Wafiyya";
-            updateUI();
-            debouncedSave();
+            updateDropdowns();
         });
         document.getElementById('enable-travel-buffer').addEventListener('change', (e) => {
             appState.enableTravelBuffer = e.target.checked;
-            debouncedSave();
         });
         document.getElementById('days-count').addEventListener('change', (e) => {
             let val = parseInt(e.target.value);
-            if(val >= 1 && val <= 7) { 
-                appState.days = val; 
-                renderTeachersList(); 
-                debouncedSave();
-            }
+            if(val >= 1 && val <= 7) { appState.days = val; renderTeachersList(); }
         });
         document.getElementById('periods-count').addEventListener('change', (e) => {
             let val = parseInt(e.target.value);
-            if(val >= 1 && val <= 10) { 
-                appState.periods = val; 
-                renderTeachersList(); 
-                debouncedSave();
+            if(val >= 1 && val <= 10) { appState.periods = val; renderTeachersList(); }
+        });
+        document.getElementById('classes-list-input').addEventListener('change', (e) => {
+            const list = e.target.value.split(',').map(s=>s.trim()).filter(Boolean);
+            if(list.length > 0) {
+                appState.classesList = list;
+                updateDropdowns();
+                saveToCloud();
             }
         });
 
-        // Debounce auto-save
-        let debounceTimer;
-        function debouncedSave() {
-            clearTimeout(debounceTimer);
-            debounceTimer = setTimeout(() => {
-                saveToCloud();
-            }, 1200);
-        }
-
-        // Teacher Management
+        // Faculty Management
         function addTeacher() {
-            const nameInput = document.getElementById('new-teacher-name');
-            const name = nameInput.value.trim();
-            if (!name) {
-                showAlert("Required", "Please enter faculty name.");
-                return;
+            const name = document.getElementById('new-teacher-name').value.trim();
+            let short = document.getElementById('new-teacher-short').value.trim().toUpperCase();
+            if(!name) { showAlert("Required", "Please enter faculty member's name."); return; }
+            if(!short) {
+                // Auto generate short name from initial letters
+                short = name.split(' ').map(w=>w[0]).join('').substring(0, 3).toUpperCase();
             }
-            if (appState.teachers.find(t => t.name.toLowerCase() === name.toLowerCase())) {
+
+            if(appState.teachers.find(t=>t.name.toLowerCase() === name.toLowerCase())) {
                 showAlert("Duplicate", "A teacher with this name already exists.");
                 return;
             }
@@ -655,23 +753,26 @@
             appState.teachers.push({
                 id: generateId(),
                 name: name,
+                shortName: short,
                 constraints: []
             });
-            nameInput.value = '';
+
+            document.getElementById('new-teacher-name').value = '';
+            document.getElementById('new-teacher-short').value = '';
             renderTeachersList();
-            updateTeacherDropdown();
+            updateDropdowns();
             saveToCloud();
         }
 
         function deleteTeacher(id) {
             const isAssigned = appState.classes.some(c => c.teacherId === id);
-            if (isAssigned) {
-                showAlert("Action Denied", "Cannot remove faculty while subjects are assigned to them. Reassign or remove subjects first.");
+            if(isAssigned) {
+                showAlert("Action Denied", "Cannot remove teacher who is currently assigned to subjects. Remove or reassign those subjects first.");
                 return;
             }
             appState.teachers = appState.teachers.filter(t => t.id !== id);
             renderTeachersList();
-            updateTeacherDropdown();
+            updateDropdowns();
             saveToCloud();
         }
 
@@ -679,7 +780,6 @@
             const day = parseInt(document.getElementById(`const-day-${teacherId}`).value);
             const periodStr = document.getElementById(`const-period-${teacherId}`).value;
             const period = periodStr === 'all' ? 'all' : parseInt(periodStr);
-            
             const teacher = appState.teachers.find(t => t.id === teacherId);
             if(!teacher) return;
             const exists = teacher.constraints.find(c => c.day === day && c.period === period);
@@ -689,7 +789,7 @@
                 saveToCloud();
             }
         }
-        
+
         function removeConstraint(teacherId, index) {
             const teacher = appState.teachers.find(t => t.id === teacherId);
             if(teacher) {
@@ -704,24 +804,24 @@
             const countBadge = document.getElementById('teacher-count-badge');
             countBadge.innerText = `${appState.teachers.length} Teachers`;
 
-            if (appState.teachers.length === 0) {
-                container.innerHTML = '<div class="p-8 text-center text-slate-400 italic text-sm">No faculty members registered yet. Add teachers using the form above.</div>';
+            if(appState.teachers.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-slate-400 italic text-sm">No teachers registered for this academic year yet.</div>';
                 return;
             }
 
             container.innerHTML = '';
             appState.teachers.forEach(teacher => {
                 const div = document.createElement('div');
-                div.className = 'p-5 flex flex-col md:flex-row gap-4 hover:bg-slate-50/70 transition';
+                div.className = 'p-4 flex flex-col md:flex-row gap-4 hover:bg-slate-50/70 transition';
                 
                 let constraintsHtml = teacher.constraints.map((c, idx) => `
                     <span class="inline-flex items-center px-2 py-0.5 rounded-md text-xs font-medium bg-red-50 text-red-700 border border-red-200">
                         <i class="fas fa-ban mr-1 text-[10px]"></i>
                         ${dayNames[c.day]} : ${c.period === 'all' ? 'All Day' : 'P' + (c.period + 1)}
-                        <button onclick="window.removeConstraint('${teacher.id}', ${idx})" class="ml-1.5 text-red-400 hover:text-red-700 focus:outline-none"><i class="fas fa-times"></i></button>
+                        <button onclick="window.removeConstraint('${teacher.id}', ${idx})" class="ml-1 text-red-400 hover:text-red-700"><i class="fas fa-times"></i></button>
                     </span>
                 `).join('');
-                
+
                 let periodOpts = `<option value="all">Whole Day</option>`;
                 for(let p=0; p<appState.periods; p++) periodOpts += `<option value="${p}">Period ${p+1}</option>`;
                 
@@ -732,25 +832,28 @@
                     <div class="w-full md:w-1/3 flex justify-between items-start">
                         <div>
                             <div class="font-semibold text-slate-800 text-sm flex items-center gap-2">
-                                <span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-700 flex items-center justify-center text-xs">
-                                    <i class="fas fa-user"></i>
+                                <span class="w-7 h-7 rounded-full bg-emerald-100 text-emerald-800 flex items-center justify-center font-bold text-xs border border-emerald-200">
+                                    ${teacher.shortName || 'T'}
                                 </span>
-                                ${teacher.name}
+                                <div>
+                                    <div>${teacher.name}</div>
+                                    <div class="text-[10px] text-slate-400">Code: <span class="font-bold text-slate-600">${teacher.shortName}</span></div>
+                                </div>
                             </div>
                         </div>
-                        <button onclick="window.deleteTeacher('${teacher.id}')" class="text-slate-400 hover:text-red-600 p-1 transition" title="Remove Faculty">
+                        <button onclick="window.deleteTeacher('${teacher.id}')" class="text-slate-400 hover:text-red-600 p-1" title="Remove Faculty">
                             <i class="fas fa-trash-alt text-xs"></i>
                         </button>
                     </div>
-                    <div class="w-full md:w-2/3 border-t md:border-t-0 md:border-l pt-3 md:pt-0 md:pl-5 border-slate-200">
-                        <div class="text-xs font-semibold text-slate-500 mb-1.5">Unavailability Constraints:</div>
-                        <div class="flex flex-wrap gap-1.5 mb-2.5">${constraintsHtml || '<span class="text-xs text-slate-400 italic">Available on all periods</span>'}</div>
+                    <div class="w-full md:w-2/3 border-t md:border-t-0 md:border-l pt-2 md:pt-0 md:pl-4 border-slate-200">
+                        <div class="text-[11px] font-semibold text-slate-500 mb-1">Unavailability Slots:</div>
+                        <div class="flex flex-wrap gap-1 mb-2">${constraintsHtml || '<span class="text-xs text-slate-400 italic">Available on all periods</span>'}</div>
                         
-                        <div class="flex flex-wrap gap-2 items-center bg-slate-50 p-2 rounded-lg border border-slate-200">
-                            <select id="const-day-${teacher.id}" class="text-xs border border-slate-300 rounded p-1.5 bg-white text-slate-700">${dayOpts}</select>
-                            <select id="const-period-${teacher.id}" class="text-xs border border-slate-300 rounded p-1.5 bg-white text-slate-700">${periodOpts}</select>
-                            <button onclick="window.addConstraint('${teacher.id}')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2.5 py-1.5 rounded text-xs font-medium transition whitespace-nowrap">
-                                <i class="fas fa-plus text-xs mr-1 text-slate-500"></i> Block Slot
+                        <div class="flex flex-wrap gap-2 items-center bg-slate-50 p-1.5 rounded-lg border border-slate-200">
+                            <select id="const-day-${teacher.id}" class="text-xs border border-slate-300 rounded p-1 bg-white text-slate-700">${dayOpts}</select>
+                            <select id="const-period-${teacher.id}" class="text-xs border border-slate-300 rounded p-1 bg-white text-slate-700">${periodOpts}</select>
+                            <button onclick="window.addConstraint('${teacher.id}')" class="bg-slate-200 hover:bg-slate-300 text-slate-700 px-2 py-1 rounded text-xs font-medium whitespace-nowrap">
+                                <i class="fas fa-plus text-[10px] mr-1"></i> Block
                             </button>
                         </div>
                     </div>
@@ -759,92 +862,163 @@
             });
         }
 
-        // Classes / Subjects Management
-        function updateTeacherDropdown() {
-            const sel = document.getElementById('new-class-teacher');
-            sel.innerHTML = '';
-            appState.teachers.forEach(t => {
-                const opt = document.createElement('option');
-                opt.value = t.id;
-                opt.innerText = t.name;
-                sel.appendChild(opt);
+        // Allotment Management with Full Edit
+        function updateDropdowns() {
+            // College Selects
+            ['new-class-inst', 'edit-allotment-inst'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.options[0].text = appState.institutions[0];
+                    el.options[0].value = appState.institutions[0];
+                    el.options[1].text = appState.institutions[1];
+                    el.options[1].value = appState.institutions[1];
+                }
             });
-            
-            const instSel = document.getElementById('new-class-inst');
-            instSel.options[0].text = appState.institutions[0];
-            instSel.options[1].text = appState.institutions[1];
 
-            // Teacher filter in timetable
-            const teacherFilter = document.getElementById('teacher-filter');
-            if(teacherFilter) {
-                teacherFilter.innerHTML = '<option value="all">All Teachers</option>';
-                appState.teachers.forEach(t => {
-                    const opt = document.createElement('option');
-                    opt.value = t.id;
-                    opt.innerText = t.name;
-                    teacherFilter.appendChild(opt);
-                });
-            }
+            // Class/Batch Selects
+            ['new-class-batch', 'edit-allotment-batch'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.innerHTML = '';
+                    appState.classesList.forEach(cls => {
+                        const opt = document.createElement('option');
+                        opt.value = cls;
+                        opt.innerText = cls;
+                        el.appendChild(opt);
+                    });
+                }
+            });
+
+            // Teacher Selects
+            ['new-class-teacher', 'edit-allotment-teacher'].forEach(id => {
+                const el = document.getElementById(id);
+                if(el) {
+                    el.innerHTML = '';
+                    appState.teachers.forEach(t => {
+                        const opt = document.createElement('option');
+                        opt.value = t.id;
+                        opt.innerText = `${t.name} (${t.shortName})`;
+                        el.appendChild(opt);
+                    });
+                }
+            });
+
+            document.getElementById('classes-list-input').value = appState.classesList.join(', ');
         }
 
-        function addClass() {
-            const instIndex = parseInt(document.getElementById('new-class-inst').value);
+        function addAllotment() {
+            const college = document.getElementById('new-class-inst').value;
+            const batch = document.getElementById('new-class-batch').value;
             const subject = document.getElementById('new-class-subject').value.trim();
             const teacherId = document.getElementById('new-class-teacher').value;
             const hours = parseInt(document.getElementById('new-class-hours').value);
 
-            if (!subject) { showAlert("Required", "Please specify subject name."); return; }
-            if (!teacherId) { showAlert("Required", "Please select a teacher. Register teachers first."); return; }
-            if (isNaN(hours) || hours <= 0) { showAlert("Error", "Hours must be greater than zero."); return; }
+            if(!subject) { showAlert("Required", "Please enter subject name."); return; }
+            if(!teacherId) { showAlert("Required", "Please select a faculty member. Add teachers first."); return; }
+            if(isNaN(hours) || hours <= 0) { showAlert("Error", "Hours must be greater than zero."); return; }
 
             appState.classes.push({
                 id: generateId(),
-                instIndex,
-                subject,
-                teacherId,
-                hours
+                college: college,
+                className: batch,
+                subject: subject,
+                teacherId: teacherId,
+                hours: hours
             });
 
             document.getElementById('new-class-subject').value = '';
-            renderClassesList();
+            renderAllotmentsList();
             saveToCloud();
         }
 
-        function deleteClass(id) {
+        function deleteAllotment(id) {
             appState.classes = appState.classes.filter(c => c.id !== id);
-            renderClassesList();
+            renderAllotmentsList();
             saveToCloud();
         }
 
-        function renderClassesList() {
+        function openEditAllotmentModal(id) {
+            const item = appState.classes.find(c => c.id === id);
+            if(!item) return;
+
+            document.getElementById('edit-allotment-id').value = item.id;
+            document.getElementById('edit-allotment-inst').value = item.college;
+            document.getElementById('edit-allotment-batch').value = item.className;
+            document.getElementById('edit-allotment-subject').value = item.subject;
+            document.getElementById('edit-allotment-teacher').value = item.teacherId;
+            document.getElementById('edit-allotment-hours').value = item.hours;
+
+            const modal = document.getElementById('edit-allotment-modal');
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+
+        function closeEditAllotmentModal() {
+            const modal = document.getElementById('edit-allotment-modal');
+            modal.classList.add('hidden');
+            modal.classList.remove('flex');
+        }
+
+        function saveEditedAllotment() {
+            const id = document.getElementById('edit-allotment-id').value;
+            const item = appState.classes.find(c => c.id === id);
+            if(!item) return;
+
+            const college = document.getElementById('edit-allotment-inst').value;
+            const batch = document.getElementById('edit-allotment-batch').value;
+            const subject = document.getElementById('edit-allotment-subject').value.trim();
+            const teacherId = document.getElementById('edit-allotment-teacher').value;
+            const hours = parseInt(document.getElementById('edit-allotment-hours').value);
+
+            if(!subject) { showAlert("Required", "Subject name cannot be empty."); return; }
+            if(isNaN(hours) || hours <= 0) { showAlert("Invalid", "Hours must be greater than zero."); return; }
+
+            item.college = college;
+            item.className = batch;
+            item.subject = subject;
+            item.teacherId = teacherId;
+            item.hours = hours;
+
+            closeEditAllotmentModal();
+            renderAllotmentsList();
+            saveToCloud();
+            showToast("Allotment Updated", "Subject allocation modified successfully.");
+        }
+
+        function renderAllotmentsList() {
             const tbody = document.getElementById('classes-list');
             const countBadge = document.getElementById('allotment-count-badge');
             countBadge.innerText = `${appState.classes.length} Allotments`;
             tbody.innerHTML = '';
-            
+
             if(appState.classes.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="px-6 py-6 text-center text-slate-400 italic text-sm">No subjects assigned yet. Use the form above to add subjects.</td></tr>';
+                tbody.innerHTML = '<tr><td colspan="6" class="px-6 py-6 text-center text-slate-400 italic text-sm">No subjects allocated yet. Use the form above to add allocations.</td></tr>';
                 return;
             }
 
             appState.classes.forEach(c => {
                 const teacher = appState.teachers.find(t => t.id === c.teacherId);
                 const tr = document.createElement('tr');
-                const isWafy = c.instIndex === 0;
-                
+                const isWafy = c.college === appState.institutions[0];
+
                 tr.innerHTML = `
-                    <td class="px-6 py-3.5 whitespace-nowrap text-xs font-semibold">
+                    <td class="px-5 py-3 whitespace-nowrap text-xs font-semibold">
                         <span class="inline-flex items-center px-2 py-0.5 rounded-full ${isWafy ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'}">
-                            ${appState.institutions[c.instIndex]}
+                            ${c.college}
                         </span>
                     </td>
-                    <td class="px-6 py-3.5 whitespace-nowrap text-sm font-medium text-slate-800">${c.subject}</td>
-                    <td class="px-6 py-3.5 whitespace-nowrap text-sm text-slate-600">
-                        <i class="fas fa-user-tie text-slate-400 text-xs mr-1"></i> ${teacher ? teacher.name : 'Unknown'}
+                    <td class="px-5 py-3 whitespace-nowrap text-xs font-medium text-slate-700">${c.className || 'General'}</td>
+                    <td class="px-5 py-3 whitespace-nowrap text-sm font-semibold text-slate-800">${c.subject}</td>
+                    <td class="px-5 py-3 whitespace-nowrap text-xs text-slate-600">
+                        <span class="font-bold text-slate-700">${teacher ? teacher.name : 'Unknown'}</span>
+                        <span class="ml-1 bg-slate-100 text-slate-600 px-1.5 py-0.5 rounded text-[10px] font-mono">${teacher ? teacher.shortName : ''}</span>
                     </td>
-                    <td class="px-6 py-3.5 whitespace-nowrap text-xs text-center font-bold text-slate-700">${c.hours}</td>
-                    <td class="px-6 py-3.5 whitespace-nowrap text-right text-xs">
-                        <button onclick="window.deleteClass('${c.id}')" class="text-slate-400 hover:text-red-600 transition" title="Delete">
+                    <td class="px-5 py-3 whitespace-nowrap text-xs text-center font-bold text-slate-700">${c.hours}</td>
+                    <td class="px-5 py-3 whitespace-nowrap text-right text-xs space-x-1">
+                        <button onclick="window.openEditAllotmentModal('${c.id}')" class="text-emerald-600 hover:text-emerald-800 p-1" title="Edit Allotment">
+                            <i class="fas fa-edit"></i>
+                        </button>
+                        <button onclick="window.deleteAllotment('${c.id}')" class="text-slate-400 hover:text-red-600 p-1" title="Delete">
                             <i class="fas fa-trash-alt"></i>
                         </button>
                     </td>
@@ -853,31 +1027,31 @@
             });
         }
 
-        function updateViewSelectorLabels() {
-            const viewSel = document.getElementById('view-selector');
-            if(viewSel && viewSel.options.length > 2) {
-                viewSel.options[0].text = `Combined View (${appState.institutions.join(' & ')})`;
-                viewSel.options[1].text = `${appState.institutions[0]} Only`;
-                viewSel.options[2].text = `${appState.institutions[1]} Only`;
-            }
-        }
-
         function updateUI() {
             document.getElementById('inst1-name').value = appState.institutions[0];
             document.getElementById('inst2-name').value = appState.institutions[1];
             document.getElementById('days-count').value = appState.days;
             document.getElementById('periods-count').value = appState.periods;
             document.getElementById('enable-travel-buffer').checked = appState.enableTravelBuffer;
-            
-            updateTeacherDropdown();
-            updateViewSelectorLabels();
-            renderClassesList();
+            updateDropdowns();
+            renderTeachersList();
+            renderAllotmentsList();
         }
 
-        // Timetable Generation Engine
+        // Reset Active Year
+        function resetYearData() {
+            if(confirm(`Reset data for academic year ${currentYear} to default templates?`)) {
+                loadInitialTemplates();
+                updateUI();
+                saveToCloud();
+                showAlert("Reset", `Data for ${currentYear} reset to default.`);
+            }
+        }
+
+        // Timetable Scheduling Engine
         function generateTimetable() {
             if(appState.classes.length === 0) {
-                showAlert("Notice", "Please assign subjects and teachers before generating the timetable.");
+                showAlert("Notice", "Please add subject allocations before generating timetable.");
                 return;
             }
 
@@ -886,69 +1060,64 @@
                 <div class="p-12 text-center">
                     <i class="fas fa-circle-notch fa-spin text-4xl text-emerald-600 mb-3"></i>
                     <p class="text-sm font-semibold text-slate-700">Computing optimal schedule...</p>
-                    <p class="text-xs text-slate-400 mt-1">Resolving faculty clashes and travel buffers across ${appState.institutions.join(' and ')}</p>
+                    <p class="text-xs text-slate-400 mt-1">Analyzing cross-campus teacher clashes & travel buffers for ${currentYear}</p>
                 </div>
             `;
             document.getElementById('generation-messages').classList.add('hidden');
-            document.getElementById('messages-list').innerHTML = '';
 
-            setTimeout(runGenerationAlgorithm, 120);
+            setTimeout(runMultiClassAlgorithm, 150);
         }
 
-        function runGenerationAlgorithm() {
-            const { days, periods, teachers, classes, enableTravelBuffer } = appState;
-            
-            // Initialize schedule: [day][period][instIndex]
+        function runMultiClassAlgorithm() {
+            const { days, periods, teachers, classes, enableTravelBuffer, classesList, institutions } = appState;
+
+            // Schedule structure: schedule[day][period][className] = slotObject
             let schedule = Array(days).fill(null).map(() => 
-                Array(periods).fill(null).map(() => [null, null])
+                Array(periods).fill(null).map(() => ({}))
             );
-            
-            let issues = [];
+
             let slotsToSchedule = [];
-            
             classes.forEach(c => {
-                for(let i = 0; i < c.hours; i++) {
+                for(let i=0; i<c.hours; i++) {
                     slotsToSchedule.push({...c});
                 }
             });
-            
-            // Heuristic sort: faculty with highest constraints & larger hour commitments first
+
+            // Sort slots: Hardest constraints first
             slotsToSchedule.sort((a, b) => {
-                const tA = teachers.find(t => t.id === a.teacherId);
-                const tB = teachers.find(t => t.id === b.teacherId);
-                const cScoreA = (tA ? tA.constraints.length * 3 : 0) + a.hours;
-                const cScoreB = (tB ? tB.constraints.length * 3 : 0) + b.hours;
-                return cScoreB - cScoreA;
+                const tA = teachers.find(t=>t.id===a.teacherId);
+                const tB = teachers.find(t=>t.id===b.teacherId);
+                const scoreA = (tA ? tA.constraints.length * 3 : 0) + a.hours;
+                const scoreB = (tB ? tB.constraints.length * 3 : 0) + b.hours;
+                return scoreB - scoreA;
             });
 
             let unscheduled = [];
 
             for(let slot of slotsToSchedule) {
                 let placed = false;
-                
-                // Shuffle days order to distribute evenly
                 let dayOrder = Array.from({length: days}, (_, i) => i).sort(() => Math.random() - 0.5);
-                
+
                 for(let d of dayOrder) {
                     if(placed) break;
-                    
-                    // Count how many times this subject is already placed today in this institution
-                    let subjectTodayCount = 0;
-                    for(let p = 0; p < periods; p++) {
-                        const existing = schedule[d][p][slot.instIndex];
-                        if(existing && existing.subject === slot.subject) subjectTodayCount++;
+
+                    // Avoid same subject more than twice in same class in a single day
+                    let subjectDayCount = 0;
+                    for(let p=0; p<periods; p++) {
+                        const s = schedule[d][p][slot.className];
+                        if(s && s.subject === slot.subject) subjectDayCount++;
                     }
-                    if(subjectTodayCount >= 2) continue; // avoid more than 2 periods of same subject per day
+                    if(subjectDayCount >= 2) continue;
 
                     let periodOrder = Array.from({length: periods}, (_, i) => i).sort(() => Math.random() - 0.5);
-                    
+
                     for(let p of periodOrder) {
-                        // Slot occupied?
-                        if(schedule[d][p][slot.instIndex] !== null) continue;
-                        
+                        // 1. Is this class already occupied in this period?
+                        if(schedule[d][p][slot.className]) continue;
+
                         const teacher = teachers.find(t => t.id === slot.teacherId);
-                        
-                        // Check teacher unavailability
+
+                        // 2. Is teacher unavailable at this day/period?
                         let isUnavailable = false;
                         if(teacher) {
                             isUnavailable = teacher.constraints.some(c => 
@@ -957,235 +1126,429 @@
                         }
                         if(isUnavailable) continue;
 
-                        // Check simultaneous clash in the other institution
-                        const otherInstIndex = slot.instIndex === 0 ? 1 : 0;
-                        const otherClassSameTime = schedule[d][p][otherInstIndex];
-                        if (otherClassSameTime && otherClassSameTime.teacherId === slot.teacherId) {
-                            continue;
+                        // 3. Is teacher already teaching ANY other class at this exact period?
+                        let teacherBusy = false;
+                        for(let cls in schedule[d][p]) {
+                            if(schedule[d][p][cls] && schedule[d][p][cls].teacherId === slot.teacherId) {
+                                teacherBusy = true;
+                                break;
+                            }
                         }
+                        if(teacherBusy) continue;
 
-                        // Check travel buffer (if enabled)
+                        // 4. Campus Travel Buffer
                         if(enableTravelBuffer) {
                             let travelClash = false;
-                            if (p > 0) {
-                                const prevClass = schedule[d][p-1][otherInstIndex];
-                                if(prevClass && prevClass.teacherId === slot.teacherId) travelClash = true;
-                            }
-                            if (p < periods - 1) {
-                                const nextClass = schedule[d][p+1][otherInstIndex];
-                                if(nextClass && nextClass.teacherId === slot.teacherId) travelClash = true;
+                            const checkPeriodForOtherCollege = (pIndex) => {
+                                if(pIndex < 0 || pIndex >= periods) return false;
+                                for(let cls in schedule[d][pIndex]) {
+                                    const assigned = schedule[d][pIndex][cls];
+                                    if(assigned && assigned.teacherId === slot.teacherId && assigned.college !== slot.college) {
+                                        return true;
+                                    }
+                                }
+                                return false;
+                            };
+                            if(checkPeriodForOtherCollege(p - 1) || checkPeriodForOtherCollege(p + 1)) {
+                                travelClash = true;
                             }
                             if(travelClash) continue;
                         }
 
-                        // Success: allocate
-                        schedule[d][p][slot.instIndex] = slot;
+                        // Place successfully
+                        schedule[d][p][slot.className] = slot;
                         placed = true;
                         break;
                     }
                 }
-                
+
                 if(!placed) {
                     unscheduled.push(slot);
                 }
             }
 
             appState.timetable = schedule;
-            
+
             if(unscheduled.length > 0) {
                 let counts = {};
                 unscheduled.forEach(u => {
-                    const instName = appState.institutions[u.instIndex];
-                    const key = `${u.subject} (${instName})`;
+                    const key = `${u.subject} (${u.className} - ${u.college})`;
                     counts[key] = (counts[key] || 0) + 1;
                 });
+                let issues = [];
                 for(let item in counts) {
-                    issues.push(`Could not accommodate ${counts[item]} hour(s) of <b>${item}</b> due to tight constraints or period limits.`);
+                    issues.push(`Could not place ${counts[item]} hr(s) of <b>${item}</b> due to tight constraints or period limits.`);
                 }
-                
                 const msgBox = document.getElementById('generation-messages');
-                const msgList = document.getElementById('messages-list');
-                msgList.innerHTML = issues.map(i => `<li>${i}</li>`).join('');
+                document.getElementById('messages-list').innerHTML = issues.map(i=>`<li>${i}</li>`).join('');
                 msgBox.classList.remove('hidden');
             }
 
             renderTimetable();
-            saveToCloud(); // Automatically sync generated schedule to cloud!
+            saveToCloud();
+        }
+
+        // VIEW & PRINT ENGINE (Teacher / Class / College)
+        function setTimetableViewMode(mode) {
+            timetableViewMode = mode;
+            ['teacher', 'class', 'college'].forEach(m => {
+                const btn = document.getElementById(`mode-btn-${m}`);
+                if(m === mode) {
+                    btn.className = "px-3 py-1.5 rounded-md transition bg-white text-emerald-800 shadow-sm font-bold";
+                } else {
+                    btn.className = "px-3 py-1.5 rounded-md transition text-slate-600 hover:text-slate-900";
+                }
+            });
+            renderSubFilters();
+            renderTimetable();
+        }
+
+        function renderSubFilters() {
+            const container = document.getElementById('sub-filter-container');
+            container.innerHTML = '';
+
+            if(timetableViewMode === 'teacher') {
+                container.innerHTML = `
+                    <label class="text-slate-500 mr-1 font-medium">Faculty:</label>
+                    <select id="teacher-view-filter" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer">
+                        <option value="all">-- All Teachers Summary --</option>
+                        ${appState.teachers.map(t=>`<option value="${t.id}">${t.name} (${t.shortName})</option>`).join('')}
+                    </select>
+                `;
+            } else if(timetableViewMode === 'class') {
+                container.innerHTML = `
+                    <label class="text-slate-500 mr-1 font-medium">Class:</label>
+                    <select id="class-view-filter" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer">
+                        ${appState.classesList.map(cls=>`<option value="${cls}">${cls}</option>`).join('')}
+                    </select>
+                `;
+            } else {
+                container.innerHTML = `
+                    <label class="text-slate-500 mr-1 font-medium">College:</label>
+                    <select id="college-view-filter" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer">
+                        <option value="combined">Combined (Both Colleges)</option>
+                        <option value="${appState.institutions[0]}">${appState.institutions[0]} Only</option>
+                        <option value="${appState.institutions[1]}">${appState.institutions[1]} Only</option>
+                    </select>
+                `;
+            }
         }
 
         function renderTimetable() {
             if(!appState.timetable) return;
-            
-            const viewMode = document.getElementById('view-selector').value;
+
             const container = document.getElementById('timetable-container');
-            const teacherFilterWrap = document.getElementById('teacher-filter-wrap');
             const { days, periods, timetable } = appState;
-            
-            if(viewMode === 'teacher') {
-                teacherFilterWrap.classList.remove('hidden');
+
+            if(timetableViewMode === 'teacher') {
+                renderTeacherTimetable(container, days, periods, timetable);
+            } else if(timetableViewMode === 'class') {
+                renderClassTimetable(container, days, periods, timetable);
             } else {
-                teacherFilterWrap.classList.add('hidden');
+                renderCollegeTimetable(container, days, periods, timetable);
+            }
+        }
+
+        // 1. TEACHER TIMETABLE VIEW & PRINT
+        function renderTeacherTimetable(container, days, periods, timetable) {
+            const filterEl = document.getElementById('teacher-view-filter');
+            const selectedTeacherId = filterEl ? filterEl.value : 'all';
+
+            const teachersToRender = selectedTeacherId === 'all' ? 
+                appState.teachers : 
+                appState.teachers.filter(t => t.id === selectedTeacherId);
+
+            if(teachersToRender.length === 0) {
+                container.innerHTML = '<div class="p-8 text-center text-slate-400">No teacher selected or available.</div>';
+                return;
             }
 
-            const selectedTeacherId = document.getElementById('teacher-filter')?.value || 'all';
+            let html = '';
+            teachersToRender.forEach(teacher => {
+                html += `
+                    <div class="mb-8 border border-slate-200 rounded-xl overflow-hidden shadow-sm page-break-inside-avoid">
+                        <div class="bg-slate-100 p-3 flex justify-between items-center border-b border-slate-200">
+                            <div>
+                                <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
+                                    <span class="w-6 h-6 rounded bg-emerald-600 text-white flex items-center justify-center text-xs font-mono font-bold">${teacher.shortName}</span>
+                                    ${teacher.name}
+                                </h3>
+                                <p class="text-[11px] text-slate-500">Weekly Faculty Schedule • Academic Year ${currentYear}</p>
+                            </div>
+                            <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium">Faculty Timetable</span>
+                        </div>
 
-            let html = '<table class="min-w-full divide-y divide-slate-200 border-collapse border border-slate-200 text-center">';
-            
-            // Table Header
-            html += '<thead class="bg-slate-100 text-slate-700"><tr>';
-            html += '<th class="px-4 py-3 border border-slate-200 text-left text-xs font-bold uppercase tracking-wider w-28 bg-slate-200/60">Day</th>';
-            if(viewMode === 'combined') {
-                html += '<th class="px-2 py-3 border border-slate-200 text-xs font-bold uppercase tracking-wider w-24 bg-slate-200/60">Institution</th>';
-            }
-            for(let p=0; p<periods; p++) {
-                html += `<th class="px-3 py-3 border border-slate-200 text-xs font-bold uppercase tracking-wider bg-slate-100">Period ${p+1}</th>`;
-            }
-            html += '</tr></thead><tbody class="bg-white divide-y divide-slate-200">';
-            
-            for(let d=0; d<days; d++) {
-                let rowsForDay = 1;
-                if(viewMode === 'combined') rowsForDay = 2;
+                        <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
+                            <thead class="bg-slate-50 text-slate-600 text-xs font-semibold">
+                                <tr>
+                                    <th class="px-3 py-2.5 border border-slate-200 text-left w-24">Day</th>
+                                    ${Array.from({length: periods}, (_, i) => `<th class="px-2 py-2.5 border border-slate-200">Period ${i+1}</th>`).join('')}
+                                </tr>
+                            </thead>
+                            <tbody class="divide-y divide-slate-200 text-xs bg-white">
+                `;
 
-                for(let r=0; r<rowsForDay; r++) {
-                    let instIdx = viewMode === 'combined' ? r : (viewMode === 'inst0' ? 0 : 1);
-                    
+                for(let d=0; d<days; d++) {
                     html += `<tr>`;
-                    if(r === 0) {
-                        html += `<td rowspan="${rowsForDay}" class="px-3 py-4 border border-slate-200 font-bold bg-slate-50 text-slate-800 text-sm align-middle">${dayNames[d]}</td>`;
-                    }
+                    html += `<td class="px-3 py-2.5 border border-slate-200 font-bold bg-slate-50 text-slate-700 text-left">${dayNames[d]}</td>`;
 
-                    if(viewMode === 'combined') {
-                        const instTag = instIdx === 0 ? 
-                            `<span class="text-xs font-bold text-emerald-800 bg-emerald-100 px-2 py-0.5 rounded">${appState.institutions[0]}</span>` :
-                            `<span class="text-xs font-bold text-purple-800 bg-purple-100 px-2 py-0.5 rounded">${appState.institutions[1]}</span>`;
-                        html += `<td class="px-2 py-3 border border-slate-200 text-xs align-middle bg-slate-50/50">${instTag}</td>`;
-                    }
-                    
                     for(let p=0; p<periods; p++) {
-                        let cellData = timetable[d][p][instIdx];
-                        
-                        // If teacher filter active
-                        if(viewMode === 'teacher' && selectedTeacherId !== 'all') {
-                            if(cellData && cellData.teacherId !== selectedTeacherId) {
-                                cellData = null;
+                        let assignedSlot = null;
+                        for(let cls in timetable[d][p]) {
+                            const slot = timetable[d][p][cls];
+                            if(slot && slot.teacherId === teacher.id) {
+                                assignedSlot = slot;
+                                break;
                             }
                         }
 
-                        let cellClass = "border border-slate-200 p-2 period-cell text-xs relative";
-                        let bgClass = "bg-white";
-                        let content = `<span class="text-slate-300 text-[11px] italic font-light">Free</span>`;
-                        
-                        if(cellData) {
-                            const teacher = appState.teachers.find(t => t.id === cellData.teacherId);
-                            const tName = teacher ? teacher.name : '';
-                            bgClass = instIdx === 0 ? "bg-emerald-50/90 text-emerald-950" : "bg-purple-50/90 text-purple-950";
-                            
-                            content = `
-                                <div class="font-bold text-slate-900 text-xs mb-1">${cellData.subject}</div>
-                                <div class="text-[11px] text-slate-600 flex items-center justify-center gap-1">
-                                    <i class="fas fa-user-tie text-[10px] text-slate-400"></i> ${tName}
-                                </div>
+                        if(assignedSlot) {
+                            const isWafy = assignedSlot.college === appState.institutions[0];
+                            const bg = isWafy ? 'bg-emerald-50 text-emerald-950' : 'bg-purple-50 text-purple-950';
+                            const tag = isWafy ? 'bg-emerald-200 text-emerald-800' : 'bg-purple-200 text-purple-800';
+
+                            html += `
+                                <td class="border border-slate-200 p-2 period-cell ${bg}">
+                                    <div class="font-bold text-xs">${assignedSlot.subject}</div>
+                                    <div class="text-[10px] text-slate-600 font-medium">${assignedSlot.className}</div>
+                                    <span class="inline-block text-[9px] px-1.5 py-0.2 rounded font-semibold mt-1 ${tag}">${assignedSlot.college}</span>
+                                </td>
                             `;
-                            
-                            if(viewMode !== 'combined') {
-                                const tagColor = instIdx === 0 ? 'bg-emerald-200 text-emerald-800' : 'bg-purple-200 text-purple-800';
-                                content += `<div class="absolute top-1 right-1 text-[9px] px-1 rounded ${tagColor}">${appState.institutions[instIdx]}</div>`;
-                            }
+                        } else {
+                            html += `<td class="border border-slate-200 p-2 text-slate-300 italic text-[11px]">-</td>`;
                         }
-                        
-                        html += `<td class="${cellClass} ${bgClass}">${content}</td>`;
                     }
                     html += `</tr>`;
                 }
-            }
-            
-            html += '</tbody></table>';
+
+                html += `</tbody></table></div>`;
+            });
+
             container.innerHTML = html;
         }
 
-        // Export Timetable to CSV
-        function exportToCSV() {
-            if(!appState.timetable) {
-                showAlert("Notice", "No timetable generated yet to export.");
+        // 2. CLASS TIMETABLE VIEW & PRINT
+        function renderClassTimetable(container, days, periods, timetable) {
+            const filterEl = document.getElementById('class-view-filter');
+            const targetClass = filterEl ? filterEl.value : appState.classesList[0];
+
+            if(!targetClass) {
+                container.innerHTML = '<div class="p-8 text-center text-slate-400">No class selected.</div>';
                 return;
             }
-            const { days, periods, timetable } = appState;
-            let csv = ["Day,Institution," + Array.from({length: periods}, (_, i) => `Period ${i+1}`).join(',')];
+
+            let html = `
+                <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-slate-100 p-3.5 flex justify-between items-center border-b border-slate-200">
+                        <div>
+                            <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+                                <i class="fas fa-graduation-cap text-emerald-600"></i> ${targetClass} Timetable
+                            </h3>
+                            <p class="text-xs text-slate-500">Academic Schedule • Year ${currentYear}</p>
+                        </div>
+                        <span class="bg-blue-100 text-blue-800 text-xs px-2.5 py-1 rounded font-semibold">Class Noticeboard</span>
+                    </div>
+
+                    <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
+                        <thead class="bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider">
+                            <tr>
+                                <th class="px-4 py-3 border border-slate-200 text-left w-28 bg-slate-100">Day</th>
+                                ${Array.from({length: periods}, (_, i) => `<th class="px-3 py-3 border border-slate-200 bg-slate-50">Period ${i+1}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-xs bg-white">
+            `;
 
             for(let d=0; d<days; d++) {
-                for(let inst=0; inst<2; inst++) {
-                    let row = [`"${dayNames[d]}"`, `"${appState.institutions[inst]}"`];
+                html += `<tr>`;
+                html += `<td class="px-4 py-3 border border-slate-200 font-bold bg-slate-50 text-slate-800 text-left">${dayNames[d]}</td>`;
+
+                for(let p=0; p<periods; p++) {
+                    const slot = timetable[d][p][targetClass];
+                    if(slot) {
+                        const teacher = appState.teachers.find(t=>t.id === slot.teacherId);
+                        const isWafy = slot.college === appState.institutions[0];
+                        const bg = isWafy ? 'bg-emerald-50/90 text-emerald-950' : 'bg-purple-50/90 text-purple-950';
+
+                        html += `
+                            <td class="border border-slate-200 p-2.5 period-cell ${bg}">
+                                <div class="font-bold text-xs mb-1 text-slate-900">${slot.subject}</div>
+                                <div class="text-[11px] text-slate-600 flex items-center justify-center gap-1">
+                                    <i class="fas fa-user-tie text-[9px] text-slate-400"></i>
+                                    <span>${teacher ? teacher.name : 'Unknown'}</span>
+                                    <span class="bg-white border border-slate-200 text-[10px] px-1 rounded font-mono font-bold">${teacher ? teacher.shortName : ''}</span>
+                                </div>
+                            </td>
+                        `;
+                    } else {
+                        html += `<td class="border border-slate-200 p-2 text-slate-300 italic text-[11px]">Free</td>`;
+                    }
+                }
+                html += `</tr>`;
+            }
+
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        // 3. COLLEGE / MASTER TIMETABLE VIEW
+        function renderCollegeTimetable(container, days, periods, timetable) {
+            const filterEl = document.getElementById('college-view-filter');
+            const targetCollege = filterEl ? filterEl.value : 'combined';
+
+            let classesToShow = appState.classesList;
+            if(targetCollege !== 'combined') {
+                classesToShow = classesToShow.filter(cls => {
+                    return appState.classes.some(c => c.className === cls && c.college === targetCollege);
+                });
+                if(classesToShow.length === 0) classesToShow = appState.classesList;
+            }
+
+            let html = `
+                <div class="border border-slate-200 rounded-xl overflow-hidden shadow-sm">
+                    <div class="bg-slate-100 p-3.5 flex justify-between items-center border-b border-slate-200">
+                        <div>
+                            <h3 class="font-bold text-base text-slate-800 flex items-center gap-2">
+                                <i class="fas fa-university text-emerald-600"></i> Master Academic Schedule
+                            </h3>
+                            <p class="text-xs text-slate-500">${targetCollege === 'combined' ? 'Combined Institutional Master' : targetCollege + ' Campus'} • Year ${currentYear}</p>
+                        </div>
+                        <span class="bg-emerald-100 text-emerald-800 text-xs px-2.5 py-1 rounded font-semibold">Master Sheet</span>
+                    </div>
+
+                    <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
+                        <thead class="bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider">
+                            <tr>
+                                <th class="px-3 py-3 border border-slate-200 text-left w-24 bg-slate-100">Day</th>
+                                <th class="px-3 py-3 border border-slate-200 text-left w-32 bg-slate-100">Class</th>
+                                ${Array.from({length: periods}, (_, i) => `<th class="px-2 py-3 border border-slate-200 bg-slate-50">P ${i+1}</th>`).join('')}
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-200 text-xs bg-white">
+            `;
+
+            for(let d=0; d<days; d++) {
+                classesToShow.forEach((cls, rIdx) => {
+                    html += `<tr>`;
+                    if(rIdx === 0) {
+                        html += `<td rowspan="${classesToShow.length}" class="px-3 py-4 border border-slate-200 font-bold bg-slate-50 text-slate-800 text-left align-middle">${dayNames[d]}</td>`;
+                    }
+
+                    html += `<td class="px-3 py-2 border border-slate-200 font-semibold text-slate-700 text-left bg-slate-50/50">${cls}</td>`;
+
                     for(let p=0; p<periods; p++) {
-                        let c = timetable[d][p][inst];
-                        if(c) {
-                            const t = appState.teachers.find(tch => tch.id === c.teacherId);
-                            row.push(`"${c.subject} (${t ? t.name : ''})"`);
+                        const slot = timetable[d][p][cls];
+                        if(slot) {
+                            const teacher = appState.teachers.find(t=>t.id === slot.teacherId);
+                            const isWafy = slot.college === appState.institutions[0];
+                            const bg = isWafy ? 'bg-emerald-50 text-emerald-950' : 'bg-purple-50 text-purple-950';
+
+                            html += `
+                                <td class="border border-slate-200 p-1.5 period-cell ${bg}">
+                                    <div class="font-bold text-[11px]">${slot.subject}</div>
+                                    <span class="inline-block bg-white/80 border border-slate-200 font-mono font-bold text-[9px] px-1 rounded text-slate-700 mt-0.5">${teacher ? teacher.shortName : ''}</span>
+                                </td>
+                            `;
+                        } else {
+                            html += `<td class="border border-slate-200 p-1.5 text-slate-300 text-[10px]">-</td>`;
+                        }
+                    }
+                    html += `</tr>`;
+                });
+            }
+
+            html += `</tbody></table></div>`;
+            container.innerHTML = html;
+        }
+
+        // Export to CSV
+        function exportToCSV() {
+            if(!appState.timetable) { showAlert("Notice", "No timetable generated to export."); return; }
+            const { days, periods, timetable, classesList } = appState;
+            let csv = ["Academic Year," + currentYear];
+            csv.push("Day,Class," + Array.from({length: periods}, (_, i) => `Period ${i+1}`).join(','));
+
+            for(let d=0; d<days; d++) {
+                classesList.forEach(cls => {
+                    let row = [`"${dayNames[d]}"`, `"${cls}"`];
+                    for(let p=0; p<periods; p++) {
+                        const slot = timetable[d][p][cls];
+                        if(slot) {
+                            const t = appState.teachers.find(tch => tch.id === slot.teacherId);
+                            row.push(`"${slot.subject} (${t ? t.shortName : ''})"`);
                         } else {
                             row.push('"Free"');
                         }
                     }
                     csv.push(row.join(','));
-                }
+                });
             }
 
             const blob = new Blob([csv.join('\n')], { type: 'text/csv' });
             const url = URL.createObjectURL(blob);
             const a = document.createElement('a');
             a.href = url;
-            a.download = `WAFY_WAFIYYA_TIMETABLE_${new Date().toISOString().slice(0,10)}.csv`;
+            a.download = `WAFY_WAFIYYA_${currentYear}_TIMETABLE.csv`;
             a.click();
             URL.revokeObjectURL(url);
         }
 
-        // Load Default Templates
+        // Default Initial Templates
         function loadInitialTemplates() {
             appState.institutions = ["Wafy", "Wafiyya"];
             appState.days = 5;
             appState.periods = 6;
             appState.enableTravelBuffer = true;
-            
+            appState.classesList = ["Wafy Prep", "Wafy Thanawiyya", "Wafiyya Prep", "Wafiyya Thanawiyya"];
+
             appState.teachers = [
-                { id: 't1', name: 'Usthad Abdul Rahman', constraints: [{day: 0, period: 0}] },
-                { id: 't2', name: 'Prof. Maya', constraints: [] },
-                { id: 't3', name: 'Usthad Shareef', constraints: [{day: 4, period: 'all'}] },
-                { id: 't4', name: 'Dr. Zameel', constraints: [] },
-                { id: 't5', name: 'Usthad Anwar', constraints: [{day: 1, period: 5}] }
+                { id: 't1', name: 'Usthad Abdul Rahman', shortName: 'AR', constraints: [{day: 0, period: 0}] },
+                { id: 't2', name: 'Prof. Maya', shortName: 'MY', constraints: [] },
+                { id: 't3', name: 'Usthad Shareef', shortName: 'SF', constraints: [{day: 4, period: 'all'}] },
+                { id: 't4', name: 'Dr. Zameel', shortName: 'ZM', constraints: [] },
+                { id: 't5', name: 'Usthad Anwar', shortName: 'AN', constraints: [{day: 1, period: 5}] }
             ];
-            
+
             appState.classes = [
-                { id: 'c1', instIndex: 0, subject: 'Fiqh', teacherId: 't1', hours: 4 },
-                { id: 'c2', instIndex: 1, subject: 'Fiqh', teacherId: 't1', hours: 3 },
-                { id: 'c3', instIndex: 0, subject: 'Tafseer', teacherId: 't2', hours: 4 },
-                { id: 'c4', instIndex: 1, subject: 'Tafseer', teacherId: 't2', hours: 4 },
-                { id: 'c5', instIndex: 0, subject: 'Arabic Literature', teacherId: 't3', hours: 4 },
-                { id: 'c6', instIndex: 1, subject: 'Nahw & Balagha', teacherId: 't3', hours: 3 },
-                { id: 'c7', instIndex: 0, subject: 'English', teacherId: 't4', hours: 3 },
-                { id: 'c8', instIndex: 1, subject: 'English', teacherId: 't4', hours: 3 },
-                { id: 'c9', instIndex: 0, subject: 'Hadith Studies', teacherId: 't5', hours: 4 },
-                { id: 'c10', instIndex: 1, subject: 'Hadith Studies', teacherId: 't5', hours: 3 }
+                { id: 'c1', college: 'Wafy', className: 'Wafy Prep', subject: 'Fiqh', teacherId: 't1', hours: 4 },
+                { id: 'c2', college: 'Wafiyya', className: 'Wafiyya Prep', subject: 'Fiqh', teacherId: 't1', hours: 3 },
+                { id: 'c3', college: 'Wafy', className: 'Wafy Thanawiyya', subject: 'Tafseer', teacherId: 't2', hours: 4 },
+                { id: 'c4', college: 'Wafiyya', className: 'Wafiyya Thanawiyya', subject: 'Tafseer', teacherId: 't2', hours: 4 },
+                { id: 'c5', college: 'Wafy', className: 'Wafy Prep', subject: 'Arabic Literature', teacherId: 't3', hours: 4 },
+                { id: 'c6', college: 'Wafiyya', className: 'Wafiyya Prep', subject: 'Nahw & Balagha', teacherId: 't3', hours: 3 },
+                { id: 'c7', college: 'Wafy', className: 'Wafy Thanawiyya', subject: 'English', teacherId: 't4', hours: 3 },
+                { id: 'c8', college: 'Wafiyya', className: 'Wafiyya Thanawiyya', subject: 'English', teacherId: 't4', hours: 3 },
+                { id: 'c9', college: 'Wafy', className: 'Wafy Prep', subject: 'Hadith Studies', teacherId: 't5', hours: 4 },
+                { id: 'c10', college: 'Wafiyya', className: 'Wafiyya Thanawiyya', subject: 'Hadith Studies', teacherId: 't5', hours: 3 }
             ];
         }
 
-        // Attach global handlers to window for HTML attributes
+        // Expose functions to window
         window.switchTab = switchTab;
+        window.switchAcademicYear = switchAcademicYear;
+        window.openNewYearModal = openNewYearModal;
+        window.closeNewYearModal = closeNewYearModal;
+        window.confirmNewAcademicYear = confirmNewAcademicYear;
         window.addTeacher = addTeacher;
         window.deleteTeacher = deleteTeacher;
         window.addConstraint = addConstraint;
         window.removeConstraint = removeConstraint;
-        window.addClass = addClass;
-        window.deleteClass = deleteClass;
+        window.addAllotment = addAllotment;
+        window.deleteAllotment = deleteAllotment;
+        window.openEditAllotmentModal = openEditAllotmentModal;
+        window.closeEditAllotmentModal = closeEditAllotmentModal;
+        window.saveEditedAllotment = saveEditedAllotment;
         window.generateTimetable = generateTimetable;
+        window.setTimetableViewMode = setTimetableViewMode;
         window.renderTimetable = renderTimetable;
         window.exportToCSV = exportToCSV;
         window.saveToCloud = saveToCloud;
-        window.resetData = resetData;
+        window.resetYearData = resetYearData;
         window.closeAlert = closeAlert;
 
-        // Start initialization
         window.addEventListener('DOMContentLoaded', () => {
-            loadDatabase();
+            initSystem();
         });
-
     </script>
 </body>
 </html>
