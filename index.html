@@ -4057,6 +4057,13 @@
         }
 
         // Faculty Management
+        function escapeHtml(str) {
+            if (!str) return '';
+            const div = document.createElement('div');
+            div.textContent = str;
+            return div.innerHTML;
+        }
+
         function openEditTeacherModal(teacherId) {
             if (!isAdminLoggedIn) {
                 if (typeof openAdminLoginModal === 'function') openAdminLoginModal();
@@ -4657,12 +4664,12 @@
 
             if (!appState.teachers || appState.teachers.length === 0) {
                 container.innerHTML = `
-                    <div class="p-12 text-center">
+                    <div class="p-10 text-center">
                         <div class="w-14 h-14 mx-auto mb-3 rounded-2xl bg-slate-100 text-slate-400 flex items-center justify-center text-2xl">
                             <i class="fas fa-chalkboard-teacher"></i>
                         </div>
                         <h3 class="text-base font-bold text-slate-700">No Faculty Registered Yet</h3>
-                        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">Use the "Add Faculty Member" form above to register teachers and assign unique short codes.</p>
+                        <p class="text-xs text-slate-500 max-w-sm mx-auto mt-1">Use the "Add Faculty Member" form above to register teachers with unique short codes.</p>
                     </div>
                 `;
                 return;
@@ -4670,140 +4677,140 @@
 
             let filteredTeachers = appState.teachers;
             if (filterText) {
-                filteredTeachers = appState.teachers.filter(t => 
-                    (t.name || '').toLowerCase().includes(filterText) ||
-                    (t.shortName || '').toLowerCase().includes(filterText)
-                );
+                filteredTeachers = appState.teachers.filter(function(t) {
+                    return (t.name || '').toLowerCase().indexOf(filterText) !== -1 ||
+                           (t.shortName || '').toLowerCase().indexOf(filterText) !== -1;
+                });
             }
 
             if (filteredTeachers.length === 0) {
-                container.innerHTML = `
-                    <div class="p-8 text-center text-slate-400 italic text-sm">
-                        No faculty members match "<strong>${escapeHtml(filterText)}</strong>".
-                    </div>
-                `;
+                container.innerHTML = '<div class="p-8 text-center text-slate-400 italic text-sm">No faculty members match your search.</div>';
                 return;
             }
 
-            const dayOpts = Array.from({length: appState.days}, (_, i) => `<option value="${i}">${dayNamesEn[i] || ('Day ' + (i+1))}</option>`).join('');
+            var dayOpts = '';
+            for (var di = 0; di < appState.days; di++) {
+                dayOpts += '<option value="' + di + '">' + (dayNamesEn[di] || ('Day ' + (di+1))) + '</option>';
+            }
 
-            filteredTeachers.forEach(teacher => {
-                // Calculate assigned subjects and workload
-                const assignedClasses = (appState.classes || []).filter(c => c.teacherId === teacher.id);
-                const totalHours = assignedClasses.reduce((sum, c) => sum + (Number(c.hours) || 0), 0);
+            filteredTeachers.forEach(function(teacher) {
+                // Calculate assigned subjects and workload from allotments
+                var assignedClasses = [];
+                if (appState.classes && appState.classes.length) {
+                    for (var ci = 0; ci < appState.classes.length; ci++) {
+                        if (appState.classes[ci].teacherId === teacher.id) {
+                            assignedClasses.push(appState.classes[ci]);
+                        }
+                    }
+                }
+                var totalHours = 0;
+                for (var hi = 0; hi < assignedClasses.length; hi++) {
+                    totalHours += (Number(assignedClasses[hi].hours) || 0);
+                }
                 
                 // Determine campus affiliation
-                const colleges = [...new Set(assignedClasses.map(c => c.college).filter(Boolean))];
-                let campusBadge = '';
+                var collegeSet = {};
+                for (var ki = 0; ki < assignedClasses.length; ki++) {
+                    if (assignedClasses[ki].college) collegeSet[assignedClasses[ki].college] = true;
+                }
+                var colleges = Object.keys(collegeSet);
+
+                var campusBadge = '';
                 if (colleges.length > 1) {
-                    campusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"><i class="fas fa-university text-[9px]"></i> Dual Campus (Wafy & Wafiyya)</span>`;
+                    campusBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-indigo-50 text-indigo-700 border border-indigo-200"><i class="fas fa-university text-[9px]"></i> Both Campuses</span>';
                 } else if (colleges.length === 1) {
-                    const isKKHM = colleges[0].includes('KKHM') || colleges[0].includes('WAFY )');
+                    var isKKHM = colleges[0].indexOf('KKHM') !== -1 || colleges[0].indexOf('WAFY )') !== -1;
                     if (isKKHM) {
-                        campusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fas fa-university text-[9px]"></i> KKHM Wafy</span>`;
+                        campusBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-emerald-50 text-emerald-700 border border-emerald-200"><i class="fas fa-university text-[9px]"></i> KKHM Wafy</span>';
                     } else {
-                        campusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200"><i class="fas fa-graduation-cap text-[9px]"></i> Al-Gaith Wafiyya</span>`;
+                        campusBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold bg-purple-50 text-purple-700 border border-purple-200"><i class="fas fa-graduation-cap text-[9px]"></i> Al-Gaith Wafiyya</span>';
                     }
                 } else {
-                    campusBadge = `<span class="inline-flex items-center gap-1 px-2.5 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200"><i class="fas fa-info-circle text-[9px]"></i> Unallotted</span>`;
+                    campusBadge = '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-medium bg-slate-100 text-slate-500 border border-slate-200"><i class="fas fa-minus-circle text-[9px]"></i> Not Allotted</span>';
                 }
 
                 // Assigned classes chips
-                let classesHtml = '';
+                var classChipsHtml = '';
                 if (assignedClasses.length > 0) {
-                    classesHtml = assignedClasses.map(c => {
-                        const isWafy = (c.college || '').includes('KKHM') || (c.college || '').includes('WAFY )');
-                        const badgeColor = isWafy 
-                            ? 'bg-emerald-50 text-emerald-800 border-emerald-200' 
-                            : 'bg-purple-50 text-purple-800 border-purple-200';
-                        return `
-                            <div class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-xl text-xs border ${badgeColor} shadow-2xs">
-                                <span class="font-bold">${c.subject || 'Subject'}</span>
-                                <span class="text-[10px] opacity-75">• ${c.className || ''}</span>
-                                <span class="font-bold text-[10px] bg-white/80 px-1.5 py-0.2 rounded border border-current ml-0.5">${c.hours || 0}h/wk</span>
-                            </div>
-                        `;
-                    }).join('');
+                    for (var aci = 0; aci < assignedClasses.length; aci++) {
+                        var ac = assignedClasses[aci];
+                        var isW = (ac.college || '').indexOf('KKHM') !== -1 || (ac.college || '').indexOf('WAFY )') !== -1;
+                        var chipColor = isW ? 'bg-emerald-50 text-emerald-800 border-emerald-200' : 'bg-purple-50 text-purple-800 border-purple-200';
+                        classChipsHtml += '<span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[11px] border ' + chipColor + '">';
+                        classChipsHtml += '<strong>' + (ac.subject || 'Subject') + '</strong>';
+                        classChipsHtml += ' <span class="opacity-60">•</span> ' + (ac.className || '');
+                        classChipsHtml += ' <span class="font-bold bg-white/70 px-1 rounded text-[10px]">' + (ac.hours || 0) + 'h</span>';
+                        classChipsHtml += '</span>';
+                    }
                 } else {
-                    classesHtml = `<span class="text-xs text-slate-400 italic">No teaching periods allotted yet (Assign subjects in Allotments tab)</span>`;
+                    classChipsHtml = '<span class="text-[11px] text-slate-400 italic">No subjects allotted yet</span>';
                 }
 
-                const div = document.createElement('div');
-                div.className = "p-4 sm:p-5 hover:bg-slate-50/60 transition space-y-4";
-                div.innerHTML = `
-                    <!-- Teacher Header Row -->
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-extrabold text-sm shadow-sm ring-2 ring-emerald-200/50">
-                                ${teacher.shortName || 'T'}
-                            </div>
-                            <div>
-                                <div class="flex items-center flex-wrap gap-2">
-                                    <h3 class="text-base font-bold text-slate-900">${teacher.name}</h3>
-                                    <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-xs font-mono font-extrabold bg-slate-900 text-white shadow-2xs">
-                                        <i class="fas fa-tag text-[9px] text-amber-400"></i> ${teacher.shortName}
-                                    </span>
-                                    ${campusBadge}
-                                </div>
-                                <div class="text-xs text-slate-500 mt-0.5 flex items-center gap-3">
-                                    <span><strong class="text-slate-700 font-bold">${totalHours}</strong> periods/week assigned</span>
-                                    <span>•</span>
-                                    <span><strong class="text-slate-700 font-bold">${assignedClasses.length}</strong> subject allotments</span>
-                                </div>
-                            </div>
-                        </div>
+                // Admin action buttons
+                var actionBtns = '';
+                if (isAdminLoggedIn) {
+                    actionBtns = '<div class="flex items-center gap-1.5 shrink-0">' +
+                        '<button onclick="window.openEditTeacherModal(\'' + teacher.id + '\')" class="text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 px-2.5 py-1.5 rounded-xl text-[11px] font-bold flex items-center gap-1 transition" title="Edit Name / Code">' +
+                            '<i class="fas fa-user-edit"></i> Edit' +
+                        '</button>' +
+                        '<button onclick="window.deleteTeacher(\'' + teacher.id + '\')" class="text-rose-600 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 border border-rose-200 px-2 py-1.5 rounded-xl text-[11px] font-semibold flex items-center gap-1 transition" title="Delete">' +
+                            '<i class="fas fa-trash-alt"></i>' +
+                        '</button>' +
+                    '</div>';
+                }
 
-                        <div class="flex items-center gap-2 self-end sm:self-center">
-                            <span class="text-xs font-bold px-2.5 py-1 rounded-xl bg-slate-100 text-slate-700 border border-slate-200">
-                                <i class="fas fa-clock text-slate-500 mr-1"></i> ${totalHours} hrs/wk
-                            </span>
-                            ${isAdminLoggedIn ? `
-                            <button onclick="window.openEditTeacherModal('${teacher.id}')" class="text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/90 px-2.5 py-1.5 rounded-xl transition text-xs font-bold flex items-center gap-1.5 shadow-2xs" title="Edit Teacher Name and Code">
-                                <i class="fas fa-user-edit text-emerald-600"></i> <span>Edit</span>
-                            </button>
-                            <button onclick="window.deleteTeacher('${teacher.id}')" class="text-rose-600 hover:text-rose-800 bg-rose-50/70 hover:bg-rose-100 border border-rose-200/90 px-2.5 py-1.5 rounded-xl transition text-xs font-semibold flex items-center gap-1.5 shadow-2xs" title="Delete Faculty Member">
-                                <i class="fas fa-trash-alt text-rose-500"></i> <span class="hidden md:inline">Delete</span>
-                            </button>` : ''}
-                        </div>
-                    </div>
+                var div = document.createElement('div');
+                div.className = 'p-3.5 sm:p-4 hover:bg-slate-50/60 transition';
 
-                    <!-- Detailed Grid: Assigned Subjects & Availability Constraints -->
-                    <div class="grid grid-cols-1 lg:grid-cols-12 gap-3 pt-2 border-t border-slate-100">
-                        <!-- Assigned Subjects Column -->
-                        <div class="lg:col-span-6 bg-slate-50/80 rounded-xl p-3 border border-slate-200/80">
-                            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-600 mb-2 flex items-center justify-between">
-                                <span class="flex items-center gap-1.5"><i class="fas fa-book-open text-emerald-600"></i> Assigned Subjects & Classes</span>
-                                <span class="text-[10px] text-slate-500 font-normal">${assignedClasses.length} classes</span>
-                            </div>
-                            <div class="flex flex-wrap gap-1.5">
-                                ${classesHtml}
-                            </div>
-                        </div>
+                div.innerHTML = '' +
+                    '<div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2.5 mb-2.5">' +
+                        '<div class="flex items-center gap-2.5 min-w-0">' +
+                            '<div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-700 text-white flex items-center justify-center font-extrabold text-xs shadow-sm shrink-0">' +
+                                (teacher.shortName || 'T') +
+                            '</div>' +
+                            '<div class="min-w-0">' +
+                                '<div class="flex items-center flex-wrap gap-1.5">' +
+                                    '<h3 class="text-sm font-bold text-slate-900 truncate">' + teacher.name + '</h3>' +
+                                    '<span class="inline-flex items-center gap-0.5 px-1.5 py-0.5 rounded text-[11px] font-mono font-extrabold bg-slate-800 text-white">' +
+                                        '<i class="fas fa-tag text-[8px] text-amber-400"></i> ' + teacher.shortName +
+                                    '</span>' +
+                                    campusBadge +
+                                '</div>' +
+                                '<div class="text-[11px] text-slate-500 mt-0.5">' +
+                                    '<strong class="text-slate-700">' + totalHours + '</strong> periods/week • ' +
+                                    '<strong class="text-slate-700">' + assignedClasses.length + '</strong> subjects' +
+                                '</div>' +
+                            '</div>' +
+                        '</div>' +
+                        actionBtns +
+                    '</div>' +
 
-                        <!-- Blocked Slots / Constraints Column -->
-                        <div class="lg:col-span-6 bg-slate-50/80 rounded-xl p-3 border border-slate-200/80 space-y-2">
-                            <div class="text-[11px] font-bold uppercase tracking-wider text-slate-600 flex items-center justify-between">
-                                <span class="flex items-center gap-1.5"><i class="fas fa-ban text-rose-500"></i> Blocked Slots / Availability</span>
-                                <span class="text-[10px] text-slate-500 font-normal">Constraints</span>
-                            </div>
-                            <div id="teacher-badges-${teacher.id}" class="flex flex-wrap gap-1"></div>
+                    // Assigned subjects chips row
+                    '<div class="ml-0 sm:ml-12 mb-2">' +
+                        '<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1"><i class="fas fa-book-open text-emerald-600 mr-1"></i>Subjects & Classes</div>' +
+                        '<div class="flex flex-wrap gap-1">' + classChipsHtml + '</div>' +
+                    '</div>' +
 
-                            ${isAdminLoggedIn ? `
-                            <div class="mt-2 pt-2 border-t border-slate-200/70">
-                                <div class="flex flex-wrap items-center gap-2 mb-2">
-                                    <label class="text-[11px] font-bold text-slate-700 flex items-center gap-1">
-                                        <i class="fas fa-calendar-day text-emerald-600"></i> Day:
-                                    </label>
-                                    <select id="const-day-${teacher.id}" onchange="window.updateTeacherDayView('${teacher.id}', this.value)" class="text-xs font-bold border border-slate-300 rounded-lg py-1 px-2 bg-white text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none cursor-pointer">
-                                        ${dayOpts}
-                                    </select>
-                                    <span class="text-[10px] text-slate-500">Check periods to block for this teacher:</span>
-                                </div>
-                                <div id="day-periods-grid-${teacher.id}"></div>
-                            </div>` : ''}
-                        </div>
-                    </div>
-                `;
+                    // Blocked slots badges
+                    '<div class="ml-0 sm:ml-12">' +
+                        '<div class="text-[10px] font-bold uppercase tracking-wider text-slate-500 mb-1"><i class="fas fa-ban text-rose-500 mr-1"></i>Blocked Slots</div>' +
+                        '<div id="teacher-badges-' + teacher.id + '" class="flex flex-wrap gap-1"></div>' +
+                    '</div>' +
+
+                    // Admin constraint controls
+                    (isAdminLoggedIn ? (
+                        '<div class="ml-0 sm:ml-12 mt-2 bg-slate-50 p-2.5 rounded-xl border border-slate-200">' +
+                            '<div class="flex flex-wrap items-center gap-2 mb-1.5">' +
+                                '<label class="text-[11px] font-bold text-slate-700"><i class="fas fa-calendar-day text-emerald-600 mr-1"></i>Day:</label>' +
+                                '<select id="const-day-' + teacher.id + '" onchange="window.updateTeacherDayView(\'' + teacher.id + '\', this.value)" class="text-[11px] font-bold border border-slate-300 rounded-lg py-1 px-2 bg-white cursor-pointer">' +
+                                    dayOpts +
+                                '</select>' +
+                                '<span class="text-[10px] text-slate-500">Check periods to block:</span>' +
+                            '</div>' +
+                            '<div id="day-periods-grid-' + teacher.id + '"></div>' +
+                        '</div>'
+                    ) : '');
+
                 container.appendChild(div);
                 renderTeacherConstraintRow(teacher.id);
             });
