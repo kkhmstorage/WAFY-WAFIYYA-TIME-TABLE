@@ -7,82 +7,70 @@ A modern, institutional-grade academic scheduling, period delivery auditing, and
 
 ---
 
-## 🔒 Role-Based Access Control (Admin-Only Modifications & Public Read-Only Inspection)
+## 🔒 Role-Based Access Control & Dual Institution Administrators
 
-As strictly configured:
-- **Public Viewers (Students, Teachers, Class Leaders, Visitors)**:
-  - **Read-Only Access**: View live schedules, explore campus timetables, check faculty assignments, inspect daily 3:30 PM period audit statuses, view missed period ledgers, and view/print monthly & annual academic performance reports.
-  - **Strictly Protected**: Cannot add, modify, or delete any data. Add/Edit/Delete buttons, timetable generation algorithms, and audit submission actions are hidden or disabled for non-authenticated users.
-- **Administrators**:
-  - Full authenticated access via the **Admin Login** button (Username: `admin`, Password: `kkhmadmin123`).
-  - Permissions: Add/Edit/Delete Faculty and time-off constraints, Add/Edit/Delete Subject Allotments, Generate Timetables, Schedule Date-specific Special Timetables, Record/Approve daily 3:30 PM Period Audits, and configure Academic Years & Working Days.
+### 1. Dual Campus Administrator Accounts (Full Global Access)
+Two dedicated administrator credentials are provided for both institutions, with both holding overall administrative power across all sections and data:
+
+| Institution | Username | Password | Role & Authority |
+|---|---|---|---|
+| **KKHM ISLAMIC & ARTS COLLEGE ( WAFY )** | `admin_kkhm` | `kkhmadmin123` | **KKHM Campus Administrator** (Full overall access across both colleges) |
+| **AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)** | `admin_algaith` | `algaithadmin123` | **Al-Gaith Campus Administrator** (Full overall access across both colleges) |
+| **General Administration** | `admin` | `kkhmadmin123` | **Super Administrator** (Universal access fallback) |
+
+- **One-Click Quick Fill**: In the Admin Login dialog, administrators can click either campus badge to automatically populate their username and password.
+- **Full Privileges**: Either administrator can configure academic working days, add/edit/delete faculty, adjust timetable allocations, generate master schedules, record and approve daily 3:30 PM audits, and sync changes with the cloud.
+
+---
+
+### 2. Public Inspection Mode (View & Inspect Everything, Edit Restricted)
+In accordance with institutional guidelines:
+- **Full Visibility & Navigation**: Everyone (teachers, students, class leaders, public visitors) can freely view and inspect **all 8 portal sections**:
+  1. **Schedule & Timetable**: View Today's schedule, college-wise schedules, class-wise schedules, faculty schedules, and master matrix.
+  2. **3:30 PM Daily Period Audit**: Inspect date-wise daily audits, review conducted/missed periods, and print daily audit slips.
+  3. **Missed Periods Tracker**: Inspect missed period logs, filter by date/teacher/class, and export CSV.
+  4. **Special Timetable**: Inspect special exam/event timetables and print custom schedules.
+  5. **Academic Reports**: Inspect monthly summaries, annual working day statistics, and department completion rates.
+  6. **Config & Working Days**: Inspect total working days, periods per day, and period timings in read-only mode.
+  7. **Faculty & Codes**: Inspect faculty roster, teacher codes, subject specializations, and day constraints.
+  8. **Subject Allocations**: Inspect weekly hours and teacher allotments for every class across both colleges.
+- **Strict Modification Protection**: Adding, editing, deleting, generating schedules, resetting data, and saving daily audits are securely reserved for logged-in Administrators. Public visitors see clear "Public Inspection Mode" notices and disabled edit controls.
 
 ---
 
 ## 🌟 Key Features & Capabilities
 
-### 1. Separate Timetables for Both Institutions
-- **KKHM ISLAMIC & ARTS COLLEGE ( WAFY )**:
-  - Dedicated weekly timetable for all Wafy batches (Wafy Prep, Wafy Thanawiyya, etc.).
-  - Emerald / Teal institutional theme with period timings and faculty assignments.
-  - One-click **Print Noticeboard** button formatted for campus bulletin boards.
-- **AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)**:
-  - Dedicated weekly timetable for all Wafiyya batches (Wafiyya Prep, Wafiyya Thanawiyya, etc.).
-  - Purple / Indigo institutional theme with period timings and faculty assignments.
-  - One-click **Print Noticeboard** button formatted for campus bulletin boards.
-- **Combined Institutional View (Both Campuses)**:
-  - Side-by-side / stacked view for academic leadership and shared faculty.
+### 1. Separate & Combined College Timetables
+- Under **Schedule & Timetable > By College**, dedicated switcher buttons allow immediate one-click toggling:
+  - **Both Campuses (Combined)**
+  - **KKHM ISLAMIC & ARTS COLLEGE ( WAFY )**
+  - **AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)**
+- Clean, institutional-themed schedules with distinct badges (Emerald for KKHM Wafy, Purple for Al-Gaith Wafiyya).
 
-### 2. Today's Live Active Schedule (Default Landing Screen)
-- Automatically opens to Today's schedule upon app launch.
-- Live clock indicator (**Ongoing Now**, Completed, Upcoming) based on real-time period timings.
-- Filter by Institution (`KKHM Wafy`, `AL-GAITH Wafiyya`, or `All`) and Class.
+### 2. Total Working Days Target & Progress
+- Configurable annual working days target (default: 200 days) displayed prominently in the sidebar widget and header.
+- Real-time tracking of conducted days, remaining days, and progress percentage.
 
-### 3. Total Working Days Configuration & Progress Bar
-- Institutional configuration for academic year working days (e.g., 200 days).
-- Real-time progress bar displayed on the sidebar and setup pages tracking Conducted vs Remaining working days.
+### 3. 3:30 PM Daily Period Delivery Audit
+- Formal daily reconciliation workflow where class leaders report conducted and missed periods at 3:30 PM.
+- Interactive status grid for all classes with Conducted (Green), Missed (Red), and Pending (Yellow) badges.
+- Printable Daily Audit Slip for signed office documentation.
 
-### 4. Daily 3:30 PM Period Audit System
-- Daily 3:30 PM accounting of conducted and missed lectures.
-- Public inspection mode allows viewing class submission status.
-- Admin-authenticated recording of period statuses (Conducted vs Missed) with categorized reasons (*Teacher on Leave*, *College Event*, *Special Prayer*, *Examination*, *Weather / Hartal*, *Other*).
-- Printable daily audit slips for administrative records.
+### 4. Missed Periods Tracker & Makeup Scheduler
+- Centralized tracking for periods missed due to teacher absence, college events, or holidays.
+- Track reasons, remarks, and compensation statuses with export to CSV.
 
-### 5. Missed Periods Tracker & Action Center
-- Real-time ledger of unconducted lectures across both institutions.
-- Search and filter by Institution, Class, Faculty Member, and Status (*Pending* vs *Compensated*).
-- One-click action for Admins to schedule make-up lectures directly into a Special Timetable.
-- CSV export for academic reviews.
+### 5. Special Timetables & Event Rescheduling
+- Create custom temporary schedules for special exam days, sports events, or makeup classes without altering the master weekly timetable.
 
-### 6. Special Timetable Engine (Date-Specific Swaps & Make-ups)
-- Schedule date-specific timetables without altering the regular master schedule:
-  - **Day Swap**: Follows another weekday's timetable.
-  - **Custom Make-up**: Configure custom class lectures or import missed periods.
-
-### 7. Monthly & Annual Academic Audit Reports
-- Executive performance reporting for leadership and inspection bodies:
-  - Total Scheduled vs Conducted vs Missed periods
-  - Syllabus Delivery Rate percentage
-  - Institutional Performance breakdown
-  - Faculty workload delivery ledger
-  - Official signature lines for Class Leader, Academic In-Charge, and Principal / Dean.
-  - Print-ready format and CSV export.
+### 6. Monthly & Annual Academic Reports
+- Comprehensive statistical reports with total periods scheduled, periods conducted, missed counts, and completion percentages.
+- Detailed class-wise and faculty-wise breakdown tables with print and CSV export.
 
 ---
 
-## 💻 Technical Architecture
-- **Language**: 100% Modern English.
-- **Frontend**: HTML5, Vanilla JavaScript (ES Modules), Tailwind CSS, FontAwesome 6, Google Fonts (Inter).
-- **Cloud Database**: Google Firebase Cloud Firestore v11.6.1 (`timetable_system` collection).
-- **Local Fallback**: LocalStorage caching for offline resilience.
-
----
-
-## 🚀 Getting Started
-
-1. Open `index.html` in any modern web browser.
-2. By default, the application is in **Public Viewer (Read-Only)** mode.
-3. To access administrative controls:
-   - Click **Admin Login** in the top navigation bar.
-   - Username: `admin`
-   - Password: `kkhmadmin123`
+## 🛠️ Technology Stack
+- **Frontend**: Vanilla JavaScript (ES Modules), HTML5, Tailwind CSS
+- **Icons**: FontAwesome 6 Free
+- **Database**: Google Cloud Firebase Firestore
+- **Deployment**: GitHub Pages
