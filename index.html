@@ -1197,6 +1197,57 @@
         </div>
     </div>
 
+    <!-- EDIT TEACHER MODAL -->
+    <div id="edit-teacher-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                        <i class="fas fa-user-edit"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Edit Faculty Details</h3>
+                        <p class="text-[11px] text-slate-500">Update teacher name and unique short code</p>
+                    </div>
+                </div>
+                <button onclick="window.closeEditTeacherModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <input type="hidden" id="edit-teacher-id">
+            
+            <div class="space-y-3 text-xs">
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1">Teacher Full Name / Title</label>
+                    <input type="text" id="edit-teacher-name" oninput="window.validateEditTeacherCodeInput()" placeholder="e.g. Usthad Abdul Rahman" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+                <div>
+                    <label class="block font-semibold text-slate-700 mb-1 flex items-center justify-between">
+                        <span>Short Code (Unique)</span>
+                        <span class="text-[10px] text-slate-400 font-normal">2-5 letters</span>
+                    </label>
+                    <input type="text" id="edit-teacher-short" oninput="window.validateEditTeacherCodeInput()" placeholder="e.g. AR" maxlength="6" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs uppercase font-mono font-bold focus:ring-2 focus:ring-emerald-500 outline-none">
+                </div>
+
+                <!-- Duplicate Code Warning in Edit Modal -->
+                <div id="edit-teacher-code-warning-box" class="hidden p-3 bg-rose-50 border border-rose-300 rounded-xl text-xs text-rose-800 shadow-sm">
+                    <div class="flex items-start gap-2">
+                        <i class="fas fa-exclamation-triangle text-rose-600 mt-0.5 shrink-0"></i>
+                        <div id="edit-teacher-code-warning-text" class="text-[11px] leading-relaxed"></div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mt-5 flex justify-end gap-2">
+                <button onclick="window.closeEditTeacherModal()" class="px-3.5 py-2 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-xl transition">Cancel</button>
+                <button id="btn-save-edit-teacher" onclick="window.saveEditedTeacher()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-semibold px-4 py-2 rounded-xl transition shadow flex items-center gap-1.5">
+                    <i class="fas fa-check"></i> Save Changes
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- EDIT ALLOTMENT MODAL -->
     <div id="edit-allotment-modal" class="fixed inset-0 bg-slate-900/50 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
         <div class="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
@@ -4006,6 +4057,155 @@
         }
 
         // Faculty Management
+        function openEditTeacherModal(teacherId) {
+            if (!isAdminLoggedIn) {
+                if (typeof openAdminLoginModal === 'function') openAdminLoginModal();
+                return;
+            }
+            const teacher = (appState.teachers || []).find(t => t.id === teacherId);
+            if (!teacher) {
+                showAlert("Error", "Faculty member not found.");
+                return;
+            }
+
+            document.getElementById('edit-teacher-id').value = teacher.id;
+            document.getElementById('edit-teacher-name').value = teacher.name || '';
+            document.getElementById('edit-teacher-short').value = teacher.shortName || '';
+            
+            const warningBox = document.getElementById('edit-teacher-code-warning-box');
+            if (warningBox) warningBox.classList.add('hidden');
+            
+            const shortInput = document.getElementById('edit-teacher-short');
+            if (shortInput) shortInput.classList.remove('border-rose-500', 'bg-rose-50', 'text-rose-900', 'focus:ring-rose-500');
+
+            const saveBtn = document.getElementById('btn-save-edit-teacher');
+            if (saveBtn) {
+                saveBtn.disabled = false;
+                saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+            }
+
+            const modal = document.getElementById('edit-teacher-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeEditTeacherModal() {
+            const modal = document.getElementById('edit-teacher-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function validateEditTeacherCodeInput() {
+            const id = document.getElementById('edit-teacher-id').value;
+            const shortInput = document.getElementById('edit-teacher-short');
+            const nameInput = document.getElementById('edit-teacher-name');
+            const warningBox = document.getElementById('edit-teacher-code-warning-box');
+            const warningText = document.getElementById('edit-teacher-code-warning-text');
+            const saveBtn = document.getElementById('btn-save-edit-teacher');
+            if (!shortInput) return;
+
+            let code = shortInput.value.trim().toUpperCase();
+            shortInput.value = code;
+
+            if (!code) {
+                if (warningBox) warningBox.classList.add('hidden');
+                shortInput.classList.remove('border-rose-500', 'bg-rose-50', 'text-rose-900', 'focus:ring-rose-500');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+                return;
+            }
+
+            // Check if another teacher already has this code
+            const existing = (appState.teachers || []).find(t => t.id !== id && (t.shortName || '').trim().toUpperCase() === code);
+            if (existing) {
+                if (warningBox && warningText) {
+                    warningText.innerHTML = `
+                        <strong>Duplicate Code:</strong> Code "<strong>${code}</strong>" is already assigned to <strong>${existing.name}</strong>.<br>
+                        <span class="text-rose-700">⚠️ ഈ കോഡ് നിലവിൽ "${existing.name}" എന്ന അധ്യാപകന് നൽകിയിട്ടുള്ളതാണ്! ഒരേ കോഡ് ഒന്നിലധികം ആളുകൾക്ക് നൽകാൻ കഴിയില്ല.</span>
+                    `;
+                    warningBox.classList.remove('hidden');
+                }
+                shortInput.classList.add('border-rose-500', 'bg-rose-50', 'text-rose-900', 'focus:ring-rose-500');
+                if (saveBtn) {
+                    saveBtn.disabled = true;
+                    saveBtn.classList.add('opacity-50', 'cursor-not-allowed');
+                }
+            } else {
+                if (warningBox) warningBox.classList.add('hidden');
+                shortInput.classList.remove('border-rose-500', 'bg-rose-50', 'text-rose-900', 'focus:ring-rose-500');
+                if (saveBtn) {
+                    saveBtn.disabled = false;
+                    saveBtn.classList.remove('opacity-50', 'cursor-not-allowed');
+                }
+            }
+        }
+
+        function saveEditedTeacher() {
+            if (!isAdminLoggedIn) return;
+            const id = document.getElementById('edit-teacher-id').value;
+            const nameInput = document.getElementById('edit-teacher-name');
+            const shortInput = document.getElementById('edit-teacher-short');
+            const name = (nameInput ? nameInput.value : '').trim();
+            let short = (shortInput ? shortInput.value : '').trim().toUpperCase();
+
+            if (!name) {
+                showAlert("Required", "Please enter faculty member's name.");
+                return;
+            }
+            if (!short) {
+                short = name.split(' ').filter(Boolean).map(w => w[0]).join('').substring(0, 3).toUpperCase();
+            }
+
+            // Validate duplicate code among other teachers
+            const existingWithCode = (appState.teachers || []).find(t => t.id !== id && (t.shortName || '').trim().toUpperCase() === short);
+            if (existingWithCode) {
+                showAlert("Duplicate Code", `The code "${short}" is already assigned to "${existingWithCode.name}". Duplicate codes are not allowed.`);
+                validateEditTeacherCodeInput();
+                return;
+            }
+
+            // Find teacher and update
+            const teacher = (appState.teachers || []).find(t => t.id === id);
+            if (!teacher) {
+                showAlert("Error", "Teacher record not found.");
+                return;
+            }
+
+            const oldName = teacher.name;
+            const oldShort = teacher.shortName;
+
+            teacher.name = name;
+            teacher.shortName = short;
+
+            // Sync with active timetable if cells exist
+            if (appState.timetable && Array.isArray(appState.timetable)) {
+                appState.timetable.forEach(row => {
+                    if (Array.isArray(row)) {
+                        row.forEach(cell => {
+                            if (cell && cell.teacherId === id) {
+                                cell.teacherName = name;
+                                cell.teacherShort = short;
+                            }
+                        });
+                    }
+                });
+            }
+
+            closeEditTeacherModal();
+            renderTeachersList();
+            updateDropdowns();
+            if (typeof renderTimetable === 'function') renderTimetable();
+            saveToCloud();
+
+            showToast("Faculty Updated", `"${name}" (${short}) has been updated successfully.`);
+        }
+
         function validateTeacherCodeInput() {
             const shortInput = document.getElementById('new-teacher-short');
             const nameInput = document.getElementById('new-teacher-name');
@@ -4558,8 +4758,11 @@
                                 <i class="fas fa-clock text-slate-500 mr-1"></i> ${totalHours} hrs/wk
                             </span>
                             ${isAdminLoggedIn ? `
-                            <button onclick="window.deleteTeacher('${teacher.id}')" class="text-rose-600 hover:text-rose-800 hover:bg-rose-50 p-2 rounded-xl border border-transparent hover:border-rose-200 transition text-xs font-semibold flex items-center gap-1" title="Delete Faculty Member">
-                                <i class="fas fa-trash-alt"></i> <span class="hidden md:inline">Delete</span>
+                            <button onclick="window.openEditTeacherModal('${teacher.id}')" class="text-emerald-700 hover:text-emerald-900 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200/90 px-2.5 py-1.5 rounded-xl transition text-xs font-bold flex items-center gap-1.5 shadow-2xs" title="Edit Teacher Name and Code">
+                                <i class="fas fa-user-edit text-emerald-600"></i> <span>Edit</span>
+                            </button>
+                            <button onclick="window.deleteTeacher('${teacher.id}')" class="text-rose-600 hover:text-rose-800 bg-rose-50/70 hover:bg-rose-100 border border-rose-200/90 px-2.5 py-1.5 rounded-xl transition text-xs font-semibold flex items-center gap-1.5 shadow-2xs" title="Delete Faculty Member">
+                                <i class="fas fa-trash-alt text-rose-500"></i> <span class="hidden md:inline">Delete</span>
                             </button>` : ''}
                         </div>
                     </div>
@@ -4999,6 +5202,10 @@
         window.copyShareUrl = copyShareUrl;
         window.updatePeriodTiming = updatePeriodTiming;
         window.validateTeacherCodeInput = validateTeacherCodeInput;
+        window.openEditTeacherModal = openEditTeacherModal;
+        window.closeEditTeacherModal = closeEditTeacherModal;
+        window.validateEditTeacherCodeInput = validateEditTeacherCodeInput;
+        window.saveEditedTeacher = saveEditedTeacher;
         window.addTeacher = addTeacher;
         window.deleteTeacher = deleteTeacher;
         window.restoreTeacher = restoreTeacher;
