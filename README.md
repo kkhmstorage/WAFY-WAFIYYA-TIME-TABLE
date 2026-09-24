@@ -1,45 +1,51 @@
-# WAFY & WAFIYYA TIME TABLE
+﻿# WAFY & WAFIYYA TIME TABLE
 
 Coordinated Multi-College Academic Timetable & Faculty Management System for Wafy & Wafiyya Institutions.
 
-## 🚀 Key Features
+---
 
-### 1. Admin Authentication & Role Protection (അഡ്മിൻ സുരക്ഷ)
-- **Public View (Teachers & Students)**: View-only access to Teacher Timetables, Class Timetables, and Master Timetables. Printing and CSV export available. No editing or configuration tools are accessible.
-- **Admin Access**:
-  - Secure Login with Username and Password.
-  - **Default Credentials**:
-    - **Username**: `admin`
-    - **Password**: `kkhmadmin123`
-  - Admin Mode unlocks: Academic Configuration, Period Timings setup, Faculty registration & Short Names, Subject Allotments, In-place Editing, Schedule Generation, and Cloud Database Saving.
-  - Custom Admin Password change option.
+## 🚀 പ്രധാന സവിശേഷതകൾ (Key Features)
 
-### 2. Period Timings (പിരീഡ് സമയങ്ങൾ)
-- Each period displays its custom start and end time (e.g., `09:00 - 09:45`, `09:45 - 10:30`).
-- Configurable per period in the Admin Configuration tab.
-- Automatically included in Teacher Slips, Classroom Noticeboard sheets, and College Master prints.
+### 1. ഇന്നത്തെ ലൈവ് ഷെഡ്യൂൾ - ഫസ്റ്റ് ഇൻ്റർഫേസ് (Today's Active Schedule)
+- ആപ്പ് തുറക്കുമ്പോൾ ആദ്യം കാണുന്നത് **അന്നത്തെ ദിവസത്തെ ലൈവ് ഷെഡ്യൂളോ** അല്ലെങ്കിൽ ആ ദിവസത്തേക്ക് പ്രത്യേകം തയ്യാറാക്കിയ **സ്പെഷ്യൽ ടൈംടേബിളോ** ആയിരിക്കും.
+- ലൈവ് ഡിജിറ്റൽ ക്ലോക്കും നിലവിൽ നടക്കുന്ന പിരീഡിൻ്റെ സൂചികയും (Live Now).
+- ക്ലാസ് തിരിച്ചോ എല്ലാ ക്ലാസുകളും ഒരുമിച്ചോ കാണാനുള്ള ഫിൽട്ടർ.
 
-### 3. Public Sharing (ഷെയർ ചെയ്യാനുള്ള ലിങ്ക്)
-- One-click shareable Web URL:  
-  **`https://kkhmstorage.github.io/WAFY-WAFIYYA-TIME-TABLE/`**
-- Includes direct **"Share via WhatsApp"** button.
+### 2. ആകെ വർക്കിംഗ് ഡേയ്സ് (Total Working Days Tracking)
+- അഡ്മിൻ ക്രമീകരണത്തിൽ അധ്യയന വർഷത്തിലെ ആകെ പ്രവൃത്തി ദിനങ്ങൾ (Total Working Days - ഉദാ: 200) രേഖപ്പെടുത്താം.
+- ഇതുവരെ നടന്ന ദിനങ്ങളും (Conducted Days) ഇനി ബാക്കിയുള്ള ദിനങ്ങളും (Remaining Days) പ്രോഗ്രസ്സ് ബാറും തത്സമയം കാണാം.
 
-#### How to Enable GitHub Pages (1 minute setup):
-1. Open your GitHub Repository: [https://github.com/kkhmstorage/WAFY-WAFIYYA-TIME-TABLE](https://github.com/kkhmstorage/WAFY-WAFIYYA-TIME-TABLE)
-2. Click **Settings** (tab at the top).
-3. In the left sidebar, click **Pages**.
-4. Under **Build and deployment** -> **Branch**, select **`main`** and click **Save**.
-5. Within 1 minute, your site will be live at: `https://kkhmstorage.github.io/WAFY-WAFIYYA-TIME-TABLE/`!
+### 3. വൈകുന്നേരം 3:30 ന് ഡെയ്‌ലി പിരീഡ് കണക്കെടുപ്പ് (3:30 PM Daily Period Audit)
+- കോളേജിൽ എല്ലാ ദിവസവും 3.30 ന് ക്ലാസ് ലീഡേഴ്സ് ഓഫീസിൽ എത്തി അന്നത്തെ നടന്ന പിരീഡുകളും നടക്കാത്ത പിരീഡുകളും രേഖപ്പെടുത്തുന്നു.
+- ഒറ്റ ക്ലിക്കിൽ നടന്നു (Conducted) അല്ലെങ്കിൽ നടന്നില്ല (Missed) എന്ന് മാർക്ക് ചെയ്യാം.
+- നഷ്ടമായ പിരീഡുകൾക്ക് കാരണം (അധ്യാപകൻ അവധി, സ്ഥാപന പരിപാടി, പരീക്ഷ, മഴ/ഹർത്താൽ മുതലായവ) തിരഞ്ഞെടുക്കാം.
+- എല്ലാം നടന്നു ഒറ്റ ക്ലിക്ക് ഓപ്ഷനും ക്ലാസ് തിരിച്ചുള്ള സമർപ്പണ വിവരങ്ങളും ലഭ്യമാണ്.
 
-### 4. Multi-Academic Year Archive (അധ്യയന വർഷങ്ങൾ)
-- Switch between academic years (e.g. `2024-2025`, `2025-2026`, `2026-2027`) anytime.
-- Previous years' records remain preserved and viewable at any time.
+### 4. നഷ്ടമായ പിരീഡുകൾ (Missed Periods Tracker & Hub)
+- നഷ്ടപ്പെട്ട എല്ലാ പിരീഡുകളുടെയും കൃത്യമായ ലിസ്റ്റ്, തീയതി, ക്ലാസ്, വിഷയം, അധ്യാപകൻ, കാരണം എന്നിവ സഹിതം കാണാം.
+- പരിഹരിക്കാനുള്ളവ (Pending Make-up), തീർത്തു നൽകിയവ (Compensated) എന്നിവ എളുപ്പത്തിൽ ട്രാക്ക് ചെയ്യാം.
+- നഷ്ടമായ പിരീഡുകൾ സ്പെഷ്യൽ ടൈംടേബിളിലേക്ക് നേരിട്ട് ഉൾപ്പെടുത്താനുള്ള വൺ-ക്ലിക്ക് ബട്ടൺ.
 
-### 5. 3-Way View & Print Engine
-- 👨‍🏫 **By Teacher**: Weekly schedule per faculty with personalized print slips.
-- 🏫 **By Class**: Classroom noticeboard schedule with subject and faculty short codes.
-- 🏛️ **By College / Master**: Complete master timetable for Wafy, Wafiyya, or Combined.
+### 5. സ്പെഷ്യൽ ടൈംടേബിൾ (Special Timetable)
+- നിശ്ചിത തീയതികൾ വെച്ച് ഷെഡ്യൂൾ ചെയ്യാവുന്ന പ്രത്യേക ടൈംടേബിൾ:
+  - **ഡേ സ്വാപ്പ് (Day Swap)**: മറ്റൊരു ദിവസത്തെ (ഉദാ: തിങ്കൾ) മുഴുവൻ ടൈംടേബിളും ഈ തീയതിയിലേക്ക് (ഉദാ: ശനി) പകരം നൽകാം.
+  - **നഷ്ടപരിഹാര ഷെഡ്യൂൾ (Custom Make-up)**: നഷ്ടമായ പിരീഡുകൾ തിരഞ്ഞെടുത്ത് ക്രമീകരിക്കാം.
+- ആ തീയതി വരുമ്പോൾ ആപ്പ് തുറക്കുമ്പോൾ തനിയെ സ്പെഷ്യൽ ഷെഡ്യൂൾ ലൈവ് ആകും!
 
-### 6. Cloud Database (Firebase Firestore)
-- Real-time sync across all devices via Firestore.
-- Offline cache ensures zero downtime if internet is interrupted.
+### 6. മാസാവസാനവും വർഷാവസാനവും റിപ്പോർട്ടുകൾ (Monthly & Annual Reports)
+- **പ്രതിമാസ റിപ്പോർട്ട് (Monthly Report)** & **വാർഷിക റിപ്പോർട്ട് (Annual Report)**:
+  - ആകെ ഷെഡ്യൂൾ ചെയ്ത പിരീഡുകൾ, നടന്നവ, നഷ്ടമായവ, തീർത്തവ, ഹാജർ ശതമാനം (%).
+  - ക്ലാസ് തിരിച്ചുള്ള സമഗ്ര പെർഫോമൻസ് ടേബിൾ.
+  - അധ്യാപകരുടെ ക്ലാസ് ഹാജർ നിലവാരം (Faculty Delivery Audit).
+  - ഒഫീഷ്യൽ ലെറ്റർഹെഡ് മാതൃകയിലുള്ള പ്രിൻ്റ് ലേഔട്ടും CSV ഡൗൺലോഡും.
+
+### 7. അഡ്മിൻ സുരക്ഷ & ക്ലൗഡ് സിങ്ക് (Admin Security & Cloud Sync)
+- പൊതുജനങ്ങൾക്ക് (വിദ്യാർത്ഥികൾ, അധ്യാപകർ) വ്യൂ-ഒൺലി ആക്സസ്.
+- അഡ്മിൻ ലോഗിൻ വഴി ക്രമീകരണങ്ങളും ടൈംടേബിൾ ജനറേഷനും.
+- ഗൂഗിൾ ഫയർബേസ് (Firebase Firestore) വഴി എല്ലാ ഡിവൈസുകളിലും തത്സമയ ക്ലൗഡ് സിങ്ക്.
+
+---
+
+## 🌐 ഷെയർ ചെയ്യാനുള്ള ലിങ്ക് (Live Web URL)
+- **https://kkhmstorage.github.io/WAFY-WAFIYYA-TIME-TABLE/**
+- വാട്ട്സ്ആപ്പ് വഴി ഷെയർ ചെയ്യാനുള്ള ബട്ടൺ ആപ്പിൽ ലഭ്യമാണ്.
