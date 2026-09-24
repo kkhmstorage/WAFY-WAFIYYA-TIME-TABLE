@@ -36,12 +36,14 @@
             </div>
             <div class="min-w-0">
                 <div class="flex items-center gap-1.5 flex-wrap">
-                    <h1 class="text-sm sm:text-base md:text-xl font-black tracking-tight text-white whitespace-nowrap">
-                        WAFY & WAFIYYA
+                    <h1 class="text-xs sm:text-sm md:text-base font-black tracking-tight text-white whitespace-nowrap">
+                        KKHM (WAFY) & AL-GAITH (WAFIYYA)
                     </h1>
-                    <span id="role-badge" class="text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600 whitespace-nowrap">Public View</span>
+                    <span id="role-badge" class="text-[9px] sm:text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600 whitespace-nowrap">
+                        <i class="fas fa-lock text-[8px] mr-1"></i> Public Viewer (Read-Only)
+                    </span>
                 </div>
-                <p class="text-[10px] sm:text-xs text-emerald-200/80 truncate">Academic Timetable & Daily Period Audit Portal</p>
+                <p class="text-[9px] sm:text-[11px] text-emerald-200/80 truncate">Coordinated Academic Timetable & 3:30 PM Period Audit Directorate</p>
             </div>
         </div>
 
@@ -237,9 +239,10 @@
                 </div>
 
                 <!-- Printable Academic Header -->
-                <div class="hidden print:block text-center py-4 border-b border-slate-300">
-                    <h1 class="text-xl font-bold uppercase tracking-wider text-slate-900">KKHM ISLAMIC & ARTS COLLEGE</h1>
-                    <p class="text-xs text-slate-600" id="print-header-details">Wafy & Wafiyya Academic Schedule</p>
+                <div class="hidden print:block text-center py-4 border-b-2 border-slate-800">
+                    <h1 class="text-xl font-black uppercase tracking-wider text-slate-900">KKHM ISLAMIC & ARTS COLLEGE ( WAFY )</h1>
+                    <h2 class="text-lg font-bold uppercase tracking-wider text-purple-900">AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)</h2>
+                    <p class="text-xs text-slate-600 mt-1" id="print-header-details">Coordinated Academic Timetable • Academic Year 2026-2027</p>
                 </div>
 
                 <!-- Schedule Container -->
@@ -327,7 +330,7 @@
                         </div>
                         <div class="flex items-center gap-2 mt-1 sm:mt-0">
                             <span id="audit-schedule-type-badge" class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[11px]">Regular Timetable</span>
-                            <button onclick="window.markAllAuditPeriods(true)" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 transition">
+                            <button id="btn-audit-mark-all" onclick="window.markAllAuditPeriods(true)" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 transition hidden">
                                 <i class="fas fa-check-double"></i> Mark All as Conducted
                             </button>
                         </div>
@@ -352,13 +355,27 @@
                     </div>
 
                     <!-- Submit / Save Actions -->
-                    <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
-                        <div class="text-xs text-slate-500" id="audit-saved-status-text">
-                            <i class="fas fa-info-circle text-emerald-600"></i> Verify all period statuses before saving.
+                    <div id="audit-actions-wrapper" class="pt-2">
+                        <div id="audit-admin-save-container" class="hidden flex flex-wrap justify-between items-center gap-3">
+                            <div class="text-xs text-slate-500" id="audit-saved-status-text">
+                                <i class="fas fa-info-circle text-emerald-600 mr-1"></i> Verify all period statuses before saving.
+                            </div>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.saveClassAuditReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
+                                    <i class="fas fa-save"></i> Save Class Audit Report
+                                </button>
+                            </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <button onclick="window.saveClassAuditReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2">
-                                <i class="fas fa-save"></i> Save Class Audit Report
+                        <div id="audit-viewer-notice-container" class="bg-blue-50 border border-blue-200 text-blue-900 p-3 rounded-2xl flex flex-col sm:flex-row items-start sm:items-center justify-between text-xs gap-2">
+                            <div class="flex items-center gap-2">
+                                <i class="fas fa-eye text-blue-600 text-base"></i>
+                                <div>
+                                    <span class="font-bold">Public Inspection Mode (Read-Only):</span>
+                                    <span>Viewing today's audit status. Only authenticated administrators can record or update period audits.</span>
+                                </div>
+                            </div>
+                            <button onclick="window.openAdminLoginModal()" class="bg-blue-600 hover:bg-blue-700 text-white font-bold px-3 py-1.5 rounded-xl shadow-sm transition shrink-0">
+                                <i class="fas fa-lock mr-1"></i> Admin Login
                             </button>
                         </div>
                     </div>
@@ -686,11 +703,11 @@
                         </h3>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Institution 1 Name</label>
-                            <input type="text" id="inst1-name" value="Wafy" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <input type="text" id="inst1-name" value="KKHM ISLAMIC & ARTS COLLEGE ( WAFY )" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                         <div>
                             <label class="block text-xs font-medium text-slate-600 mb-1">Institution 2 Name</label>
-                            <input type="text" id="inst2-name" value="Wafiyya" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <input type="text" id="inst2-name" value="AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)" class="w-full border border-slate-300 rounded-xl p-2.5 text-sm focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
 
                         <div class="pt-2">
@@ -823,8 +840,8 @@
                         <div>
                             <label class="block text-xs font-medium text-slate-700 mb-1">Campus / College</label>
                             <select id="new-class-inst" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
-                                <option value="Wafy">Wafy</option>
-                                <option value="Wafiyya">Wafiyya</option>
+                                <option value="KKHM ISLAMIC & ARTS COLLEGE ( WAFY )">KKHM ISLAMIC & ARTS COLLEGE ( WAFY )</option>
+                                <option value="AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)">AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)</option>
                             </select>
                         </div>
                         <div>
@@ -1124,8 +1141,8 @@
                 <div>
                     <label class="block font-medium text-slate-700 mb-1">Campus / College</label>
                     <select id="edit-allotment-inst" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-white outline-none">
-                        <option value="Wafy">Wafy</option>
-                        <option value="Wafiyya">Wafiyya</option>
+                        <option value="KKHM ISLAMIC & ARTS COLLEGE ( WAFY )">KKHM ISLAMIC & ARTS COLLEGE ( WAFY )</option>
+                        <option value="AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)">AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)</option>
                     </select>
                 </div>
                 <div>
@@ -1262,8 +1279,13 @@
             password: "kkhmadmin123"
         };
 
+        let selectedCollegeTimetable = 'kkhm'; // 'kkhm' | 'algaith' | 'all'
+
         let appState = {
-            institutions: ["Wafy", "Wafiyya"],
+            institutions: [
+                "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )",
+                "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)"
+            ],
             days: 5,
             periods: 6,
             enableTravelBuffer: true,
@@ -1325,6 +1347,19 @@
             return dayName + ', ' + day + ' ' + monthName + ' ' + year;
         }
 
+        
+        function isWafyCollege(collegeStr) {
+            if (!collegeStr) return true;
+            const lower = collegeStr.toLowerCase();
+            return lower.includes('kkhm') || (lower.includes('wafy') && !lower.includes('wafiyya'));
+        }
+
+        function isWafiyyaCollege(collegeStr) {
+            if (!collegeStr) return false;
+            const lower = collegeStr.toLowerCase();
+            return lower.includes('al-gaith') || lower.includes('algaith') || lower.includes('wafiyya');
+        }
+
         // Authentication & Role Control
         function updateRoleUI() {
             const roleBadge = document.getElementById('role-badge');
@@ -1333,39 +1368,58 @@
             const loginBtn = document.getElementById('btn-admin-login');
             const loggedGroup = document.getElementById('admin-logged-group');
             const addYearBtn = document.getElementById('btn-add-year');
+            const createSpecialBtn = document.getElementById('btn-open-create-special');
 
             const mobSetup = document.getElementById('mob-tab-setup');
             const mobTeachers = document.getElementById('mob-tab-teachers');
             const mobClasses = document.getElementById('mob-tab-classes');
 
+            const auditAdminSave = document.getElementById('audit-admin-save-container');
+            const auditViewerNotice = document.getElementById('audit-viewer-notice-container');
+
             if (isAdminLoggedIn) {
                 if (roleBadge) {
-                    roleBadge.className = "text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40";
-                    roleBadge.innerHTML = '<i class="fas fa-crown text-[9px] mr-1"></i> Admin Mode';
+                    roleBadge.className = "text-[9px] sm:text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40 whitespace-nowrap shadow-sm";
+                    roleBadge.innerHTML = '<i class="fas fa-user-shield text-[9px] mr-1"></i> Admin (Full Access)';
                 }
                 if (adminNav) adminNav.classList.remove('hidden');
                 if (adminGen) adminGen.classList.remove('hidden');
                 if (loginBtn) loginBtn.classList.add('hidden');
                 if (loggedGroup) { loggedGroup.classList.remove('hidden'); loggedGroup.classList.add('flex'); }
                 if (addYearBtn) addYearBtn.classList.remove('hidden');
+                if (createSpecialBtn) createSpecialBtn.classList.remove('hidden');
                 if (mobSetup) mobSetup.classList.remove('hidden');
                 if (mobTeachers) mobTeachers.classList.remove('hidden');
                 if (mobClasses) mobClasses.classList.remove('hidden');
+                if (auditAdminSave) auditAdminSave.classList.remove('hidden');
+                const markAllBtn = document.getElementById('btn-audit-mark-all'); if (markAllBtn) markAllBtn.classList.remove('hidden');
+                if (auditViewerNotice) auditViewerNotice.classList.add('hidden');
             } else {
                 if (roleBadge) {
-                    roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600";
-                    roleBadge.innerText = "Public View";
+                    roleBadge.className = "text-[9px] sm:text-[10px] font-semibold px-2.5 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600 whitespace-nowrap";
+                    roleBadge.innerHTML = '<i class="fas fa-lock text-[8px] mr-1"></i> Public Viewer (Read-Only)';
                 }
                 if (adminNav) adminNav.classList.add('hidden');
                 if (adminGen) adminGen.classList.add('hidden');
                 if (loginBtn) loginBtn.classList.remove('hidden');
                 if (loggedGroup) { loggedGroup.classList.add('hidden'); loggedGroup.classList.remove('flex'); }
                 if (addYearBtn) addYearBtn.classList.add('hidden');
+                if (createSpecialBtn) createSpecialBtn.classList.add('hidden');
                 if (mobSetup) mobSetup.classList.add('hidden');
                 if (mobTeachers) mobTeachers.classList.add('hidden');
                 if (mobClasses) mobClasses.classList.add('hidden');
+                if (auditAdminSave) auditAdminSave.classList.add('hidden');
+                const markAllBtn = document.getElementById('btn-audit-mark-all'); if (markAllBtn) markAllBtn.classList.add('hidden');
+                if (auditViewerNotice) auditViewerNotice.classList.remove('hidden');
             }
+
             renderAllotmentsList();
+            renderSpecialSection();
+            renderMissedSection();
+            if (document.getElementById('audit-section') && !document.getElementById('audit-section').classList.contains('hidden')) {
+                loadAuditForSelectedClass();
+                renderDailyAuditStatusGrid();
+            }
         }
 
         function openAdminLoginModal() {
@@ -1559,790 +1613,19 @@
         }
 
         function ensureDataStructures() {
-            if(!appState.deletedTeachers) appState.deletedTeachers = [];
-            if(!appState.specialTimetables) appState.specialTimetables = [];
-            if(!appState.dailyAudits) appState.dailyAudits = {};
-            if(!appState.totalWorkingDays) appState.totalWorkingDays = 200;
-        }
-
-        async function saveToCloud() {
-            if(!isAdminLoggedIn) {
-                showAlert("Access Denied", "Only administrators can save changes to cloud database.");
-                return;
+            if (!appState.institutions || appState.institutions.length < 2 || appState.institutions[0] === "Wafy" || !appState.institutions[0].includes("KKHM")) {
+                appState.institutions = [
+                    "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )",
+                    "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)"
+                ];
             }
-            isSaving = true;
-            const btn = document.getElementById('btn-save-cloud');
-            if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
-
-            const yearDocRef = doc(firestore, "timetable_system", 'year_' + currentYear.replace('-', '_'));
-
-            try {
-                localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
-                await setDoc(yearDocRef, {
-                    institutions: appState.institutions,
-                    days: appState.days,
-                    periods: appState.periods,
-                    enableTravelBuffer: appState.enableTravelBuffer,
-                    totalWorkingDays: appState.totalWorkingDays || 200,
-                    classesList: appState.classesList,
-                    periodTimings: appState.periodTimings,
-                    teachers: appState.teachers,
-                    deletedTeachers: appState.deletedTeachers || [],
-                    classes: appState.classes,
-                    timetable: appState.timetable,
-                    specialTimetables: appState.specialTimetables || [],
-                    dailyAudits: appState.dailyAudits || {},
-                    lastUpdated: serverTimestamp()
-                }, { merge: true });
-
-                showToast("Cloud Synced", 'Timetable for ' + currentYear + ' updated in Firestore.');
-            } catch(err) {
-                console.error("Cloud save failed:", err);
-                showToast("Saved Locally", "Saved in browser cache.");
-            } finally {
-                isSaving = false;
-                if(btn) btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> <span class="hidden md:inline">Save</span>';
-            }
-        }
-
-        // Modals
-        function openNewYearModal() {
-            if(!isAdminLoggedIn) return;
-            document.getElementById('new-year-modal').classList.remove('hidden');
-            document.getElementById('new-year-modal').classList.add('flex');
-        }
-        function closeNewYearModal() {
-            document.getElementById('new-year-modal').classList.add('hidden');
-            document.getElementById('new-year-modal').classList.remove('flex');
-        }
-        async function confirmNewAcademicYear() {
-            const val = document.getElementById('new-year-input').value.trim();
-            if(!val) { showAlert("Required", "Please enter year label (e.g. 2027-2028)."); return; }
-            if(availableYears.includes(val)) { showAlert("Exists", "This academic year already exists."); return; }
-            
-            availableYears.unshift(val);
-            closeNewYearModal();
-            document.getElementById('new-year-input').value = '';
-
-            try {
-                const metaRef = doc(firestore, "timetable_system", "meta");
-                await setDoc(metaRef, { years: availableYears, activeYear: val }, { merge: true });
-            } catch(e){}
-
-            await switchAcademicYear(val);
-        }
-
-        function showAlert(title, message) {
-            document.getElementById('alert-title').innerText = title;
-            document.getElementById('alert-message').innerText = message;
-            const modal = document.getElementById('alert-modal');
-            modal.classList.remove('hidden');
-            modal.classList.add('flex');
-        }
-        function closeAlert() {
-            const modal = document.getElementById('alert-modal');
-            modal.classList.add('hidden');
-            modal.classList.remove('flex');
-        }
-
-        function generateId() {
-            return Math.random().toString(36).substring(2, 10);
-        }
-
-        function updateWorkingDaysDisplay() {
-            const total = appState.totalWorkingDays || 200;
-            const auditedDates = Object.keys(appState.dailyAudits || {});
-            const conducted = auditedDates.length;
-            const remaining = Math.max(0, total - conducted);
-            const pct = Math.min(100, Math.round((conducted / total) * 100));
-
-            // Sidebar widget
-            const sideVal = document.getElementById('side-working-days-val');
-            if(sideVal) sideVal.innerText = total;
-            const sideProg = document.getElementById('side-working-progress-bar');
-            if(sideProg) sideProg.style.width = pct + '%';
-            const sideCond = document.getElementById('side-conducted-days');
-            if(sideCond) sideCond.innerText = conducted;
-            const sideRem = document.getElementById('side-remaining-days');
-            if(sideRem) sideRem.innerText = remaining;
-
-            // Setup section
-            const inp = document.getElementById('total-working-days-input');
-            if(inp) inp.value = total;
-            const kpiTgt = document.getElementById('setup-kpi-target-days');
-            if(kpiTgt) kpiTgt.innerText = total;
-            const kpiCond = document.getElementById('setup-kpi-conducted-days');
-            if(kpiCond) kpiCond.innerText = conducted;
-            const kpiRem = document.getElementById('setup-kpi-remaining-days');
-            if(kpiRem) kpiRem.innerText = remaining;
-        }
-
-        function switchTab(tabId) {
-            if(!isAdminLoggedIn && (tabId === 'setup' || tabId === 'teachers' || tabId === 'classes')) {
-                showAlert("Admin Required", "Please log in as Admin to access management settings.");
-                return;
-            }
-
-            const allTabs = ['timetable', 'audit', 'missed', 'special', 'reports', 'setup', 'teachers', 'classes'];
-            allTabs.forEach(t => {
-                const btn = document.getElementById('tab-' + t);
-                if (btn) {
-                    if (t === tabId) {
-                        btn.classList.add('active', 'text-emerald-700', 'bg-emerald-50/80');
-                        btn.classList.remove('text-slate-600', 'hover:bg-slate-50');
-                    } else {
-                        btn.classList.remove('active', 'text-emerald-700', 'bg-emerald-50/80');
-                        btn.classList.add('text-slate-600', 'hover:bg-slate-50');
-                    }
-                }
-                const mobBtn = document.getElementById('mob-tab-' + t);
-                if (mobBtn) {
-                    if (t === tabId) {
-                        mobBtn.classList.add('active', 'bg-emerald-700', 'text-white');
-                        mobBtn.classList.remove('text-slate-300', 'hover:bg-slate-800');
-                    } else {
-                        mobBtn.classList.remove('active', 'bg-emerald-700', 'text-white');
-                        mobBtn.classList.add('text-slate-300', 'hover:bg-slate-800');
-                    }
-                }
-                const sec = document.getElementById(t + '-section');
-                if(sec) sec.classList.add('hidden');
-            });
-
-            const activeSec = document.getElementById(tabId + '-section');
-            if(activeSec) activeSec.classList.remove('hidden');
-
-            if(tabId === 'classes') updateDropdowns();
-            if(tabId === 'timetable') {
-                renderSubFilters();
-                renderTimetable();
-            }
-            if(tabId === 'audit') {
-                initAuditSection();
-            }
-            if(tabId === 'missed') {
-                renderMissedSection();
-            }
-            if(tabId === 'special') {
-                renderSpecialSection();
-            }
-            if(tabId === 'reports') {
-                initReportsSection();
-            }
-        }
-
-        // Active Schedule Resolver for any specific date
-        function getActiveScheduleForDate(dateStr) {
-            const special = (appState.specialTimetables || []).find(st => st.date === dateStr);
-            if (special) {
-                if (special.type === 'swap') {
-                    const dayIdx = parseInt(special.swapDayIndex || 0);
-                    return {
-                        isSpecial: true,
-                        specialType: 'swap',
-                        specialTitle: special.title || 'Day Swap',
-                        swapDayName: dayNames[dayIdx],
-                        periods: appState.timetable ? appState.timetable[dayIdx] : null
-                    };
-                } else if (special.type === 'custom') {
-                    return {
-                        isSpecial: true,
-                        specialType: 'custom',
-                        specialTitle: special.title || 'Compensatory Schedule',
-                        customClasses: special.classes || {},
-                        isCustomMakeup: true
-                    };
-                }
-            }
-
-            const parts = dateStr.split('-');
-            const dObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            const dayOfWeek = dObj.getDay();
-            const dayIdx = (dayOfWeek === 0) ? 6 : dayOfWeek - 1;
-
-            if (dayIdx >= appState.days) {
-                return {
-                    isSpecial: false,
-                    isHoliday: true,
-                    dayIndex: dayIdx,
-                    dayName: dayNames[dayIdx],
-                    periods: null
-                };
-            }
-
-            return {
-                isSpecial: false,
-                isHoliday: false,
-                dayIndex: dayIdx,
-                dayName: dayNames[dayIdx],
-                periods: appState.timetable ? appState.timetable[dayIdx] : null
-            };
-        }
-
-        // VIEW & PRINT ENGINE
-        function setTimetableViewMode(mode) {
-            timetableViewMode = mode;
-            ['today', 'college', 'class', 'teacher', 'master'].forEach(m => {
-                const btn = document.getElementById('mode-btn-' + m);
-                if (btn) {
-                    if (m === mode) {
-                        btn.className = "px-2.5 py-1.5 rounded-lg transition bg-white text-emerald-800 shadow-sm font-bold text-center";
-                    } else {
-                        btn.className = "px-2.5 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900 text-center";
-                    }
-                }
-            });
-            renderSubFilters();
-            renderTimetable();
-        }
-
-        function renderSubFilters() {
-            const container = document.getElementById('sub-filter-container');
-            if(!container) return;
-            container.innerHTML = '';
-
-            if(timetableViewMode === 'today') {
-                container.innerHTML = `
-                    <div class="flex items-center gap-1.5 flex-wrap">
-                        <label class="text-slate-500 font-medium">Date:</label>
-                        <input type="date" id="today-view-date-input" value="${getTodayDateStr()}" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer text-xs">
-                        
-                        <label class="text-slate-500 ml-1 font-medium">College:</label>
-                        <select id="today-college-filter" onchange="window.onTodayCollegeFilterChange()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer max-w-[120px] truncate">
-                            <option value="all">All Colleges</option>
-                            <option value="${appState.institutions[0]}">${appState.institutions[0]} Campus</option>
-                            <option value="${appState.institutions[1]}">${appState.institutions[1]} Campus</option>
-                        </select>
-
-                        <label class="text-slate-500 ml-1 font-medium">Class:</label>
-                        <select id="today-class-filter" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer max-w-[130px] truncate">
-                            <option value="all">All Classes</option>
-                            ${appState.classesList.map(cls=>`<option value="${cls}">${cls}</option>`).join('')}
-                        </select>
-                    </div>
-                `;
-            } else if(timetableViewMode === 'college') {
-                container.innerHTML = `
-                    <div class="flex items-center gap-1.5">
-                        <label class="text-slate-500 font-medium">Select College:</label>
-                        <select id="college-view-filter" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer max-w-[160px] truncate">
-                            <option value="${appState.institutions[0]}">${appState.institutions[0]} Campus Timetable</option>
-                            <option value="${appState.institutions[1]}">${appState.institutions[1]} Campus Timetable</option>
-                            <option value="combined">Combined Colleges Master</option>
-                        </select>
-                    </div>
-                `;
-            } else if(timetableViewMode === 'class') {
-                container.innerHTML = `
-                    <label class="text-slate-500 mr-1 font-medium">Select Class:</label>
-                    <select id="class-view-filter" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer max-w-[160px] sm:max-w-none truncate">
-                        ${appState.classesList.map(cls=>`<option value="${cls}">${cls}</option>`).join('')}
-                    </select>
-                `;
-            } else if(timetableViewMode === 'teacher') {
-                container.innerHTML = `
-                    <label class="text-slate-500 mr-1 font-medium">Select Faculty:</label>
-                    <select id="teacher-view-filter" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer max-w-[160px] sm:max-w-none truncate">
-                        <option value="all">-- All Faculty Members --</option>
-                        ${appState.teachers.map(t=>`<option value="${t.id}">${t.name} (${t.shortName})</option>`).join('')}
-                    </select>
-                `;
-            } else {
-                container.innerHTML = `
-                    <label class="text-slate-500 mr-1 font-medium">Scope:</label>
-                    <span class="font-bold text-slate-700">Combined Institutional Master</span>
-                `;
-            }
-        }
-
-        function onTodayCollegeFilterChange() {
-            const collegeVal = document.getElementById('today-college-filter')?.value || 'all';
-            const classSel = document.getElementById('today-class-filter');
-            if(classSel) {
-                classSel.innerHTML = '<option value="all">All Classes</option>';
-                let filteredClasses = appState.classesList;
-                if(collegeVal !== 'all') {
-                    filteredClasses = filteredClasses.filter(cls => {
-                        return appState.classes.some(c => c.className === cls && c.college === collegeVal) || cls.toLowerCase().includes(collegeVal.toLowerCase());
-                    });
-                }
-                filteredClasses.forEach(cls => {
-                    const opt = document.createElement('option');
-                    opt.value = cls;
-                    opt.innerText = cls;
-                    classSel.appendChild(opt);
+            if (appState.classes) {
+                appState.classes.forEach(c => {
+                    if (c.college === "Wafy" || isWafyCollege(c.college)) c.college = appState.institutions[0];
+                    else if (c.college === "Wafiyya" || isWafiyyaCollege(c.college)) c.college = appState.institutions[1];
                 });
             }
-            renderTimetable();
-        }
-
-        function renderTimetable() {
-            const container = document.getElementById('timetable-container');
-            if(!container) return;
-
-            if(timetableViewMode === 'today') {
-                renderTodayTimetable(container);
-            } else if(timetableViewMode === 'college') {
-                renderCollegeWiseTimetable(container, appState.days, appState.periods, appState.timetable);
-            } else if(timetableViewMode === 'class') {
-                renderClassTimetable(container, appState.days, appState.periods, appState.timetable);
-            } else if(timetableViewMode === 'teacher') {
-                renderTeacherTimetable(container, appState.days, appState.periods, appState.timetable);
-            } else {
-                renderMasterMatrixTimetable(container, appState.days, appState.periods, appState.timetable);
-            }
-        }
-
-        // 1. TODAY'S LIVE TIMETABLE (DEFAULT FIRST INTERFACE)
-        function renderTodayTimetable(container) {
-            const dateInput = document.getElementById('today-view-date-input');
-            const targetDate = dateInput ? dateInput.value : getTodayDateStr();
-            const collegeFilterEl = document.getElementById('today-college-filter');
-            const targetCollege = collegeFilterEl ? collegeFilterEl.value : 'all';
-            const classFilterEl = document.getElementById('today-class-filter');
-            const targetClass = classFilterEl ? classFilterEl.value : 'all';
-
-            const parts = targetDate.split('-');
-            const dateObj = new Date(parseInt(parts[0]), parseInt(parts[1]) - 1, parseInt(parts[2]));
-            const engDateFormatted = getEnglishDateFormatted(dateObj);
-            const isActuallyToday = (targetDate === getTodayDateStr());
-
-            const scheduleRes = getActiveScheduleForDate(targetDate);
-            const { periods } = appState;
-
-            // Audit Status for target date
-            const auditData = (appState.dailyAudits || {})[targetDate];
-            const auditedClasses = auditData ? Object.keys(auditData.classes || {}) : [];
-            const isAuditComplete = appState.classesList.length > 0 && auditedClasses.length >= appState.classesList.length;
-
-            let html = '';
-
-            // Header Banner
-            html += `
-                <div class="space-y-4 mb-5">
-                    <div class="bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-950 text-white p-4 sm:p-5 rounded-2xl shadow-sm border border-emerald-700/50 flex flex-col md:flex-row justify-between items-start md:items-center gap-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-2xl font-bold shadow-inner shrink-0">
-                                <i class="${isActuallyToday ? 'fas fa-sun text-amber-400' : 'fas fa-calendar-day'}"></i>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2 flex-wrap">
-                                    <h2 class="text-base sm:text-lg font-black text-white">${engDateFormatted}</h2>
-                                    ${isActuallyToday ? '<span class="bg-amber-400 text-slate-950 text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">TODAY</span>' : '<span class="bg-slate-700 text-slate-300 text-[10px] font-bold px-2 py-0.5 rounded-full">' + targetDate + '</span>'}
-                                </div>
-                                <p class="text-xs text-emerald-200/80 mt-0.5" id="today-live-clock-sub">Academic Schedule • Year ${currentYear}</p>
-                            </div>
-                        </div>
-
-                        <!-- 3:30 PM Audit Quick Action Card -->
-                        <div class="flex items-center gap-2 self-stretch md:self-auto justify-between bg-slate-900/80 border border-emerald-500/40 p-2.5 rounded-xl text-xs">
-                            <div class="pr-2">
-                                <div class="text-[10px] text-slate-400 uppercase font-semibold">3:30 PM Daily Audit</div>
-                                <div class="font-bold text-white flex items-center gap-1.5">
-                                    ${isAuditComplete ? '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> Completed</span>' : '<span class="text-amber-400"><i class="fas fa-clock"></i> ' + auditedClasses.length + '/' + appState.classesList.length + ' Recorded</span>'}
-                                </div>
-                            </div>
-                            <button onclick="window.quickOpenAuditForDate('${targetDate}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow">
-                                <i class="fas fa-edit"></i> <span>Audit Entry</span>
-                            </button>
-                        </div>
-                    </div>
-            `;
-
-            // Special Timetable Alert Banner
-            if (scheduleRes.isSpecial) {
-                html += `
-                    <div class="bg-gradient-to-r from-purple-50 via-indigo-50 to-purple-50 border-2 border-purple-500/60 rounded-2xl p-4 shadow-sm flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3">
-                        <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-purple-600 text-white flex items-center justify-center font-bold text-lg shadow shrink-0">
-                                <i class="fas fa-calendar-check animate-pulse"></i>
-                            </div>
-                            <div>
-                                <div class="flex items-center gap-2">
-                                    <span class="bg-purple-600 text-white text-[10px] font-extrabold px-2 py-0.5 rounded-full uppercase tracking-wider">🔔 Special Timetable Active</span>
-                                    <span class="text-xs font-bold text-purple-950">${scheduleRes.specialTitle}</span>
-                                </div>
-                                <div class="text-xs text-purple-800 font-medium mt-1">
-                                    ${scheduleRes.specialType === 'swap' ? '🔄 Day Swap Applied: <b>' + scheduleRes.swapDayName + ' Timetable</b> is running today' : '🛠️ Compensatory Make-up Schedule is active today'}
-                                </div>
-                            </div>
-                        </div>
-                        <button onclick="window.switchTab('special')" class="text-xs bg-purple-600 hover:bg-purple-700 text-white font-bold px-3 py-1.5 rounded-xl transition shadow">
-                            View Special Schedule Details
-                        </button>
-                    </div>
-                `;
-            } else if (scheduleRes.isHoliday) {
-                html += `
-                    <div class="bg-amber-50 border border-amber-200 rounded-2xl p-6 text-center text-slate-700 my-4">
-                        <div class="w-12 h-12 rounded-2xl bg-amber-100 text-amber-700 flex items-center justify-center text-2xl mx-auto mb-2 font-bold">
-                            <i class="fas fa-umbrella-beach"></i>
-                        </div>
-                        <h3 class="font-bold text-base text-slate-800">College Holiday / Off Day (${scheduleRes.dayName})</h3>
-                        <p class="text-xs text-slate-500 mt-1 max-w-md mx-auto">No regular academic periods are scheduled for today. You can view weekly schedules or create a Special Timetable.</p>
-                        <div class="mt-4 flex justify-center gap-2">
-                            <button onclick="window.setTimetableViewMode('college')" class="bg-white hover:bg-slate-50 border border-slate-300 text-slate-700 font-bold px-4 py-2 rounded-xl text-xs transition">
-                                View College Weekly Timetable
-                            </button>
-                            ${isAdminLoggedIn ? `<button onclick="window.openCreateSpecialModal('${targetDate}')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold px-4 py-2 rounded-xl text-xs transition shadow">
-                                <i class="fas fa-plus-circle mr-1"></i> Add Special Class Schedule
-                            </button>` : ''}
-                        </div>
-                    </div>
-                `;
-                container.innerHTML = html;
-                return;
-            }
-
-            html += `</div>`;
-
-            // Filter classes
-            let classesToShow = appState.classesList;
-            if(targetCollege !== 'all') {
-                classesToShow = classesToShow.filter(cls => {
-                    return appState.classes.some(c => c.className === cls && c.college === targetCollege) || cls.toLowerCase().includes(targetCollege.toLowerCase());
-                });
-            }
-            if(targetClass !== 'all') {
-                classesToShow = classesToShow.filter(cls => cls === targetClass);
-            }
-
-            if(classesToShow.length === 0) {
-                html += '<div class="p-8 text-center text-slate-400 italic">No batches found matching the selected filters.</div>';
-                container.innerHTML = html;
-                return;
-            }
-
-            // Render Periods Grid for Today
-            classesToShow.forEach(cls => {
-                const isAuditedForClass = auditData && auditData.classes && auditData.classes[cls];
-                const auditPeriodsStatus = isAuditedForClass ? isAuditedForClass.periods : [];
-                const isWafyClass = cls.toLowerCase().includes('wafiyya') ? false : true;
-
-                html += `
-                    <div class="mb-6 border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
-                        <div class="bg-slate-100/80 px-4 py-3 border-b border-slate-200 flex justify-between items-center flex-wrap gap-2">
-                            <div class="flex items-center gap-2">
-                                <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isWafyClass ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'}">
-                                    ${isWafyClass ? 'Wafy Campus' : 'Wafiyya Campus'}
-                                </span>
-                                <h3 class="font-bold text-sm text-slate-800">${cls}</h3>
-                                <span class="text-xs text-slate-400">• Today's Periods</span>
-                            </div>
-                            <div class="flex items-center gap-2 text-xs">
-                                ${isAuditedForClass ? 
-                                    `<span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[11px]"><i class="fas fa-check-circle"></i> 3:30 Audit Recorded</span>` : 
-                                    `<span class="bg-amber-100 text-amber-800 font-bold px-2 py-0.5 rounded text-[11px]"><i class="fas fa-hourglass-start"></i> 3:30 Audit Pending</span>`
-                                }
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-6 divide-y sm:divide-y-0 sm:divide-x divide-slate-100">
-                `;
-
-                for(let p=0; p<periods; p++) {
-                    let slot = null;
-                    if (scheduleRes.isSpecial && scheduleRes.isCustomMakeup) {
-                        const customPeriods = scheduleRes.customClasses[cls] || [];
-                        const found = customPeriods.find(cp => cp.period === p);
-                        if (found) slot = found;
-                    } else if (scheduleRes.periods) {
-                        slot = scheduleRes.periods[p] ? scheduleRes.periods[p][cls] : null;
-                    }
-
-                    const auditEntry = auditPeriodsStatus.find(ap => ap.period === p);
-                    const isMissed = auditEntry && auditEntry.status === 'missed';
-                    const isConducted = auditEntry && auditEntry.status === 'conducted';
-
-                    const pTiming = appState.periodTimings[p] || ('Period ' + (p+1));
-
-                    if (slot) {
-                        const teacher = appState.teachers.find(t=>t.id === slot.teacherId);
-                        const isWafy = slot.college === appState.institutions[0];
-                        const bgCard = isMissed ? 'bg-rose-50/60 border-rose-200' : (isConducted ? 'bg-emerald-50/40' : 'bg-white');
-
-                        html += `
-                            <div class="p-3 ${bgCard} flex flex-col justify-between min-h-[110px] relative transition hover:shadow-inner">
-                                <div>
-                                    <div class="flex justify-between items-center mb-1">
-                                        <span class="font-bold text-[10px] text-slate-500 uppercase">Period ${p+1}</span>
-                                        <span class="text-[10px] font-mono text-slate-400">${pTiming}</span>
-                                    </div>
-                                    <div class="font-bold text-xs text-slate-900 mt-1">${slot.subject}</div>
-                                    <div class="text-[11px] text-slate-600 mt-0.5 flex items-center gap-1">
-                                        <i class="fas fa-user-tie text-[9px] text-slate-400"></i>
-                                        <span class="truncate">${teacher ? teacher.name : 'Usthad'}</span>
-                                        <span class="bg-slate-100 border border-slate-200 font-mono font-bold text-[9px] px-1 rounded">${teacher ? teacher.shortName : ''}</span>
-                                    </div>
-                                </div>
-                                <div class="mt-2 pt-1.5 border-t border-slate-100 flex justify-between items-center text-[10px]">
-                                    <span class="px-1.5 py-0.2 rounded font-semibold ${isWafy ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'}">${slot.college}</span>
-                                    ${isMissed ? 
-                                        `<span class="text-rose-600 font-bold flex items-center gap-0.5"><i class="fas fa-times-circle"></i> Missed</span>` : 
-                                        (isConducted ? 
-                                            `<span class="text-emerald-600 font-bold flex items-center gap-0.5"><i class="fas fa-check-circle"></i> Conducted</span>` : 
-                                            `<span class="text-slate-400">-</span>`)
-                                    }
-                                </div>
-                            </div>
-                        `;
-                    } else {
-                        html += `
-                            <div class="p-3 bg-slate-50/50 flex flex-col justify-between min-h-[110px] text-center text-slate-400">
-                                <div class="flex justify-between items-center">
-                                    <span class="font-bold text-[10px] text-slate-400 uppercase">Period ${p+1}</span>
-                                    <span class="text-[10px] font-mono text-slate-400">${pTiming}</span>
-                                </div>
-                                <div class="my-auto italic text-xs text-slate-400">Free Period</div>
-                                <div class="text-[10px] text-slate-300">-</div>
-                            </div>
-                        `;
-                    }
-                }
-
-                html += `</div></div>`;
-            });
-
-            container.innerHTML = html;
-        }
-
-        function updateLiveClock() {
-            const clockEl = document.getElementById('today-live-clock-sub');
-            if (clockEl) {
-                const now = new Date();
-                const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
-                clockEl.innerText = 'Academic Schedule • Live Time: ' + timeStr + ' • Year ' + currentYear;
-            }
-        }
-
-
-        // -------------------------------------------------------------
-        // DAILY AUDIT SYSTEM (3:30 PM Office Report by Class Leaders)
-        // -------------------------------------------------------------
-        function initAuditSection() {
-            const picker = document.getElementById('audit-date-picker');
-            if (picker && !picker.value) {
-                picker.value = getTodayDateStr();
-            }
-            populateAuditClassDropdown();
-            loadAuditForSelectedClass();
-            renderDailyAuditStatusGrid();
-        }
-
-        function setAuditDateToToday() {
-            const picker = document.getElementById('audit-date-picker');
-            if (picker) picker.value = getTodayDateStr();
-            onAuditDateChange();
-        }
-
-        function onAuditDateChange() {
-            loadAuditForSelectedClass();
-            renderDailyAuditStatusGrid();
-        }
-
-        function populateAuditClassDropdown() {
-            const sel = document.getElementById('audit-class-picker');
-            if (!sel) return;
-            const curVal = sel.value;
-            sel.innerHTML = '';
-            appState.classesList.forEach(cls => {
-                const opt = document.createElement('option');
-                opt.value = cls;
-                opt.innerText = cls;
-                if (cls === curVal) opt.selected = true;
-                sel.appendChild(opt);
-            });
-        }
-
-        function quickOpenAuditForDate(dateStr) {
-            switchTab('audit');
-            const picker = document.getElementById('audit-date-picker');
-            if (picker) picker.value = dateStr;
-            onAuditDateChange();
-        }
-
-        function loadAuditForSelectedClass() {
-            const dateInput = document.getElementById('audit-date-picker');
-            const dateStr = dateInput ? dateInput.value : getTodayDateStr();
-            const classSel = document.getElementById('audit-class-picker');
-            const targetClass = classSel ? classSel.value : appState.classesList[0];
-
-            if (!targetClass) return;
-
-            const nameEl = document.getElementById('audit-info-class-name');
-            if (nameEl) nameEl.innerText = targetClass;
-            const dateEl = document.getElementById('audit-info-date-str');
-            if (dateEl) dateEl.innerText = dateStr;
-
-            const scheduleRes = getActiveScheduleForDate(dateStr);
-            const badgeEl = document.getElementById('audit-schedule-type-badge');
-            if (badgeEl) {
-                if (scheduleRes.isSpecial) {
-                    badgeEl.className = "bg-purple-100 text-purple-900 font-bold px-2 py-0.5 rounded text-[11px]";
-                    badgeEl.innerHTML = '<i class="fas fa-calendar-check mr-1"></i> Special: ' + scheduleRes.specialTitle;
-                } else if (scheduleRes.isHoliday) {
-                    badgeEl.className = "bg-amber-100 text-amber-900 font-bold px-2 py-0.5 rounded text-[11px]";
-                    badgeEl.innerHTML = '<i class="fas fa-umbrella-beach mr-1"></i> ' + scheduleRes.dayNameEn + ' (Holiday)';
-                } else {
-                    badgeEl.className = "bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[11px]";
-                    badgeEl.innerHTML = '<i class="fas fa-calendar-day mr-1"></i> Regular Schedule (' + scheduleRes.dayNameEn + ')';
-                }
-            }
-
-            // Check if existing audit saved
-            const auditDoc = (appState.dailyAudits || {})[dateStr];
-            const classAudit = (auditDoc && auditDoc.classes) ? auditDoc.classes[targetClass] : null;
-
-            const leaderInput = document.getElementById('audit-leader-name');
-            if (leaderInput) {
-                leaderInput.value = classAudit ? (classAudit.leaderName || '') : '';
-            }
-
-            const tbody = document.getElementById('audit-periods-tbody');
-            if (!tbody) return;
-            tbody.innerHTML = '';
-
-            const { periods } = appState;
-            for (let p = 0; p < periods; p++) {
-                let slot = null;
-                if (scheduleRes.isSpecial && scheduleRes.isCustomMakeup) {
-                    const customPeriods = scheduleRes.customClasses[targetClass] || [];
-                    const found = customPeriods.find(cp => cp.period === p);
-                    if (found) slot = found;
-                } else if (scheduleRes.periods) {
-                    slot = scheduleRes.periods[p] ? scheduleRes.periods[p][targetClass] : null;
-                }
-
-                const existingPeriodAudit = classAudit && classAudit.periods ? classAudit.periods.find(ep => ep.period === p) : null;
-                const status = existingPeriodAudit ? existingPeriodAudit.status : 'conducted';
-                const reason = existingPeriodAudit ? (existingPeriodAudit.reason || '') : '';
-                const remarks = existingPeriodAudit ? (existingPeriodAudit.remarks || '') : '';
-
-                const teacher = slot ? appState.teachers.find(t => t.id === slot.teacherId) : null;
-                const pTiming = appState.periodTimings[p] || ('Period ' + (p + 1));
-
-                const tr = document.createElement('tr');
-                tr.id = 'audit-period-row-' + p;
-                tr.className = status === 'missed' ? 'bg-rose-50/50' : 'bg-white';
-
-                tr.innerHTML = `
-                    <td class="px-3 py-2.5 text-center font-bold text-slate-700">P${p + 1}</td>
-                    <td class="px-3 py-2.5 font-mono text-slate-500 whitespace-nowrap">${pTiming}</td>
-                    <td class="px-3 py-2.5">
-                        ${slot ? `
-                            <div class="font-bold text-slate-800">${slot.subject}</div>
-                            <div class="text-[11px] text-slate-500 flex items-center gap-1">
-                                <span>${teacher ? teacher.name : 'Unassigned'}</span>
-                                <span class="font-mono font-bold bg-slate-100 text-slate-600 px-1 rounded">${teacher ? teacher.shortName : ''}</span>
-                            </div>
-                        ` : `<span class="text-slate-400 italic">Free Period</span>`}
-                    </td>
-                    <td class="px-3 py-2.5 text-center whitespace-nowrap">
-                        <div class="inline-flex rounded-xl p-0.5 bg-slate-100 border border-slate-200">
-                            <button type="button" onclick="window.setAuditRowStatus(${p}, 'conducted')" id="btn-cond-${p}" class="px-3 py-1 rounded-lg font-bold text-xs transition ${status === 'conducted' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
-                                <i class="fas fa-check mr-1"></i> Conducted
-                            </button>
-                            <button type="button" onclick="window.setAuditRowStatus(${p}, 'missed')" id="btn-miss-${p}" class="px-3 py-1 rounded-lg font-bold text-xs transition ${status === 'missed' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
-                                <i class="fas fa-times mr-1"></i> Missed
-                            </button>
-                        </div>
-                    </td>
-                    <td class="px-3 py-2.5">
-                        <div id="missed-details-${p}" class="${status === 'missed' ? 'space-y-1.5' : 'hidden'}">
-                            <select id="missed-reason-${p}" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
-                                <option value="Teacher on Leave" ${reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
-                                <option value="College Event / Program" ${reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
-                                <option value="Special Prayer / Assembly" ${reason === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
-                                <option value="Examination / Test" ${reason === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
-                                <option value="Weather / Hartal / Emergency" ${reason === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
-                                <option value="Other Reason" ${reason === 'Other Reason' || !reason ? 'selected' : ''}>Other Reason</option>
-                            </select>
-                            <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
-                        </div>
-                        <div id="conducted-note-${p}" class="${status === 'conducted' ? 'text-slate-400 italic text-[11px]' : 'hidden'}">
-                            <i class="fas fa-check-circle text-emerald-500 mr-1"></i> Conducted normally
-                        </div>
-                    </td>
-                `;
-
-                tbody.appendChild(tr);
-            }
-        }
-
-        function setAuditRowStatus(periodIndex, newStatus) {
-            const btnCond = document.getElementById('btn-cond-' + periodIndex);
-            const btnMiss = document.getElementById('btn-miss-' + periodIndex);
-            const missedDiv = document.getElementById('missed-details-' + periodIndex);
-            const condDiv = document.getElementById('conducted-note-' + periodIndex);
-            const row = document.getElementById('audit-period-row-' + periodIndex);
-
-            if (newStatus === 'conducted') {
-                if (btnCond) btnCond.className = "px-3 py-1 rounded-lg font-bold text-xs transition bg-emerald-600 text-white shadow-sm";
-                if (btnMiss) btnMiss.className = "px-3 py-1 rounded-lg font-bold text-xs transition text-slate-600 hover:text-slate-900";
-                if (missedDiv) missedDiv.classList.add('hidden');
-                if (condDiv) condDiv.classList.remove('hidden');
-                if (row) row.className = "bg-white";
-            } else {
-                if (btnCond) btnCond.className = "px-3 py-1 rounded-lg font-bold text-xs transition text-slate-600 hover:text-slate-900";
-                if (btnMiss) btnMiss.className = "px-3 py-1 rounded-lg font-bold text-xs transition bg-rose-600 text-white shadow-sm";
-                if (missedDiv) missedDiv.classList.remove('hidden');
-                if (condDiv) condDiv.classList.add('hidden');
-                if (row) row.className = "bg-rose-50/50";
-            }
-        }
-
-        function markAllAuditPeriods(conducted) {
-            const { periods } = appState;
-            for (let p = 0; p < periods; p++) {
-                setAuditRowStatus(p, conducted ? 'conducted' : 'missed');
-            }
-            showToast("Updated", "All periods marked as " + (conducted ? "conducted." : "missed."));
-        }
-
-        function saveClassAuditReport() {
-            const dateInput = document.getElementById('audit-date-picker');
-            const dateStr = dateInput ? dateInput.value : getTodayDateStr();
-            const classSel = document.getElementById('audit-class-picker');
-            const targetClass = classSel ? classSel.value : appState.classesList[0];
-            const leaderName = (document.getElementById('audit-leader-name')?.value || '').trim();
-
-            if (!targetClass) return;
-
-            const scheduleRes = getActiveScheduleForDate(dateStr);
-            const { periods } = appState;
-            let periodResults = [];
-
-            for (let p = 0; p < periods; p++) {
-                const btnMiss = document.getElementById('btn-miss-' + p);
-                const isMissed = btnMiss && btnMiss.classList.contains('bg-rose-600');
-                const reasonEl = document.getElementById('missed-reason-' + p);
-                const remarksEl = document.getElementById('missed-remarks-' + p);
-
-                let slot = null;
-                if (scheduleRes.isSpecial && scheduleRes.isCustomMakeup) {
-                    const customPeriods = scheduleRes.customClasses[targetClass] || [];
-                    const found = customPeriods.find(cp => cp.period === p);
-                    if (found) slot = found;
-                } else if (scheduleRes.periods) {
-                    slot = scheduleRes.periods[p] ? scheduleRes.periods[p][targetClass] : null;
-                }
-
-                const teacher = slot ? appState.teachers.find(t => t.id === slot.teacherId) : null;
-
-                periodResults.push({
-                    period: p,
-                    subject: slot ? slot.subject : 'Free',
-                    college: slot ? slot.college : (targetClass.toLowerCase().includes('wafiyya') ? 'Wafiyya' : 'Wafy'),
-                    teacherId: slot ? slot.teacherId : '',
-                    teacherName: teacher ? teacher.name : '',
-                    teacherShort: teacher ? teacher.shortName : '',
-                    status: isMissed ? 'missed' : 'conducted',
-                    reason: isMissed ? (reasonEl ? reasonEl.value : 'Other Reason') : '',
-                    remarks: isMissed ? (remarksEl ? remarksEl.value.trim() : '') : '',
-                    auditTimestamp: new Date().toISOString()
-                });
-            }
-
+            if (!appState.specialTimetables) appState.specialTimetables = [];
             if (!appState.dailyAudits) appState.dailyAudits = {};
             if (!appState.dailyAudits[dateStr]) {
                 appState.dailyAudits[dateStr] = {
@@ -2541,14 +1824,16 @@
                         }
                     </td>
                     <td class="px-4 py-3 text-right whitespace-nowrap space-x-1">
-                        ${!m.isCompensated ? `
-                            <button onclick="window.scheduleMissedInSpecial('${m.id}')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] px-2.5 py-1 rounded-lg transition shadow-sm" title="Schedule in Special Timetable">
-                                <i class="fas fa-calendar-plus mr-1"></i> Schedule Make-up
+                        ${isAdminLoggedIn ? `
+                            ${!m.isCompensated ? `
+                                <button onclick="window.scheduleMissedInSpecial('${m.id}')" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-[11px] px-2.5 py-1 rounded-lg transition shadow-sm" title="Schedule in Special Timetable">
+                                    <i class="fas fa-calendar-plus mr-1"></i> Make-up
+                                </button>
+                            ` : ''}
+                            <button onclick="window.toggleCompensatedStatus('${m.id}')" class="text-slate-400 hover:text-emerald-700 text-xs p-1" title="Toggle Status">
+                                <i class="${m.isCompensated ? 'fas fa-undo text-amber-600' : 'fas fa-check-circle text-emerald-600'}"></i>
                             </button>
-                        ` : ''}
-                        <button onclick="window.toggleCompensatedStatus('${m.id}')" class="text-slate-400 hover:text-emerald-700 text-xs p-1" title="Toggle Status">
-                            <i class="${m.isCompensated ? 'fas fa-undo text-amber-600' : 'fas fa-check-circle text-emerald-600'}"></i>
-                        </button>
+                        ` : `<span class="text-slate-300 italic text-[11px]">-</span>`}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -2578,6 +1863,10 @@
         }
 
         function toggleCompensatedStatus(missedId) {
+            if (!isAdminLoggedIn) {
+                showAlert("Admin Authentication Required", "Only administrators can update compensation status.");
+                return;
+            }
             const parts = missedId.split('_');
             const dateStr = parts[0];
             const cls = parts[1];
@@ -2879,6 +2168,10 @@
         }
 
         function saveSpecialSchedule() {
+            if (!isAdminLoggedIn) {
+                showAlert("Admin Authentication Required", "Only administrators can schedule special timetables.");
+                return;
+            }
             const dateInp = document.getElementById('special-input-date');
             const dateStr = dateInp ? dateInp.value : '';
             const titleInp = document.getElementById('special-input-title');
@@ -3122,11 +2415,13 @@
             let html = `
                 <!-- Institutional Header for Print & Display -->
                 <div class="text-center border-b-2 border-slate-800 pb-4">
-                    <h1 class="text-xl sm:text-2xl font-black uppercase text-slate-900 tracking-wider">KKHM ISLAMIC & ARTS COLLEGE</h1>
-                    <p class="text-xs font-semibold text-slate-700">Wafy & Wafiyya Timetable & Academic Audit Directorate</p>
+                    <h1 class="text-xl sm:text-2xl font-black uppercase text-slate-900 tracking-wider">KKHM ISLAMIC & ARTS COLLEGE ( WAFY )</h1>
+                    <h2 class="text-base sm:text-lg font-bold uppercase text-purple-900 tracking-wider mt-1">AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)</h2>
+                    <p class="text-xs font-semibold text-slate-700 mt-1">Coordinated Academic Timetable & 3:30 PM Period Delivery Directorate</p>
                     <div class="mt-2 inline-flex items-center gap-2 bg-slate-100 px-3 py-1 rounded-full text-xs font-bold text-slate-800">
                         <span>${isMonthly ? 'Monthly Period Audit Report (' + selectedMonth + ')' : 'Annual Academic Audit Report (' + currentYear + ')'}</span>
                     </div>
+                </div>
                 </div>
 
                 <!-- KPI Metric Summary -->
@@ -3313,7 +2608,7 @@
                     <div>
                         <div class="h-10 border-b border-dashed border-slate-400 mx-auto w-3/4"></div>
                         <div class="mt-1 font-bold">Principal / Dean</div>
-                        <div class="text-[10px] text-slate-400">KKHM Islamic & Arts College</div>
+                        <div class="text-[10px] text-slate-400">KKHM (Wafy) & AL-GAITH (Wafiyya)</div>
                     </div>
                 </div>
             `;
@@ -3559,10 +2854,19 @@
             container.innerHTML = html;
         }
 
-        // 3. College-Wise Timetable View (Wafy Campus vs Wafiyya Campus vs Combined)
-        function renderCollegeTimetable(container, days, periods, timetable) {
+        function selectCollegeTimetableTab(collegeKey) {
+            selectedCollegeTimetable = collegeKey;
             const filterEl = document.getElementById('college-view-filter');
-            const targetCollege = filterEl ? filterEl.value : 'all';
+            if (filterEl) filterEl.value = collegeKey;
+            renderTimetable();
+        }
+
+        // 3. College-Wise Timetable View (KKHM WAFY vs AL-GAITH WAFIYYA vs Combined)
+        function renderCollegeTimetable(container, days, periods, timetable) {
+            const instKKHM = appState.institutions[0] || "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )";
+            const instALGAITH = appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)";
+
+            const targetCollege = selectedCollegeTimetable || 'kkhm';
 
             const mobileHint = `
                 <div class="md:hidden flex items-center justify-between text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg mb-3 no-print">
@@ -3574,32 +2878,63 @@
                 </div>
             `;
 
-            // Determine which colleges to render
+            // Campus Switcher Navigation Pills
+            const switcherHtml = `
+                <div class="mb-5 flex flex-wrap gap-2.5 no-print">
+                    <button type="button" onclick="window.selectCollegeTimetableTab('kkhm')" class="flex-1 min-w-[240px] p-3 rounded-2xl border text-left transition ${targetCollege === 'kkhm' ? 'bg-gradient-to-r from-emerald-700 to-teal-800 text-white shadow-md ring-2 ring-emerald-400' : 'bg-white hover:bg-emerald-50 text-slate-700 border-slate-200'}">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs sm:text-sm uppercase tracking-wide flex items-center gap-2">
+                                <i class="fas fa-university ${targetCollege === 'kkhm' ? 'text-emerald-200' : 'text-emerald-600'}"></i>
+                                KKHM ISLAMIC & ARTS COLLEGE
+                            </span>
+                            <span class="${targetCollege === 'kkhm' ? 'bg-white text-emerald-900' : 'bg-emerald-100 text-emerald-800'} text-[10px] font-black px-2 py-0.5 rounded-full">WAFY</span>
+                        </div>
+                        <div class="text-[11px] mt-1 ${targetCollege === 'kkhm' ? 'text-emerald-100' : 'text-slate-500'}">Boys Campus • Comprehensive Weekly Class Schedule</div>
+                    </button>
+
+                    <button type="button" onclick="window.selectCollegeTimetableTab('algaith')" class="flex-1 min-w-[240px] p-3 rounded-2xl border text-left transition ${targetCollege === 'algaith' ? 'bg-gradient-to-r from-purple-800 to-indigo-900 text-white shadow-md ring-2 ring-purple-400' : 'bg-white hover:bg-purple-50 text-slate-700 border-slate-200'}">
+                        <div class="flex items-center justify-between">
+                            <span class="font-extrabold text-xs sm:text-sm uppercase tracking-wide flex items-center gap-2">
+                                <i class="fas fa-graduation-cap ${targetCollege === 'algaith' ? 'text-purple-200' : 'text-purple-600'}"></i>
+                                AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS
+                            </span>
+                            <span class="${targetCollege === 'algaith' ? 'bg-white text-purple-900' : 'bg-purple-100 text-purple-800'} text-[10px] font-black px-2 py-0.5 rounded-full">WAFIYYA</span>
+                        </div>
+                        <div class="text-[11px] mt-1 ${targetCollege === 'algaith' ? 'text-purple-100' : 'text-slate-500'}">Girls Campus • Comprehensive Weekly Class Schedule</div>
+                    </button>
+
+                    <button type="button" onclick="window.selectCollegeTimetableTab('all')" class="p-3 rounded-2xl border text-left transition flex items-center justify-center shrink-0 ${targetCollege === 'all' ? 'bg-slate-900 text-white shadow-md ring-2 ring-slate-400' : 'bg-white hover:bg-slate-50 text-slate-700 border-slate-200'}">
+                        <div class="text-center px-3">
+                            <div class="font-bold text-xs"><i class="fas fa-columns mr-1.5"></i> Both Institutions</div>
+                            <div class="text-[10px] ${targetCollege === 'all' ? 'text-slate-300' : 'text-slate-400'}">Side-by-Side Master</div>
+                        </div>
+                    </button>
+                </div>
+            `;
+
             let collegesToRender = [];
-            if (targetCollege === 'Wafy' || targetCollege === appState.institutions[0]) {
-                collegesToRender = [appState.institutions[0]];
-            } else if (targetCollege === 'Wafiyya' || targetCollege === appState.institutions[1]) {
-                collegesToRender = [appState.institutions[1]];
+            if (targetCollege === 'kkhm') {
+                collegesToRender = [{ key: 'kkhm', name: instKKHM, short: 'WAFY', isWafy: true }];
+            } else if (targetCollege === 'algaith') {
+                collegesToRender = [{ key: 'algaith', name: instALGAITH, short: 'WAFIYYA', isWafy: false }];
             } else {
-                collegesToRender = [appState.institutions[0], appState.institutions[1]];
+                collegesToRender = [
+                    { key: 'kkhm', name: instKKHM, short: 'WAFY', isWafy: true },
+                    { key: 'algaith', name: instALGAITH, short: 'WAFIYYA', isWafy: false }
+                ];
             }
 
-            let html = mobileHint;
+            let html = mobileHint + switcherHtml;
 
-            collegesToRender.forEach(collegeName => {
-                const isWafy = (collegeName === appState.institutions[0]);
-                const badgeTheme = isWafy ? 'bg-emerald-600 text-white' : 'bg-purple-600 text-white';
-                const headerBorder = isWafy ? 'border-emerald-200' : 'border-purple-200';
-                const headerBg = isWafy ? 'bg-emerald-50/70' : 'bg-purple-50/70';
-                const iconColor = isWafy ? 'text-emerald-700' : 'text-purple-700';
+            collegesToRender.forEach(col => {
+                const badgeTheme = col.isWafy ? 'bg-emerald-600 text-white' : 'bg-purple-600 text-white';
+                const headerBorder = col.isWafy ? 'border-emerald-200' : 'border-purple-200';
+                const headerBg = col.isWafy ? 'bg-gradient-to-r from-emerald-50 to-teal-50/50' : 'bg-gradient-to-r from-purple-50 to-indigo-50/50';
+                const iconColor = col.isWafy ? 'text-emerald-700' : 'text-purple-700';
 
                 // Find classes belonging to this college
                 let collegeClasses = appState.classesList.filter(cls => {
-                    if (isWafy) {
-                        return cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya');
-                    } else {
-                        return cls.toLowerCase().includes('wafiyya');
-                    }
+                    return col.isWafy ? isWafyCollege(cls) : isWafiyyaCollege(cls);
                 });
 
                 if (collegeClasses.length === 0) {
@@ -3608,19 +2943,24 @@
 
                 html += `
                     <div class="mb-8 border ${headerBorder} rounded-2xl overflow-hidden shadow-sm bg-white page-break-inside-avoid">
-                        <div class="${headerBg} p-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-2 border-b ${headerBorder}">
+                        <div class="${headerBg} p-4 sm:p-5 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b ${headerBorder}">
                             <div>
-                                <h3 class="font-black text-base text-slate-800 flex items-center gap-2">
-                                    <i class="fas fa-university ${iconColor}"></i> ${collegeName} Campus Timetable
-                                </h3>
-                                <p class="text-xs text-slate-500 mt-0.5">Comprehensive Weekly Academic Schedule • Academic Year ${currentYear}</p>
+                                <div class="flex items-center gap-2 flex-wrap">
+                                    <h3 class="font-black text-base sm:text-lg text-slate-900 flex items-center gap-2">
+                                        <i class="fas fa-university ${iconColor}"></i> ${col.name}
+                                    </h3>
+                                    <span class="${badgeTheme} text-[10px] font-black px-2.5 py-0.5 rounded-full shadow-sm uppercase tracking-wider">
+                                        ${col.short} CAMPUS
+                                    </span>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-1">Official Academic Schedule • Academic Year ${currentYear}</p>
                             </div>
-                            <div class="flex items-center gap-2">
-                                <span class="${badgeTheme} text-xs font-bold px-3 py-1 rounded-full shadow-sm">
-                                    ${collegeName} Directorate
+                            <div class="flex items-center gap-2 self-end sm:self-auto">
+                                <span class="text-xs text-slate-500 font-medium bg-white px-2.5 py-1 rounded-lg border border-slate-200">
+                                    <b>${collegeClasses.length}</b> Batches
                                 </span>
-                                <button onclick="window.print()" class="no-print bg-white hover:bg-slate-100 text-slate-700 text-xs font-bold px-3 py-1 rounded-lg border border-slate-300 shadow-sm transition">
-                                    <i class="fas fa-print mr-1"></i> Print
+                                <button onclick="window.print()" class="no-print bg-white hover:bg-slate-50 text-slate-700 text-xs font-bold px-3 py-1.5 rounded-xl border border-slate-300 shadow-sm transition flex items-center gap-1.5">
+                                    <i class="fas fa-print text-slate-500"></i> Print Noticeboard
                                 </button>
                             </div>
                         </div>
@@ -3630,7 +2970,7 @@
                                 <thead class="bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider">
                                     <tr>
                                         <th class="px-3 py-2.5 border border-slate-200 text-left w-24 bg-slate-100">Day</th>
-                                        <th class="px-3 py-2.5 border border-slate-200 text-left w-36 bg-slate-100">Class</th>
+                                        <th class="px-3 py-2.5 border border-slate-200 text-left w-36 bg-slate-100">Class Batch</th>
                                         ${Array.from({length: periods}, (_, i) => `
                                             <th class="px-2 py-2 border border-slate-200 bg-slate-50 min-w-[90px]">
                                                 <div>Period ${i + 1}</div>
@@ -3649,13 +2989,13 @@
                             html += `<td rowspan="${collegeClasses.length}" class="px-3 py-4 border border-slate-200 font-bold bg-slate-50 text-slate-800 text-left align-middle whitespace-nowrap">${dayNamesEn[d]}</td>`;
                         }
 
-                        html += `<td class="px-3 py-2 border border-slate-200 font-bold text-slate-700 text-left bg-slate-50/50 whitespace-nowrap">${cls}</td>`;
+                        html += `<td class="px-3 py-2.5 border border-slate-200 font-bold text-slate-700 text-left bg-slate-50/50 whitespace-nowrap">${cls}</td>`;
 
                         for (let p = 0; p < periods; p++) {
                             const slot = (timetable && timetable[d] && timetable[d][p]) ? timetable[d][p][cls] : null;
                             if (slot) {
                                 const teacher = appState.teachers.find(t => t.id === slot.teacherId);
-                                const cellBg = isWafy ? 'bg-emerald-50/80 text-emerald-950' : 'bg-purple-50/80 text-purple-950';
+                                const cellBg = col.isWafy ? 'bg-emerald-50/80 text-emerald-950' : 'bg-purple-50/80 text-purple-950';
 
                                 html += `
                                     <td class="border border-slate-200 p-2 period-cell ${cellBg}">
@@ -4517,7 +3857,7 @@
 
         // Initial Templates
         function loadInitialTemplates() {
-            appState.institutions = ["Wafy", "Wafiyya"];
+            appState.institutions = ["KKHM ISLAMIC & ARTS COLLEGE ( WAFY )", "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)"];
             appState.days = 5;
             appState.periods = 6;
             appState.enableTravelBuffer = true;
@@ -4592,6 +3932,7 @@
         window.saveEditedAllotment = saveEditedAllotment;
         window.generateTimetable = generateTimetable;
         window.setTimetableViewMode = setTimetableViewMode;
+        window.selectCollegeTimetableTab = selectCollegeTimetableTab;
         window.renderTimetable = renderTimetable;
         window.exportToCSV = exportToCSV;
         window.saveToCloud = saveToCloud;
