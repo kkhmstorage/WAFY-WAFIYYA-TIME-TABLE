@@ -1,51 +1,96 @@
-﻿# WAFY & WAFIYYA TIME TABLE
+# WAFY & WAFIYYA TIME TABLE
+## Coordinated Multi-Campus Academic Scheduling, Daily Audit & Faculty Allocation Portal
 
-Coordinated Multi-College Academic Timetable & Faculty Management System for Wafy & Wafiyya Institutions.
-
----
-
-## 🚀 പ്രധാന സവിശേഷതകൾ (Key Features)
-
-### 1. ഇന്നത്തെ ലൈവ് ഷെഡ്യൂൾ - ഫസ്റ്റ് ഇൻ്റർഫേസ് (Today's Active Schedule)
-- ആപ്പ് തുറക്കുമ്പോൾ ആദ്യം കാണുന്നത് **അന്നത്തെ ദിവസത്തെ ലൈവ് ഷെഡ്യൂളോ** അല്ലെങ്കിൽ ആ ദിവസത്തേക്ക് പ്രത്യേകം തയ്യാറാക്കിയ **സ്പെഷ്യൽ ടൈംടേബിളോ** ആയിരിക്കും.
-- ലൈവ് ഡിജിറ്റൽ ക്ലോക്കും നിലവിൽ നടക്കുന്ന പിരീഡിൻ്റെ സൂചികയും (Live Now).
-- ക്ലാസ് തിരിച്ചോ എല്ലാ ക്ലാസുകളും ഒരുമിച്ചോ കാണാനുള്ള ഫിൽട്ടർ.
-
-### 2. ആകെ വർക്കിംഗ് ഡേയ്സ് (Total Working Days Tracking)
-- അഡ്മിൻ ക്രമീകരണത്തിൽ അധ്യയന വർഷത്തിലെ ആകെ പ്രവൃത്തി ദിനങ്ങൾ (Total Working Days - ഉദാ: 200) രേഖപ്പെടുത്താം.
-- ഇതുവരെ നടന്ന ദിനങ്ങളും (Conducted Days) ഇനി ബാക്കിയുള്ള ദിനങ്ങളും (Remaining Days) പ്രോഗ്രസ്സ് ബാറും തത്സമയം കാണാം.
-
-### 3. വൈകുന്നേരം 3:30 ന് ഡെയ്‌ലി പിരീഡ് കണക്കെടുപ്പ് (3:30 PM Daily Period Audit)
-- കോളേജിൽ എല്ലാ ദിവസവും 3.30 ന് ക്ലാസ് ലീഡേഴ്സ് ഓഫീസിൽ എത്തി അന്നത്തെ നടന്ന പിരീഡുകളും നടക്കാത്ത പിരീഡുകളും രേഖപ്പെടുത്തുന്നു.
-- ഒറ്റ ക്ലിക്കിൽ നടന്നു (Conducted) അല്ലെങ്കിൽ നടന്നില്ല (Missed) എന്ന് മാർക്ക് ചെയ്യാം.
-- നഷ്ടമായ പിരീഡുകൾക്ക് കാരണം (അധ്യാപകൻ അവധി, സ്ഥാപന പരിപാടി, പരീക്ഷ, മഴ/ഹർത്താൽ മുതലായവ) തിരഞ്ഞെടുക്കാം.
-- എല്ലാം നടന്നു ഒറ്റ ക്ലിക്ക് ഓപ്ഷനും ക്ലാസ് തിരിച്ചുള്ള സമർപ്പണ വിവരങ്ങളും ലഭ്യമാണ്.
-
-### 4. നഷ്ടമായ പിരീഡുകൾ (Missed Periods Tracker & Hub)
-- നഷ്ടപ്പെട്ട എല്ലാ പിരീഡുകളുടെയും കൃത്യമായ ലിസ്റ്റ്, തീയതി, ക്ലാസ്, വിഷയം, അധ്യാപകൻ, കാരണം എന്നിവ സഹിതം കാണാം.
-- പരിഹരിക്കാനുള്ളവ (Pending Make-up), തീർത്തു നൽകിയവ (Compensated) എന്നിവ എളുപ്പത്തിൽ ട്രാക്ക് ചെയ്യാം.
-- നഷ്ടമായ പിരീഡുകൾ സ്പെഷ്യൽ ടൈംടേബിളിലേക്ക് നേരിട്ട് ഉൾപ്പെടുത്താനുള്ള വൺ-ക്ലിക്ക് ബട്ടൺ.
-
-### 5. സ്പെഷ്യൽ ടൈംടേബിൾ (Special Timetable)
-- നിശ്ചിത തീയതികൾ വെച്ച് ഷെഡ്യൂൾ ചെയ്യാവുന്ന പ്രത്യേക ടൈംടേബിൾ:
-  - **ഡേ സ്വാപ്പ് (Day Swap)**: മറ്റൊരു ദിവസത്തെ (ഉദാ: തിങ്കൾ) മുഴുവൻ ടൈംടേബിളും ഈ തീയതിയിലേക്ക് (ഉദാ: ശനി) പകരം നൽകാം.
-  - **നഷ്ടപരിഹാര ഷെഡ്യൂൾ (Custom Make-up)**: നഷ്ടമായ പിരീഡുകൾ തിരഞ്ഞെടുത്ത് ക്രമീകരിക്കാം.
-- ആ തീയതി വരുമ്പോൾ ആപ്പ് തുറക്കുമ്പോൾ തനിയെ സ്പെഷ്യൽ ഷെഡ്യൂൾ ലൈവ് ആകും!
-
-### 6. മാസാവസാനവും വർഷാവസാനവും റിപ്പോർട്ടുകൾ (Monthly & Annual Reports)
-- **പ്രതിമാസ റിപ്പോർട്ട് (Monthly Report)** & **വാർഷിക റിപ്പോർട്ട് (Annual Report)**:
-  - ആകെ ഷെഡ്യൂൾ ചെയ്ത പിരീഡുകൾ, നടന്നവ, നഷ്ടമായവ, തീർത്തവ, ഹാജർ ശതമാനം (%).
-  - ക്ലാസ് തിരിച്ചുള്ള സമഗ്ര പെർഫോമൻസ് ടേബിൾ.
-  - അധ്യാപകരുടെ ക്ലാസ് ഹാജർ നിലവാരം (Faculty Delivery Audit).
-  - ഒഫീഷ്യൽ ലെറ്റർഹെഡ് മാതൃകയിലുള്ള പ്രിൻ്റ് ലേഔട്ടും CSV ഡൗൺലോഡും.
-
-### 7. അഡ്മിൻ സുരക്ഷ & ക്ലൗഡ് സിങ്ക് (Admin Security & Cloud Sync)
-- പൊതുജനങ്ങൾക്ക് (വിദ്യാർത്ഥികൾ, അധ്യാപകർ) വ്യൂ-ഒൺലി ആക്സസ്.
-- അഡ്മിൻ ലോഗിൻ വഴി ക്രമീകരണങ്ങളും ടൈംടേബിൾ ജനറേഷനും.
-- ഗൂഗിൾ ഫയർബേസ് (Firebase Firestore) വഴി എല്ലാ ഡിവൈസുകളിലും തത്സമയ ക്ലൗഡ് സിങ്ക്.
+A modern, institutional-grade web application tailored for dual-campus Islamic & Arts Colleges (Wafy & Wafiyya streams). Designed for smooth cross-campus faculty scheduling, daily 3:30 PM period delivery auditing, missed period tracking, special make-up timetables, and comprehensive academic performance reports.
 
 ---
 
-## 🌐 ഷെയർ ചെയ്യാനുള്ള ലിങ്ക് (Live Web URL)
-- **https://kkhmstorage.github.io/WAFY-WAFIYYA-TIME-TABLE/**
-- വാട്ട്സ്ആപ്പ് വഴി ഷെയർ ചെയ്യാനുള്ള ബട്ടൺ ആപ്പിൽ ലഭ്യമാണ്.
+## 🌟 Key Features & Capabilities
+
+### 1. 100% English Academic Interface
+- Full application interface, navigation, badges, audit forms, reports, dialogs, and tables are presented in clean, modern English.
+
+### 2. Dedicated College-Wise Timetable View
+- Dedicated **"By College"** timetable mode allowing instant viewing and printing of campus-specific schedules:
+  - **Wafy Campus**: Prep, Thanawiyya, and higher classes with period timings and faculty assignments.
+  - **Wafiyya Campus**: Prep, Thanawiyya, and higher classes with period timings and faculty assignments.
+  - **All Campuses (Combined)**: Complete institutional master view with separated campus blocks.
+- One-click print noticeboard layout formatted for campus bulletin boards.
+
+### 3. Today's Live Schedule Default Landing View
+- Upon opening the application, the first interface immediately shows **Today's Active Schedule**.
+- Automatically detects special schedules, day swaps, or holidays.
+- Live period status indicator (**Ongoing Now**, Completed, Upcoming) based on current real-time clock.
+- Campus filter (Wafy, Wafiyya, or All) to view today's active classes.
+
+### 4. Total Working Days Target & Progress Tracking
+- Institutional configuration for academic year working days (e.g., 200 days).
+- Real-time progress bar displayed on sidebar and setup pages showing:
+  - Total Target Working Days
+  - Conducted Working Days (audited)
+  - Remaining Academic Days
+
+### 5. Daily 3:30 PM Period Delivery Audit (Class Leader Reporting)
+- At 3:30 PM every afternoon, class representatives/leaders report to the administrative office to record conducted vs missed periods.
+- Period-by-period status: **Conducted** or **Missed**.
+- If missed, category selection:
+  - *Teacher on Leave*
+  - *College Event / Program*
+  - *Special Prayer / Assembly*
+  - *Examination / Test*
+  - *Weather / Hartal / Emergency*
+  - *Other Reason* (with custom remarks).
+- Digital signature recording (Class Leader name and timestamp).
+- Visual status grid indicating which classes have submitted and which are pending.
+
+### 6. Missed Periods Tracker & Compensation Hub
+- Centralized tracking ledger for all missed lectures across the academic year.
+- Filter by Class, Faculty Member, and Status (**Pending** vs **Compensated**).
+- One-click action to schedule make-up lectures directly into a Special Timetable.
+- Export missed period ledger to CSV for administrative reviews.
+
+### 7. Special Timetable Engine (Date-Specific Swaps & Custom Schedules)
+- Schedule special timetables for any given calendar date without affecting the regular weekly schedule:
+  - **Day Swap**: Follows another weekday's timetable (e.g., Wednesday follows a Friday timetable).
+  - **Custom Make-up Schedule**: Build custom class periods and import pending missed periods with one click.
+- Automatic activation: When the calendar reaches the selected date, Today's Timetable automatically switches to the special timetable.
+
+### 8. Monthly & Annual Academic Audit Reports
+- Institutional performance summaries for academic leadership:
+  - Total Scheduled vs Conducted vs Missed periods
+  - Syllabus Delivery Rate percentage
+  - Class-wise performance table
+  - Faculty workload and delivery audit table
+  - Detailed missed period ledger
+- Print-ready format with official signature fields (Class Leader, Academic In-Charge, Principal).
+- One-click CSV export for external archiving and spreadsheet analysis.
+
+### 9. Smart Multi-Campus Timetable Generation Algorithm
+- Automated scheduling engine with intelligent constraint satisfaction:
+  - **Travel Buffer**: Prevents scheduling the same teacher back-to-back across different campuses without travel time.
+  - **Teacher Busy Protection**: Eliminates double-booking of shared faculty across campuses.
+  - **Day & Period Blocking**: Teachers can specify restricted times or days.
+  - **Soft Limits**: Distributes daily subject hours evenly across the week.
+
+### 10. Multi-Year Support & Cloud Synchronization
+- Academic year switching (e.g., `2026-2027`, `2025-2026`).
+- Automatic real-time persistence to Google Firebase Cloud Firestore (`timetable_system` collection) with local storage backup.
+
+---
+
+## 💻 Tech Stack
+- **Frontend**: Vanilla HTML5, Modern ECMAScript (ES Modules), Tailwind CSS, FontAwesome 6, Google Fonts (Inter).
+- **Backend / Database**: Google Firebase Cloud Firestore v11.6.1 (NoSQL real-time cloud database).
+- **Architecture**: Single-Page Application (SPA) designed for rapid loading, offline resiliency, and responsive mobile-to-desktop responsiveness.
+
+---
+
+## 🚀 Getting Started
+
+1. Open `index.html` in any modern web browser (Google Chrome, Firefox, Microsoft Edge, Safari).
+2. Default public view allows exploring **Today's Live Schedule**, **By College**, **By Class**, and **By Teacher** timetables.
+3. For administrative access (generating schedules, auditing, configuring academic years):
+   - Click the **Admin** button in the header.
+   - Default credentials:
+     - Username: `admin`
+     - Password: `kkhmadmin123`
