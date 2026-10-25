@@ -2147,7 +2147,7 @@
             if(timetableViewMode === 'today') {
                 renderTodayTimetable(container);
             } else if(timetableViewMode === 'college') {
-                renderCollegeWiseTimetable(container, appState.days, appState.periods, appState.timetable);
+                renderCollegeTimetable(container, appState.days, appState.periods, appState.timetable);
             } else if(timetableViewMode === 'class') {
                 renderClassTimetable(container, appState.days, appState.periods, appState.timetable);
             } else if(timetableViewMode === 'teacher') {
@@ -3966,6 +3966,18 @@
             container.innerHTML = html;
         }
 
+        // College-Wise and Master Matrix Helpers
+        function renderCollegeWiseTimetable(container, days, periods, timetable) {
+            renderCollegeTimetable(container, days, periods, timetable);
+        }
+
+        function renderMasterMatrixTimetable(container, days, periods, timetable) {
+            const previousView = selectedCollegeView;
+            selectedCollegeView = 'all';
+            renderCollegeTimetable(container, days, periods, timetable);
+            selectedCollegeView = previousView;
+        }
+
         // Export Timetable to CSV
         function exportToCSV() {
             if (!appState.timetable) { showAlert("Notice", "No timetable generated to export."); return; }
@@ -5162,6 +5174,9 @@
                 const msgBox = document.getElementById('generation-messages');
                 document.getElementById('messages-list').innerHTML = issues.map(i => `<li>${i}</li>`).join('');
                 msgBox.classList.remove('hidden');
+                showToast("Timetable Notice", "Schedule generated with " + unscheduled.length + " constraint conflict(s).");
+            } else {
+                showToast("Success", "Timetable generated successfully for " + currentYear + "!");
             }
 
             renderTimetable();
@@ -5253,6 +5268,9 @@
         window.selectCollegeTimetableView = selectCollegeTimetableView;
         window.fillAdminCredentials = fillAdminCredentials;
         window.renderTimetable = renderTimetable;
+        window.renderCollegeTimetable = renderCollegeTimetable;
+        window.renderCollegeWiseTimetable = renderCollegeWiseTimetable;
+        window.renderMasterMatrixTimetable = renderMasterMatrixTimetable;
         window.exportToCSV = exportToCSV;
         window.saveToCloud = saveToCloud;
         window.resetYearData = resetYearData;
