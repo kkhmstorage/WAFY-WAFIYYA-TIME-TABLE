@@ -264,6 +264,11 @@
         </div>
 
         <div class="flex items-center gap-1.5 sm:gap-2 ml-auto">
+            <!-- ERP Back Button (when opened from Netlify ERP or Android App) -->
+            <button id="erp-return-btn" onclick="window.history.length > 1 ? window.history.back() : window.close()" class="hidden text-xs bg-emerald-800/90 hover:bg-emerald-700 text-emerald-100 border border-emerald-400/50 px-2 sm:px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow" title="Return to College ERP">
+                <i class="fas fa-arrow-left text-[10px]"></i> <span class="hidden sm:inline">Back to ERP</span>
+            </button>
+
             <!-- Academic Year Selector -->
             <div class="flex items-center bg-slate-900/80 border border-emerald-500/40 rounded-lg px-2 py-1 text-xs">
                 <i class="fas fa-graduation-cap text-emerald-400 mr-1 text-[11px]"></i>
@@ -1962,6 +1967,73 @@
 
             // Live Clock for today view
             setInterval(updateLiveClock, 1000);
+
+            // Handle SSO and Deep Linking from Netlify College ERP / Android App
+            handleURLParamsAndSSO();
+        }
+
+        // Netlify College ERP & Android App Single Sign-On (SSO) & Deep Linking Handler
+        function handleURLParamsAndSSO() {
+            try {
+                const params = new URLSearchParams(window.location.search);
+                if (!params.toString()) return;
+
+                const role = (params.get('role') || '').toLowerCase();
+                const teacherId = params.get('teacher') || params.get('teacher_id') || params.get('id');
+                const classParam = params.get('class') || params.get('batch');
+                const tabParam = params.get('tab');
+                const sourceParam = (params.get('source') || params.get('ref') || '').toLowerCase();
+                const isERP = (sourceParam === 'erp' || sourceParam === 'app' || params.has('erp'));
+
+                // 1. Show Return to ERP button if opened from Netlify ERP or Android app
+                if (isERP) {
+                    const erpBtn = document.getElementById('erp-return-btn');
+                    if (erpBtn) erpBtn.classList.remove('hidden');
+                }
+
+                // 2. Seamless Admin SSO Login
+                if (role === 'admin' || role === 'principal' || role === 'hod') {
+                    isAdminLoggedIn = true;
+                    currentAdminUser = {
+                        username: params.get('username') || 'ERP Admin',
+                        label: params.get('label') || "College ERP Administrator",
+                        institution: "Both Campuses"
+                    };
+                    sessionStorage.setItem('wafy_admin_logged', 'true');
+                    sessionStorage.setItem('wafy_admin_user', JSON.stringify(currentAdminUser));
+                    updateRoleUI();
+                    showToast("ERP SSO Active", "Authenticated seamlessly with College ERP Admin privileges.");
+                }
+
+                // 3. Faculty / Teacher View Deep Linking
+                if (role === 'teacher' || role === 'faculty' || teacherId) {
+                    window.switchTab('timetable');
+                    window.setTimetableViewMode('teacher');
+                    if (teacherId) {
+                        setTimeout(() => {
+                            const filterEl = document.getElementById('teacher-view-filter');
+                            if (filterEl) {
+                                filterEl.value = teacherId;
+                                renderTimetable();
+                            }
+                        }, 100);
+                    }
+                } else if (classParam) {
+                    window.switchTab('timetable');
+                    window.setTimetableViewMode('class');
+                    setTimeout(() => {
+                        const filterEl = document.getElementById('class-view-filter');
+                        if (filterEl) {
+                            filterEl.value = classParam;
+                            renderTimetable();
+                        }
+                    }, 100);
+                } else if (tabParam) {
+                    window.switchTab(tabParam);
+                }
+            } catch(e) {
+                console.warn("URL SSO param handler notice:", e);
+            }
         }
 
         function renderYearDropdown() {
