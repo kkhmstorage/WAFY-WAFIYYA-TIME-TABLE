@@ -120,19 +120,72 @@
                 word-break: break-word !important;
             }
             .period-cell {
-                min-height: 46px !important;
-                padding: 4px 5px !important;
+                min-height: 44px !important;
+                padding: 3px 2px !important;
+                text-align: center !important;
+                vertical-align: middle !important;
             }
             .period-cell .subject-title {
                 font-size: 11px !important;
                 font-weight: 800 !important;
                 color: #0f172a !important;
+                text-align: center !important;
             }
             .period-cell .teacher-name {
                 font-size: 9px !important;
                 color: #334155 !important;
+                text-align: center !important;
+            }
+            .day-block {
+                break-inside: avoid !important;
+                page-break-inside: avoid !important;
+            }
+            th, td {
+                text-align: center !important;
+                vertical-align: middle !important;
             }
         }
+
+        /* High-fidelity PDF export & non-split pagination rules */
+        .day-block {
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+        .pdf-export-mode {
+            background: white !important;
+            width: 100% !important;
+        }
+        .pdf-export-mode .timetable-print-card {
+            border-radius: 6px !important;
+            box-shadow: none !important;
+            margin-bottom: 0 !important;
+            break-inside: avoid !important;
+            page-break-inside: avoid !important;
+        }
+        .pdf-export-mode table {
+            width: 100% !important;
+            border-collapse: collapse !important;
+        }
+        .pdf-export-mode th,
+        .pdf-export-mode td {
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+        .pdf-export-mode .period-cell {
+            padding: 2.5px 2px !important;
+            min-height: 42px !important;
+            text-align: center !important;
+            vertical-align: middle !important;
+        }
+        .pdf-export-mode .period-cell .subject-title {
+            font-size: 11px !important;
+            text-align: center !important;
+        }
+        .pdf-export-mode .period-cell .teacher-name {
+            font-size: 9px !important;
+            text-align: center !important;
+        }
+
     </style>
 </head>
 <body class="text-slate-800 min-h-screen md:h-screen flex flex-col antialiased bg-slate-100">
@@ -3805,11 +3858,11 @@
                             <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
                                 <thead class="bg-slate-50 text-slate-600 text-xs font-semibold">
                                     <tr>
-                                        <th class="px-3 py-2.5 border border-slate-200 text-left w-24">Day</th>
+                                        <th class="px-3 py-2.5 border border-slate-200 text-center align-middle w-24 bg-slate-100 font-black">Day</th>
                                         ${Array.from({length: periods}, (_, i) => `
-                                            <th class="px-2 py-2 border border-slate-200 min-w-[90px]">
-                                                <div>Period ${i + 1}</div>
-                                                <div class="text-[10px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
+                                            <th class="px-2 py-2 border border-slate-200 min-w-[90px] text-center align-middle">
+                                                <div class="font-extrabold text-xs">Period ${i + 1}</div>
+                                                <div class="text-[9px] text-slate-400 font-medium mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                             </th>
                                         `).join('')}
                                     </tr>
@@ -3818,8 +3871,8 @@
                 `;
 
                 for (let d = 0; d < days; d++) {
-                    html += `<tr>`;
-                    html += `<td class="px-3 py-2.5 border border-slate-200 font-bold bg-slate-50 text-slate-700 text-left whitespace-nowrap">${dayNamesEn[d]}</td>`;
+                    html += `<tr class="day-block">`;
+                    html += `<td class="px-3 py-2.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}</td>`;
 
                     for (let p = 0; p < periods; p++) {
                         let assignedSlot = null;
@@ -3835,24 +3888,27 @@
 
                         if (assignedSlot) {
                             const isWafy = assignedSlot.college === appState.institutions[0];
-                            const bg = isWafy ? 'bg-emerald-50 text-emerald-950' : 'bg-purple-50 text-purple-950';
+                            const bg = isWafy ? 'bg-emerald-50 text-emerald-950 border border-emerald-200' : 'bg-purple-50 text-purple-950 border border-purple-200';
                             const tag = isWafy ? 'bg-emerald-200 text-emerald-800' : 'bg-purple-200 text-purple-800';
 
                             html += `
-                                <td class="border border-slate-200 p-2 period-cell ${bg}">
-                                    <div class="font-bold text-xs">${assignedSlot.subject}</div>
-                                    <div class="text-[10px] text-slate-600 font-medium">${assignedSlot.className}</div>
-                                    <span class="inline-block text-[9px] px-1.5 py-0.2 rounded font-semibold mt-1 ${tag}">${assignedSlot.college}</span>
+                                <td class="border border-slate-200 p-1.5 period-cell ${bg} text-center align-middle">
+                                    <div class="flex flex-col items-center justify-center text-center w-full min-h-[46px] gap-0.5">
+                                        <div class="font-black text-xs uppercase leading-tight text-slate-900">${assignedSlot.subject}</div>
+                                        <div class="text-[10px] text-slate-700 font-bold leading-tight mt-0.5">${assignedSlot.className}</div>
+                                        <span class="inline-block text-[8.5px] px-1.5 py-0.2 rounded font-semibold mt-0.5 ${tag}">${assignedSlot.college}</span>
+                                    </div>
                                 </td>
                             `;
                         } else {
-                            html += `<td class="border border-slate-200 p-2 text-slate-300 italic text-[11px]">-</td>`;
+                            html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle">-</td>`;
                         }
                     }
                     html += `</tr>`;
                 }
 
                 html += `</tbody></table></div></div>`;
+
             });
 
             container.innerHTML = html;
@@ -3895,11 +3951,11 @@
                         <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
                             <thead class="bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-4 py-3 border border-slate-200 text-left w-28 bg-slate-100">Day</th>
+                                    <th class="px-3 py-2.5 border border-slate-200 text-center align-middle w-28 bg-slate-100 font-black">Day</th>
                                     ${Array.from({length: periods}, (_, i) => `
-                                        <th class="px-3 py-2.5 border border-slate-200 bg-slate-50 min-w-[95px]">
-                                            <div>Period ${i + 1}</div>
-                                            <div class="text-[10px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
+                                        <th class="px-3 py-2.5 border border-slate-200 bg-slate-50 min-w-[95px] text-center align-middle">
+                                            <div class="font-extrabold text-xs">Period ${i + 1}</div>
+                                            <div class="text-[9px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                         </th>
                                     `).join('')}
                                 </tr>
@@ -3908,34 +3964,36 @@
             `;
 
             for (let d = 0; d < days; d++) {
-                html += `<tr>`;
-                html += `<td class="px-4 py-3 border border-slate-200 font-bold bg-slate-50 text-slate-800 text-left whitespace-nowrap">${dayNamesEn[d]}</td>`;
+                html += `<tr class="day-block">`;
+                html += `<td class="px-3 py-2.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}</td>`;
 
                 for (let p = 0; p < periods; p++) {
                     const slot = (timetable && timetable[d] && timetable[d][p]) ? timetable[d][p][targetClass] : null;
                     if (slot) {
                         const teacher = appState.teachers.find(t => t.id === slot.teacherId);
                         const isWafy = slot.college === appState.institutions[0];
-                        const bg = isWafy ? 'bg-emerald-50/90 text-emerald-950' : 'bg-purple-50/90 text-purple-950';
+                        const bg = isWafy ? 'bg-emerald-50/90 text-emerald-950 border border-emerald-200' : 'bg-purple-50/90 text-purple-950 border border-purple-200';
 
                         html += `
-                            <td class="border border-slate-200 p-2.5 period-cell ${bg}">
-                                <div class="font-bold text-xs mb-1 text-slate-900">${slot.subject}</div>
-                                <div class="text-[11px] text-slate-600 flex items-center justify-center gap-1">
-                                    <i class="fas fa-user-tie text-[9px] text-slate-400"></i>
-                                    <span>${teacher ? teacher.name : 'Unassigned'}</span>
-                                    <span class="bg-white border border-slate-200 text-[10px] px-1 rounded font-mono font-bold">${teacher ? teacher.shortName : ''}</span>
+                            <td class="border border-slate-200 p-1.5 period-cell ${bg} text-center align-middle">
+                                <div class="flex flex-col items-center justify-center text-center w-full min-h-[46px] gap-0.5">
+                                    <div class="font-black text-xs text-slate-900 leading-tight uppercase">${slot.subject}</div>
+                                    <div class="text-[10px] text-slate-700 font-bold leading-tight mt-0.5">${teacher ? teacher.name : 'Unassigned'}</div>
+                                    <div class="flex items-center justify-center mt-0.5">
+                                        <span class="bg-white border border-slate-300 text-slate-900 text-[9px] px-1.5 py-0.5 rounded font-mono font-black shadow-2xs">${teacher ? teacher.shortName : ''}</span>
+                                    </div>
                                 </div>
                             </td>
                         `;
                     } else {
-                        html += `<td class="border border-slate-200 p-2 text-slate-300 italic text-[11px]">Free</td>`;
+                        html += `<td class="border border-slate-200 p-1.5 text-slate-400 italic text-[10px] text-center align-middle">Free</td>`;
                     }
                 }
                 html += `</tr>`;
             }
 
             html += `</tbody></table></div></div>`;
+
             container.innerHTML = html;
         }
 
@@ -4041,30 +4099,30 @@
 
                         <!-- Schedule Table -->
                         <div class="overflow-x-auto w-full">
-                            <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
+                            <table class="min-w-full divide-y divide-slate-300 text-center border-collapse">
                                 <thead class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
                                     <tr>
-                                        <th class="px-3 py-2.5 border border-slate-700 text-left w-24 bg-slate-900 text-white">Day</th>
-                                        <th class="px-3 py-2.5 border border-slate-700 text-left w-36 bg-slate-900 text-white">Class Batch</th>
+                                        <th class="px-2.5 py-2.5 border border-slate-700 text-center align-middle w-24 bg-slate-900 text-white font-black uppercase tracking-wider text-xs">Day</th>
+                                        <th class="px-2.5 py-2.5 border border-slate-700 text-center align-middle w-28 bg-slate-900 text-white font-black uppercase tracking-wider text-xs">Class Batch</th>
                                         ${Array.from({length: periods}, (_, i) => `
-                                            <th class="px-2 py-2 border border-slate-700 bg-slate-900 min-w-[95px] text-white">
-                                                <div class="font-extrabold tracking-wide">Period ${i + 1}</div>
+                                            <th class="px-2 py-2 border border-slate-700 bg-slate-900 min-w-[95px] text-white text-center align-middle">
+                                                <div class="font-extrabold tracking-wide text-xs">Period ${i + 1}</div>
                                                 <div class="text-[9px] text-emerald-300 font-medium mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                             </th>
                                         `).join('')}
                                     </tr>
                                 </thead>
-                                <tbody class="divide-y divide-slate-200 text-xs bg-white">
                 `;
 
                 for (let d = 0; d < days; d++) {
+                    html += `<tbody class="day-block border-b-2 border-slate-300 text-xs bg-white">`;
                     collegeClasses.forEach((cls, rIdx) => {
                         html += `<tr>`;
                         if (rIdx === 0) {
-                            html += `<td rowspan="${collegeClasses.length}" class="px-3 py-4 border border-slate-200 font-extrabold bg-slate-100 text-slate-800 text-left align-middle whitespace-nowrap tracking-wide text-xs">${dayNamesEn[d]}</td>`;
+                            html += `<td rowspan="${collegeClasses.length}" class="px-2.5 py-2 border border-slate-300 font-black bg-slate-100 text-slate-900 text-center align-middle whitespace-nowrap tracking-wider text-xs uppercase select-none">${dayNamesEn[d]}</td>`;
                         }
 
-                        html += `<td class="px-3 py-2.5 border border-slate-200 font-bold text-slate-800 text-left bg-slate-50/70 whitespace-nowrap">${cls}</td>`;
+                        html += `<td class="px-2.5 py-2 border border-slate-300 font-extrabold text-slate-900 text-center align-middle bg-slate-50/80 whitespace-nowrap text-xs">${cls}</td>`;
 
                         for (let p = 0; p < periods; p++) {
                             const slot = (timetable && timetable[d] && timetable[d][p]) ? timetable[d][p][cls] : null;
@@ -4079,20 +4137,22 @@
                                     : 'bg-white border border-purple-300 text-purple-950';
 
                                 html += `
-                                    <td class="border border-slate-200 p-2 period-cell ${cellBg} align-top">
-                                        <div class="subject-title font-extrabold text-[12px] text-slate-900 leading-snug mb-1">${slot.subject}</div>
-                                        <div class="teacher-name text-[10px] font-semibold text-slate-700 flex items-center justify-center gap-1.5 flex-wrap">
-                                            <span>${teacher ? teacher.name : ''}</span>
-                                            <span class="inline-block ${teacherBadgeColor} font-mono font-black text-[9px] px-1.5 py-0.5 rounded shadow-2xs">${teacher ? teacher.shortName : ''}</span>
+                                    <td class="border border-slate-300 p-1.5 period-cell ${cellBg} text-center align-middle">
+                                        <div class="flex flex-col items-center justify-center text-center w-full h-full min-h-[46px] gap-0.5">
+                                            <div class="subject-title font-black text-[11.5px] leading-tight text-slate-950 text-center uppercase tracking-tight">${slot.subject}</div>
+                                            <div class="teacher-name text-[9.5px] font-bold text-slate-700 text-center leading-tight">${teacher ? teacher.name : ''}</div>
+                                            <div class="flex items-center justify-center text-center mt-0.5">
+                                                <span class="inline-block ${teacherBadgeColor} font-mono font-black text-[8.5px] px-1.5 py-0.5 rounded shadow-2xs uppercase">${teacher ? teacher.shortName : ''}</span>
+                                            </div>
                                         </div>
                                     </td>
                                 `;
                             } else {
                                 html += `
-                                    <td class="border border-slate-200 p-2 text-slate-300 italic text-[10px] align-middle bg-slate-50/30">
-                                        <div class="flex items-center justify-center gap-1 py-1.5 opacity-60">
-                                            <i class="fas fa-mug-hot text-[9px]"></i>
-                                            <span class="text-[9px] font-semibold uppercase tracking-wider">Free</span>
+                                    <td class="border border-slate-300 p-1.5 text-slate-400 text-[10px] text-center align-middle bg-slate-50/30">
+                                        <div class="flex flex-col items-center justify-center text-center py-1 opacity-50">
+                                            <i class="fas fa-coffee text-[9px] mb-0.5 text-slate-400"></i>
+                                            <span class="text-[8.5px] font-bold uppercase tracking-wider text-slate-500">Free</span>
                                         </div>
                                     </td>
                                 `;
@@ -4100,12 +4160,13 @@
                         }
                         html += `</tr>`;
                     });
+                    html += `</tbody>`;
                 }
 
                 html += `
-                                </tbody>
                             </table>
                         </div>
+
 
                         <!-- Formal Institutional Verification Footer -->
                         <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 rounded-b-2xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 text-xs text-slate-600">
@@ -4131,7 +4192,7 @@
             container.innerHTML = html;
         }
 
-        // PDF Download Engine (Full Landscape High-Resolution PDF)
+        // PDF Download Engine (Full Landscape High-Resolution PDF with Clean Page Breaks & Centered Alignment)
         function downloadTimetablePDF(specificCollege = null) {
             if (!appState.timetable) {
                 showAlert("Notice", "Please click 'Generate Timetable' first before exporting.");
@@ -4144,13 +4205,30 @@
             showToast("Generating PDF", "Compiling complete high-resolution timetable PDF...");
 
             let filename = 'TIMETABLE_' + currentYear + '.pdf';
+            let targetEl = container;
+            let hadPageBreak = false;
+
             if (specificCollege) {
-                filename = (specificCollege.toLowerCase().includes('wafy') && !specificCollege.toLowerCase().includes('wafiyya') ? 'KKHM_WAFY' : 'AL_GAITH_WAFIYYA') + '_TIMETABLE_' + currentYear + '.pdf';
+                const isWafy = specificCollege.toLowerCase().includes('wafy') && !specificCollege.toLowerCase().includes('wafiyya');
+                filename = (isWafy ? 'KKHM_WAFY' : 'AL_GAITH_WAFIYYA') + '_TIMETABLE_' + currentYear + '.pdf';
+
+                const cards = container.querySelectorAll('.timetable-print-card');
+                for (let card of cards) {
+                    if (card.textContent.includes(specificCollege)) {
+                        targetEl = card;
+                        hadPageBreak = card.classList.contains('campus-page-break');
+                        if (hadPageBreak) card.classList.remove('campus-page-break');
+                        break;
+                    }
+                }
             }
 
             // Temporarily hide no-print buttons
-            const noPrintEls = container.querySelectorAll('.no-print');
+            const noPrintEls = targetEl.querySelectorAll('.no-print');
             noPrintEls.forEach(el => el.classList.add('hidden'));
+
+            // Enable compact high-precision PDF styling
+            targetEl.classList.add('pdf-export-mode');
 
             const opt = {
                 margin: [6, 6, 6, 6],
@@ -4160,26 +4238,41 @@
                     scale: 2,
                     useCORS: true,
                     logging: false,
-                    letterRendering: true
+                    letterRendering: true,
+                    scrollY: 0,
+                    scrollX: 0
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
-                pagebreak: { mode: ['css', 'legacy'] }
+                pagebreak: { 
+                    mode: ['css', 'legacy'], 
+                    before: ['.campus-page-break', '.page-break-before'],
+                    avoid: ['.day-block', 'tr', 'tbody', '.timetable-print-card'] 
+                }
+            };
+
+            const cleanup = () => {
+                noPrintEls.forEach(el => el.classList.remove('hidden'));
+                targetEl.classList.remove('pdf-export-mode');
+                if (hadPageBreak && targetEl) {
+                    targetEl.classList.add('campus-page-break');
+                }
             };
 
             if (typeof html2pdf !== 'undefined') {
-                html2pdf().set(opt).from(container).save().then(() => {
-                    noPrintEls.forEach(el => el.classList.remove('hidden'));
+                html2pdf().set(opt).from(targetEl).save().then(() => {
+                    cleanup();
                     showToast("PDF Downloaded", "Academic timetable downloaded successfully.");
                 }).catch(err => {
                     console.error("PDF generation failed:", err);
-                    noPrintEls.forEach(el => el.classList.remove('hidden'));
+                    cleanup();
                     window.print();
                 });
             } else {
-                noPrintEls.forEach(el => el.classList.remove('hidden'));
+                cleanup();
                 window.print();
             }
         }
+
 
         // College-Wise and Master Matrix Helpers
         function renderCollegeWiseTimetable(container, days, periods, timetable) {
