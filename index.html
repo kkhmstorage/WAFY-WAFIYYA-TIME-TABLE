@@ -1918,7 +1918,7 @@
 
             // Setup section
             const inp = document.getElementById('total-working-days-input');
-            if(inp) inp.value = total;
+            if(inp && document.activeElement !== inp) inp.value = total;
             const kpiTgt = document.getElementById('setup-kpi-target-days');
             if(kpiTgt) kpiTgt.innerText = total;
             const kpiCond = document.getElementById('setup-kpi-conducted-days');
@@ -4003,21 +4003,41 @@
             appState.institutions[0] = e.target.value || "Wafy";
             updateDropdowns();
         });
+        document.getElementById('inst1-name')?.addEventListener('change', () => {
+            saveToCloud();
+        });
         document.getElementById('inst2-name')?.addEventListener('input', (e) => {
             appState.institutions[1] = e.target.value || "Wafiyya";
             updateDropdowns();
         });
-        document.getElementById('total-working-days')?.addEventListener('change', (e) => {
-            let val = parseInt(e.target.value);
-            if (!isNaN(val) && val > 0) {
-                appState.totalWorkingDays = val;
-                updateWorkingDaysDisplay();
-                saveToCloud();
-            }
+        document.getElementById('inst2-name')?.addEventListener('change', () => {
+            saveToCloud();
         });
+
+        // Total Academic Working Days - Real-time sync & auto-save
+        const workingDaysInput = document.getElementById('total-working-days-input');
+        if (workingDaysInput) {
+            const handleWorkingDaysUpdate = (shouldSave = false) => {
+                let val = parseInt(workingDaysInput.value);
+                if (!isNaN(val) && val > 0) {
+                    appState.totalWorkingDays = val;
+                    updateWorkingDaysDisplay();
+                    if (shouldSave) {
+                        saveToCloud();
+                    }
+                }
+            };
+            workingDaysInput.addEventListener('input', () => handleWorkingDaysUpdate(false));
+            workingDaysInput.addEventListener('change', () => handleWorkingDaysUpdate(true));
+        }
+
         document.getElementById('days-count')?.addEventListener('change', (e) => {
             let val = parseInt(e.target.value);
-            if (val >= 1 && val <= 7) { appState.days = val; renderTeachersList(); }
+            if (val >= 1 && val <= 7) { 
+                appState.days = val; 
+                renderTeachersList(); 
+                saveToCloud();
+            }
         });
         document.getElementById('periods-count')?.addEventListener('change', (e) => {
             let val = parseInt(e.target.value);
@@ -4025,7 +4045,12 @@
                 appState.periods = val; 
                 renderPeriodTimingInputs();
                 renderTeachersList(); 
+                saveToCloud();
             }
+        });
+        document.getElementById('enable-travel-buffer')?.addEventListener('change', (e) => {
+            appState.enableTravelBuffer = e.target.checked;
+            saveToCloud();
         });
         document.getElementById('classes-list-input')?.addEventListener('change', (e) => {
             const list = e.target.value.split(',').map(s => s.trim()).filter(Boolean);
