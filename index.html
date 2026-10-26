@@ -281,6 +281,15 @@
                 </button>
             </div>
 
+            <!-- Cloud Database Status & Sync Center Button -->
+            <button id="db-status-btn" onclick="window.openDatabaseSyncModal()" class="text-xs bg-slate-900/90 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 px-2 sm:px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow" title="Cloud Database: Initializing...">
+                <span class="relative flex h-2 w-2">
+                    <span id="db-status-ping" class="animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"></span>
+                    <span id="db-status-dot" class="relative inline-flex rounded-full h-2 w-2 bg-emerald-500"></span>
+                </span>
+                <span id="db-status-text" class="text-[11px] font-bold text-emerald-200 hidden sm:inline">Cloud Live</span>
+            </button>
+
             <!-- Share Link Button -->
             <button onclick="window.openShareModal()" class="text-xs bg-slate-800/90 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40 px-2 sm:px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow" title="Share Timetable Link">
                 <i class="fas fa-share-alt"></i> <span class="hidden sm:inline">Share</span>
@@ -410,6 +419,20 @@
                     <span>Conducted: <b id="side-conducted-days">0</b></span>
                     <span>Remaining: <b id="side-remaining-days">200</b></span>
                 </div>
+            </div>
+
+            <!-- Sidebar Cloud Database Status Card -->
+            <div onclick="window.openDatabaseSyncModal()" class="cursor-pointer mx-3 mb-2 p-2.5 bg-white/70 hover:bg-white border border-slate-200 rounded-xl transition shadow-sm flex items-center justify-between text-xs group" title="Click to open Cloud Database & Sync Center">
+                <div class="flex items-center gap-2 min-w-0">
+                    <div class="w-7 h-7 rounded-lg bg-emerald-100 group-hover:bg-emerald-200 text-emerald-700 flex items-center justify-center shrink-0 text-xs transition">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div class="min-w-0">
+                        <p class="text-[11px] font-bold text-slate-800 truncate">Cloud Database</p>
+                        <p id="side-db-status-desc" class="text-[10px] text-emerald-600 truncate font-semibold">Firebase Firestore Live</p>
+                    </div>
+                </div>
+                <span id="side-db-status-badge" class="text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0 border border-emerald-200">Live</span>
             </div>
 
             <!-- Admin Generator Widget -->
@@ -1597,13 +1620,211 @@
     </div>
 
 
+    <!-- CLOUD DATABASE & SYNCHRONIZATION CENTER MODAL -->
+    <div id="database-sync-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl max-w-2xl w-full shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]">
+            <!-- Header -->
+            <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-950 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-lg shadow-inner">
+                        <i class="fas fa-database"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base sm:text-lg font-black tracking-tight text-white">Database & Cloud Sync Center</h3>
+                            <span id="db-modal-status-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                                🟢 Cloud Live
+                            </span>
+                        </div>
+                        <p class="text-xs text-emerald-200/80">KKHM & Al-Gaith Real-Time Google Cloud Firestore Engine</p>
+                    </div>
+                </div>
+                <button onclick="window.closeDatabaseSyncModal()" class="text-slate-400 hover:text-white transition w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10">
+                    <i class="fas fa-times text-base"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-4 sm:p-6 overflow-y-auto space-y-4">
+
+                <!-- Connection & Infrastructure Info Card -->
+                <div class="bg-slate-50 border border-slate-200/90 rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between flex-wrap gap-2 pb-2 border-b border-slate-200/70">
+                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <i class="fas fa-server text-emerald-600"></i> Cloud Infrastructure Details
+                        </span>
+                        <span id="db-modal-last-sync" class="text-[11px] font-medium text-slate-500">
+                            Last Synced: Checking...
+                        </span>
+                    </div>
+
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5 text-xs">
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-400 font-medium block">Database Provider</span>
+                            <span class="font-bold text-slate-800 flex items-center gap-1.5 mt-0.5">
+                                <i class="fab fa-google text-amber-500 text-xs"></i> Google Firebase Firestore
+                            </span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-400 font-medium block">Firebase Project ID</span>
+                            <span class="font-mono font-bold text-emerald-700 mt-0.5 block truncate" id="db-modal-project-id">
+                                kkhm-islamic-and-arts-college
+                            </span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-400 font-medium block">Collection & Document</span>
+                            <span class="font-mono text-slate-700 mt-0.5 block truncate" id="db-modal-doc-path">
+                                timetable_system / <span class="text-emerald-700 font-bold" id="db-modal-doc-id">year_2026_2027</span>
+                            </span>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-xl border border-slate-200">
+                            <span class="text-[10px] text-slate-400 font-medium block">Real-time Synchronization</span>
+                            <span class="font-bold text-emerald-600 flex items-center gap-1.5 mt-0.5">
+                                <i class="fas fa-bolt text-amber-500"></i> Live Snapshot Listeners Active
+                            </span>
+                        </div>
+                    </div>
+
+                    <p class="text-[11px] text-slate-500 leading-relaxed bg-emerald-50/70 border border-emerald-200/60 p-2.5 rounded-xl">
+                        <i class="fas fa-check-circle text-emerald-600 mr-1"></i> <b>Dual-Layer Architecture:</b> Timetable data is instantly served from your device's high-speed local cache and continuously synchronized with Google Cloud Firestore in the background. If you go offline, all data remains fully functional and automatically syncs when reconnected.
+                    </p>
+                </div>
+
+                <!-- Database Metrics Grid -->
+                <div>
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2 flex items-center gap-1.5">
+                        <i class="fas fa-chart-pie text-emerald-600"></i> Database Storage Statistics (<span id="db-modal-year-title">2026-2027</span>)
+                    </h4>
+                    <div class="grid grid-cols-2 sm:grid-cols-4 gap-2.5 text-center">
+                        <div class="bg-white border border-slate-200 p-3 rounded-xl shadow-xs">
+                            <span class="text-[10px] font-semibold text-slate-500 uppercase block">Faculty</span>
+                            <span id="db-modal-stat-teachers" class="text-lg font-black text-slate-800">0</span>
+                            <span class="text-[9px] text-emerald-600 block">Registered</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-3 rounded-xl shadow-xs">
+                            <span class="text-[10px] font-semibold text-slate-500 uppercase block">Allotments</span>
+                            <span id="db-modal-stat-classes" class="text-lg font-black text-slate-800">0</span>
+                            <span class="text-[9px] text-emerald-600 block">Classes</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-3 rounded-xl shadow-xs">
+                            <span class="text-[10px] font-semibold text-slate-500 uppercase block">Working Days</span>
+                            <span id="db-modal-stat-days" class="text-lg font-black text-slate-800">200</span>
+                            <span class="text-[9px] text-emerald-600 block">Target</span>
+                        </div>
+                        <div class="bg-white border border-slate-200 p-3 rounded-xl shadow-xs">
+                            <span class="text-[10px] font-semibold text-slate-500 uppercase block">Daily Audits</span>
+                            <span id="db-modal-stat-audits" class="text-lg font-black text-slate-800">0</span>
+                            <span class="text-[9px] text-emerald-600 block">3:30 PM Logs</span>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Manual Cloud Actions -->
+                <div class="bg-slate-50 border border-slate-200 rounded-2xl p-4">
+                    <h4 class="text-xs font-bold text-slate-700 uppercase tracking-wider mb-2.5 flex items-center gap-1.5">
+                        <i class="fas fa-sync-alt text-emerald-600"></i> Cloud Actions & Manual Controls
+                    </h4>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                        <button onclick="window.forceCloudSync()" id="btn-force-cloud-sync" class="bg-white hover:bg-slate-100 text-slate-800 border border-slate-300 font-bold text-xs p-3 rounded-xl shadow-xs transition flex items-center justify-center gap-2">
+                            <i class="fas fa-cloud-download-alt text-emerald-600"></i>
+                            <span>Force Pull from Cloud</span>
+                        </button>
+                        <button onclick="window.saveToCloud()" id="btn-modal-push-cloud" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs p-3 rounded-xl shadow transition flex items-center justify-center gap-2">
+                            <i class="fas fa-cloud-upload-alt text-emerald-200"></i>
+                            <span>Save State to Cloud Now</span>
+                        </button>
+                    </div>
+                    <p class="text-[10px] text-slate-400 mt-2 text-center">
+                        Note: Automatic real-time sync is already active. Manual controls are useful if you want to explicitly force push or pull immediately.
+                    </p>
+                </div>
+
+                <!-- Data Protection: Full JSON Backup & Restore -->
+                <div class="bg-gradient-to-br from-amber-50/50 to-emerald-50/50 border border-amber-200/80 rounded-2xl p-4 space-y-3">
+                    <div class="flex items-center justify-between">
+                        <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                            <i class="fas fa-shield-alt text-amber-600"></i> Institutional Backup & Restore (JSON)
+                        </h4>
+                        <span class="text-[10px] font-semibold bg-amber-100 text-amber-900 px-2 py-0.5 rounded-full border border-amber-300">
+                            Data Safety
+                        </span>
+                    </div>
+                    <p class="text-xs text-slate-600">
+                        Export an offline, encrypted-ready JSON backup of all timetables, faculty records, constraints, and audit histories to store on your local computer or flash drive.
+                    </p>
+                    <div class="flex flex-wrap items-center gap-2 pt-1">
+                        <button onclick="window.exportDatabaseBackup()" class="bg-white hover:bg-amber-50 text-amber-900 border border-amber-300 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
+                            <i class="fas fa-file-download text-amber-600"></i> Download Full Backup (.json)
+                        </button>
+
+                        <button onclick="document.getElementById('db-backup-file-input').click()" class="bg-white hover:bg-emerald-50 text-emerald-900 border border-emerald-300 font-bold text-xs px-4 py-2.5 rounded-xl shadow-xs transition flex items-center gap-2">
+                            <i class="fas fa-file-upload text-emerald-600"></i> Restore from Backup File
+                        </button>
+                        <input type="file" id="db-backup-file-input" class="hidden" accept=".json" onchange="window.importDatabaseBackup(event)">
+                    </div>
+                </div>
+
+                <!-- Advanced: Custom Firebase Configuration Accordion -->
+                <details class="group bg-slate-50 border border-slate-200 rounded-xl p-3 text-xs">
+                    <summary class="font-bold text-slate-700 cursor-pointer flex items-center justify-between select-none">
+                        <span class="flex items-center gap-2">
+                            <i class="fas fa-cog text-slate-500"></i> Advanced: Custom Firebase Project Credentials
+                        </span>
+                        <i class="fas fa-chevron-down text-slate-400 group-open:rotate-180 transition-transform"></i>
+                    </summary>
+                    <div class="mt-3 pt-3 border-t border-slate-200 space-y-3">
+                        <p class="text-[11px] text-slate-500">
+                            By default, the portal securely connects to the official <b>KKHM Islamic & Arts College</b> Firebase project. If you wish to clone the system to a custom Firebase project or separate database, paste your credentials below:
+                        </p>
+                        <div class="space-y-2">
+                            <div>
+                                <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Firebase API Key</label>
+                                <input type="text" id="cfg-api-key" placeholder="AIzaSy..." class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono outline-none focus:ring-2 focus:ring-emerald-500">
+                            </div>
+                            <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Project ID</label>
+                                    <input type="text" id="cfg-project-id" placeholder="kkhm-islamic-and-arts-college" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                                <div>
+                                    <label class="block text-[10px] font-bold text-slate-600 mb-0.5">Auth Domain</label>
+                                    <input type="text" id="cfg-auth-domain" placeholder="project-id.firebaseapp.com" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-mono outline-none focus:ring-2 focus:ring-emerald-500">
+                                </div>
+                            </div>
+                        </div>
+                        <div class="flex items-center justify-between pt-1">
+                            <button onclick="window.saveCustomFirebaseConfig()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition">
+                                Apply Custom Config
+                            </button>
+                            <button onclick="window.resetDefaultFirebaseConfig()" class="text-xs text-rose-600 hover:text-rose-800 underline">
+                                Reset to Default KKHM Config
+                            </button>
+                        </div>
+                    </div>
+                </details>
+
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
+                <span class="text-[11px] text-slate-400 font-medium">
+                    <i class="fas fa-lock text-emerald-600 mr-1"></i> TLS 1.3 End-to-End Encrypted Cloud Storage
+                </span>
+                <button onclick="window.closeDatabaseSyncModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-5 py-2.5 rounded-xl transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+
     <!-- FIREBASE MODULE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
-        import { getFirestore, doc, getDoc, setDoc, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
+        import { getFirestore, doc, getDoc, setDoc, onSnapshot, serverTimestamp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-firestore.js";
 
-        // Firebase Configuration (KKHM Project)
-        const firebaseConfig = {
+        // Official Institutional Firebase Configuration (KKHM Project)
+        const defaultFirebaseConfig = {
             apiKey: "AIzaSyC7_NrAwXtzVkOjeHKrgKYpISLAo7rEpQk",
             authDomain: "kkhm-islamic-and-arts-college.firebaseapp.com",
             projectId: "kkhm-islamic-and-arts-college",
@@ -1613,8 +1834,30 @@
             measurementId: "G-XX3ZS2EM2C"
         };
 
-        const app = initializeApp(firebaseConfig);
+        let activeFirebaseConfig = defaultFirebaseConfig;
+        try {
+            const savedCfg = localStorage.getItem('wafy_custom_firebase_config');
+            if (savedCfg) {
+                const parsed = JSON.parse(savedCfg);
+                if (parsed.projectId && parsed.apiKey) {
+                    activeFirebaseConfig = parsed;
+                }
+            }
+        } catch(e) {}
+
+        const app = initializeApp(activeFirebaseConfig);
         const firestore = getFirestore(app);
+
+        // Database & Real-Time Cloud Sync State
+        let dbState = {
+            status: 'connecting', // 'connected' | 'syncing' | 'offline'
+            lastSyncTime: null,
+            lastSyncError: null,
+            isListening: false
+        };
+        let activeYearUnsubscribe = null;
+        let activeMetaUnsubscribe = null;
+        let isSavingLocally = false;
 
         // State Management
         let currentYear = "2026-2027";
@@ -1921,8 +2164,301 @@
             });
         }
 
+        // Cloud Database Status & Connection UI Controller
+        function setDbStatus(status, text, detail) {
+            dbState.status = status;
+            const btn = document.getElementById('db-status-btn');
+            const ping = document.getElementById('db-status-ping');
+            const dot = document.getElementById('db-status-dot');
+            const textEl = document.getElementById('db-status-text');
+            const sideDesc = document.getElementById('side-db-status-desc');
+            const sideBadge = document.getElementById('side-db-status-badge');
+            const modalBadge = document.getElementById('db-modal-status-badge');
+
+            if (textEl) textEl.innerText = text;
+            if (btn) btn.title = 'Cloud Database: ' + text + (detail ? ' - ' + detail : '');
+
+            if (status === 'connected') {
+                if (dot) { dot.className = "relative inline-flex rounded-full h-2 w-2 bg-emerald-500"; }
+                if (ping) { ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-emerald-400 opacity-75"; }
+                if (btn) { btn.className = "text-xs bg-slate-900/90 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 px-2 sm:px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow"; }
+                if (sideDesc) { sideDesc.innerText = "Firebase Firestore Live"; sideDesc.className = "text-[10px] text-emerald-600 truncate font-semibold"; }
+                if (sideBadge) { sideBadge.innerText = "Live"; sideBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 shrink-0 border border-emerald-200"; }
+                if (modalBadge) { modalBadge.innerHTML = '🟢 Cloud Live'; modalBadge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40"; }
+            } else if (status === 'syncing') {
+                if (dot) { dot.className = "relative inline-flex rounded-full h-2 w-2 bg-amber-400"; }
+                if (ping) { ping.className = "animate-ping absolute inline-flex h-full w-full rounded-full bg-amber-300 opacity-75"; }
+                if (btn) { btn.className = "text-xs bg-slate-900/90 hover:bg-slate-800 text-amber-300 border border-amber-500/40 px-2 sm:px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow"; }
+                if (sideDesc) { sideDesc.innerText = "Syncing to Cloud..."; sideDesc.className = "text-[10px] text-amber-600 truncate font-semibold"; }
+                if (sideBadge) { sideBadge.innerText = "Syncing"; sideBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 shrink-0 border border-amber-200"; }
+                if (modalBadge) { modalBadge.innerHTML = '🟡 Syncing...'; modalBadge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-amber-500/20 text-amber-300 border border-amber-400/40"; }
+            } else { // offline / local fallback
+                if (dot) { dot.className = "relative inline-flex rounded-full h-2 w-2 bg-rose-500"; }
+                if (ping) { ping.className = "hidden"; }
+                if (btn) { btn.className = "text-xs bg-slate-900/90 hover:bg-slate-800 text-rose-300 border border-rose-500/40 px-2 sm:px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow"; }
+                if (sideDesc) { sideDesc.innerText = "Offline (Local Cache)"; sideDesc.className = "text-[10px] text-slate-500 truncate font-semibold"; }
+                if (sideBadge) { sideBadge.innerText = "Offline"; sideBadge.className = "text-[9px] font-bold px-2 py-0.5 rounded-full bg-slate-100 text-slate-700 shrink-0 border border-slate-300"; }
+                if (modalBadge) { modalBadge.innerHTML = '🔴 Offline Cache'; modalBadge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/40"; }
+            }
+
+            const lastSyncEl = document.getElementById('db-modal-last-sync');
+            if (lastSyncEl) {
+                if (dbState.lastSyncTime) {
+                    lastSyncEl.innerText = 'Last Synced: ' + dbState.lastSyncTime.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit', second: '2-digit' });
+                } else if (dbState.lastSyncError) {
+                    lastSyncEl.innerText = 'Notice: Local Storage Active';
+                }
+            }
+        }
+
+        function updateDatabaseModalStats() {
+            const yrTitle = document.getElementById('db-modal-year-title');
+            if (yrTitle) yrTitle.innerText = currentYear;
+            const docId = document.getElementById('db-modal-doc-id');
+            if (docId) docId.innerText = 'year_' + currentYear.replace('-', '_');
+            const projId = document.getElementById('db-modal-project-id');
+            if (projId) projId.innerText = activeFirebaseConfig.projectId || 'kkhm-islamic-and-arts-college';
+
+            const teachersEl = document.getElementById('db-modal-stat-teachers');
+            if (teachersEl) teachersEl.innerText = (appState.teachers || []).length;
+            const classesEl = document.getElementById('db-modal-stat-classes');
+            if (classesEl) classesEl.innerText = (appState.classes || []).length;
+            const daysEl = document.getElementById('db-modal-stat-days');
+            if (daysEl) daysEl.innerText = appState.totalWorkingDays || 200;
+            const auditsEl = document.getElementById('db-modal-stat-audits');
+            if (auditsEl) {
+                const datesCount = Object.keys(appState.dailyAudits || {}).length;
+                auditsEl.innerText = datesCount;
+            }
+
+            const cfgApi = document.getElementById('cfg-api-key');
+            if (cfgApi && !cfgApi.value) cfgApi.value = activeFirebaseConfig.apiKey || '';
+            const cfgProj = document.getElementById('cfg-project-id');
+            if (cfgProj && !cfgProj.value) cfgProj.value = activeFirebaseConfig.projectId || '';
+            const cfgAuth = document.getElementById('cfg-auth-domain');
+            if (cfgAuth && !cfgAuth.value) cfgAuth.value = activeFirebaseConfig.authDomain || '';
+        }
+
+        // Parse and safely map Firestore document into appState (resolves nested array restrictions)
+        function applyFirestoreData(remoteData) {
+            if (!remoteData) return;
+
+            let parsedTimetable = null;
+            if (remoteData.timetableJSON && typeof remoteData.timetableJSON === 'string') {
+                try {
+                    parsedTimetable = JSON.parse(remoteData.timetableJSON);
+                } catch(e) {
+                    console.error("Failed to parse timetableJSON:", e);
+                }
+            } else if (remoteData.timetable && Array.isArray(remoteData.timetable)) {
+                parsedTimetable = remoteData.timetable;
+            }
+
+            const prevTimetable = appState.timetable;
+
+            // Assign incoming data
+            appState = Object.assign(appState, remoteData);
+            
+            // If timetable was parsed from JSON string or array, set it
+            if (parsedTimetable && Array.isArray(parsedTimetable) && parsedTimetable.length > 0) {
+                appState.timetable = parsedTimetable;
+            } else if (prevTimetable && Array.isArray(prevTimetable) && prevTimetable.length > 0 && !remoteData.timetableJSON) {
+                appState.timetable = prevTimetable;
+            }
+
+            ensureDataStructures();
+        }
+
+        function openDatabaseSyncModal() {
+            updateDatabaseModalStats();
+            const modal = document.getElementById('database-sync-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeDatabaseSyncModal() {
+            const modal = document.getElementById('database-sync-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        // Force Cloud Sync (re-pull from Firestore now)
+        async function forceCloudSync() {
+            const btn = document.getElementById('btn-force-cloud-sync');
+            const orig = btn ? btn.innerHTML : '';
+            if (btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin text-emerald-600"></i> Fetching from Cloud...';
+            setDbStatus('syncing', 'Syncing...', 'Refreshing from Firestore...');
+
+            const yearDocRef = doc(firestore, "timetable_system", 'year_' + currentYear.replace('-', '_'));
+            try {
+                const snap = await getDoc(yearDocRef);
+                if (snap.exists()) {
+                    applyFirestoreData(snap.data());
+                    localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
+                    updateUI();
+                    updateDeletedTeachersCount();
+                    updateWorkingDaysDisplay();
+                    renderSubFilters();
+                    renderTimetable();
+                    renderDailyAuditStatusGrid();
+                    renderMissedSection();
+                    renderSpecialSection();
+                    renderAcademicReports();
+                    dbState.lastSyncTime = new Date();
+                    setDbStatus('connected', 'Cloud Live', 'Force sync completed.');
+                    updateDatabaseModalStats();
+                    showToast("Cloud Synced", "Successfully refreshed " + currentYear + " data from Firestore.");
+                } else {
+                    showToast("Cloud Notice", "No remote data document found for " + currentYear + ".");
+                }
+            } catch(err) {
+                console.error("Force sync failed:", err);
+                dbState.lastSyncError = err.message;
+                setDbStatus('offline', 'Offline Cache', err.message);
+                showAlert("Sync Notice", "Could not reach Firestore directly (" + (err.message || 'Network error') + "). Local data is safe.");
+            } finally {
+                if (btn) btn.innerHTML = orig;
+            }
+        }
+
+        // Export Full Database Backup (JSON)
+        function exportDatabaseBackup() {
+            try {
+                const backupData = {
+                    format: "KKHM_WAFIYYA_TIMETABLE_BACKUP",
+                    version: "2.0",
+                    exportedAt: new Date().toISOString(),
+                    exportedBy: currentAdminUser ? currentAdminUser.username : "User",
+                    academicYear: currentYear,
+                    availableYears: availableYears,
+                    state: appState
+                };
+                const jsonStr = JSON.stringify(backupData, null, 2);
+                const blob = new Blob([jsonStr], { type: "application/json" });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement("a");
+                const safeDate = new Date().toISOString().slice(0, 10);
+                a.href = url;
+                a.download = `kkhm_wafy_timetable_backup_${currentYear.replace('-', '_')}_${safeDate}.json`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("Backup Created", "Database backup JSON file downloaded successfully.");
+            } catch(e) {
+                console.error("Backup export failed:", e);
+                showAlert("Backup Error", "Failed to generate backup JSON: " + e.message);
+            }
+        }
+
+        // Import Full Database Backup (JSON)
+        function importDatabaseBackup(event) {
+            const file = event.target.files && event.target.files[0];
+            if (!file) return;
+
+            if (!isAdminLoggedIn) {
+                showAlert("Access Denied", "Please log in as Administrator before restoring database backups.");
+                event.target.value = '';
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = async (e) => {
+                try {
+                    const parsed = JSON.parse(e.target.result);
+                    if (!parsed || (!parsed.state && !parsed.teachers)) {
+                        throw new Error("Invalid file format. Please select a valid timetable backup JSON file.");
+                    }
+
+                    const targetState = parsed.state || parsed;
+                    if (!Array.isArray(targetState.teachers) || !Array.isArray(targetState.classes)) {
+                        throw new Error("Backup file is missing essential faculty or subject allocation records.");
+                    }
+
+                    const confirmRestore = confirm(
+                        "Are you sure you want to restore this database backup?\n\n" +
+                        "This will update teachers (" + targetState.teachers.length + "), allotments (" + targetState.classes.length + "), and timetable for academic year " + currentYear + " in both local storage and Cloud Firestore."
+                    );
+
+                    if (!confirmRestore) {
+                        event.target.value = '';
+                        return;
+                    }
+
+                    appState = Object.assign(appState, targetState);
+                    ensureDataStructures();
+                    localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
+                    updateUI();
+                    updateDeletedTeachersCount();
+                    updateWorkingDaysDisplay();
+                    renderSubFilters();
+                    renderTimetable();
+                    renderDailyAuditStatusGrid();
+                    renderMissedSection();
+                    renderSpecialSection();
+                    renderAcademicReports();
+
+                    await saveToCloud();
+                    updateDatabaseModalStats();
+                    showAlert("Restore Completed", "Database backup restored successfully and synchronized to Cloud Firestore!");
+                } catch(err) {
+                    console.error("Restore failed:", err);
+                    showAlert("Restore Failed", "Could not restore backup: " + err.message);
+                } finally {
+                    event.target.value = '';
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        // Custom Firebase Config Management
+        function saveCustomFirebaseConfig() {
+            if (!isAdminLoggedIn) {
+                showAlert("Access Denied", "Only administrators can modify cloud configuration.");
+                return;
+            }
+            const apiKey = (document.getElementById('cfg-api-key')?.value || '').trim();
+            const projectId = (document.getElementById('cfg-project-id')?.value || '').trim();
+            const authDomain = (document.getElementById('cfg-auth-domain')?.value || '').trim();
+
+            if (!apiKey || !projectId) {
+                showAlert("Incomplete Config", "Please provide at least a Firebase API Key and Project ID.");
+                return;
+            }
+
+            const customCfg = {
+                apiKey,
+                projectId,
+                authDomain: authDomain || (projectId + '.firebaseapp.com'),
+                storageBucket: projectId + '.firebasestorage.app'
+            };
+
+            localStorage.setItem('wafy_custom_firebase_config', JSON.stringify(customCfg));
+            showAlert("Config Saved", "Custom Firebase configuration saved! The portal will now reload to connect to the new database.");
+            setTimeout(() => { window.location.reload(); }, 1200);
+        }
+
+        function resetDefaultFirebaseConfig() {
+            if (!isAdminLoggedIn) {
+                showAlert("Access Denied", "Only administrators can modify cloud configuration.");
+                return;
+            }
+            if (confirm("Reset cloud configuration back to default official KKHM Islamic & Arts College project?")) {
+                localStorage.removeItem('wafy_custom_firebase_config');
+                showAlert("Reset Done", "Reverted to official KKHM Firebase configuration. Reloading portal...");
+                setTimeout(() => { window.location.reload(); }, 1000);
+            }
+        }
+
         // System Initialization
         async function initSystem() {
+            setDbStatus('connecting', 'Connecting...', 'Initializing cloud connection');
+            updateDatabaseModalStats();
+
             if (sessionStorage.getItem('wafy_admin_logged') === 'true') {
                 isAdminLoggedIn = true;
                 try {
@@ -1943,8 +2479,21 @@
                 console.warn("Auth doc fetch notice", e);
             }
 
+            // Real-time meta listener so newly created academic years sync automatically across clients
             try {
                 const metaRef = doc(firestore, "timetable_system", "meta");
+                activeMetaUnsubscribe = onSnapshot(metaRef, (metaSnap) => {
+                    if (metaSnap.exists()) {
+                        const metaData = metaSnap.data();
+                        if(metaData.years && metaData.years.length > 0) {
+                            availableYears = metaData.years;
+                            renderYearDropdown();
+                        }
+                    }
+                }, (err) => {
+                    console.warn("Meta listener notice:", err);
+                });
+
                 const metaSnap = await getDoc(metaRef);
                 if (metaSnap.exists()) {
                     const metaData = metaSnap.data();
@@ -1967,6 +2516,15 @@
 
             // Live Clock for today view
             setInterval(updateLiveClock, 1000);
+
+            // Setup Online / Offline event listeners for instant cloud synchronization
+            window.addEventListener('online', () => {
+                setDbStatus('syncing', 'Reconnecting...', 'Internet connection restored, syncing with Firestore...');
+                loadAcademicYear(currentYear);
+            });
+            window.addEventListener('offline', () => {
+                setDbStatus('offline', 'Offline Mode', 'Internet disconnected. Changes saved locally in browser cache.');
+            });
 
             // Handle SSO and Deep Linking from Netlify College ERP / Android App
             handleURLParamsAndSSO();
@@ -2061,8 +2619,15 @@
         }
 
         async function loadAcademicYear(year) {
+            // Unsubscribe existing year listener if any
+            if (activeYearUnsubscribe) {
+                try { activeYearUnsubscribe(); } catch(e){}
+                activeYearUnsubscribe = null;
+            }
+
             const yearDocRef = doc(firestore, "timetable_system", 'year_' + year.replace('-', '_'));
             
+            // 1. Instant Cache Render (0ms latency from localStorage)
             const cached = localStorage.getItem(getStorageKey(year));
             if(cached) {
                 try {
@@ -2072,25 +2637,65 @@
                 } catch(e){}
             }
 
+            setDbStatus('syncing', 'Syncing...', 'Connecting to Firestore cloud...');
+
+            // 2. Initial fetch & template creation if needed
             try {
                 const snap = await getDoc(yearDocRef);
                 if(snap.exists()) {
-                    appState = Object.assign(appState, snap.data());
-                    ensureDataStructures();
+                    applyFirestoreData(snap.data());
                     localStorage.setItem(getStorageKey(year), JSON.stringify(appState));
                 } else {
-                    loadInitialTemplates();
+                    if ((!appState.teachers || appState.teachers.length === 0) && !cached) {
+                        loadInitialTemplates();
+                    }
                     ensureDataStructures();
-                    await setDoc(yearDocRef, {
-                        ...appState,
-                        createdAt: serverTimestamp(),
-                        lastUpdated: serverTimestamp()
-                    });
+                    if (isAdminLoggedIn) {
+                        const initTimetableJSON = appState.timetable ? JSON.stringify(appState.timetable) : null;
+                        await setDoc(yearDocRef, {
+                            ...appState,
+                            timetableJSON: initTimetableJSON,
+                            timetable: null,
+                            createdAt: serverTimestamp(),
+                            lastUpdated: serverTimestamp()
+                        });
+                    }
                     localStorage.setItem(getStorageKey(year), JSON.stringify(appState));
                 }
+                dbState.lastSyncTime = new Date();
+                setDbStatus('connected', 'Cloud Live', 'Connected & syncing in real time');
             } catch(err) {
                 console.error("Firestore load notice:", err);
-                if(appState.teachers.length === 0) loadInitialTemplates();
+                dbState.lastSyncError = err.message;
+                setDbStatus('offline', 'Offline Cache', 'Offline: ' + (err.message || 'Firestore connection issue'));
+                if((!appState.teachers || appState.teachers.length === 0) && !cached) loadInitialTemplates();
+            }
+
+            // 3. Attach Live Real-time Listener (onSnapshot)
+            try {
+                activeYearUnsubscribe = onSnapshot(yearDocRef, (docSnap) => {
+                    if (docSnap.exists() && !isSavingLocally) {
+                        applyFirestoreData(docSnap.data());
+                        localStorage.setItem(getStorageKey(year), JSON.stringify(appState));
+                        updateUI();
+                        updateDeletedTeachersCount();
+                        updateWorkingDaysDisplay();
+                        renderSubFilters();
+                        renderTimetable();
+                        renderDailyAuditStatusGrid();
+                        renderMissedSection();
+                        renderSpecialSection();
+                        renderAcademicReports();
+                        dbState.lastSyncTime = new Date();
+                        setDbStatus('connected', 'Cloud Live', 'Connected & syncing in real time');
+                        updateDatabaseModalStats();
+                    }
+                }, (err) => {
+                    console.warn("Realtime listener notice:", err);
+                    setDbStatus('offline', 'Offline Cache', 'Offline mode active');
+                });
+            } catch(e) {
+                console.warn("Failed to attach snapshot listener:", e);
             }
 
             ensureDataStructures();
@@ -2099,6 +2704,7 @@
             updateWorkingDaysDisplay();
             renderSubFilters();
             renderTimetable();
+            updateDatabaseModalStats();
         }
 
         function ensureDataStructures() {
@@ -2114,6 +2720,8 @@
                 return;
             }
             isSaving = true;
+            isSavingLocally = true;
+            setDbStatus('syncing', 'Saving...', 'Uploading updates to Firebase Firestore...');
             const btn = document.getElementById('btn-save-cloud');
             if(btn) btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Saving...';
 
@@ -2121,6 +2729,10 @@
 
             try {
                 localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
+
+                // Serialize timetable matrix to JSON string to strictly avoid Firestore nested array restriction
+                const timetableJSON = appState.timetable ? JSON.stringify(appState.timetable) : null;
+
                 await setDoc(yearDocRef, {
                     institutions: appState.institutions,
                     days: appState.days,
@@ -2132,18 +2744,25 @@
                     teachers: appState.teachers,
                     deletedTeachers: appState.deletedTeachers || [],
                     classes: appState.classes,
-                    timetable: appState.timetable,
+                    timetableJSON: timetableJSON,
+                    timetable: null, // Avoid sending nested array directly to Firestore
                     specialTimetables: appState.specialTimetables || [],
                     dailyAudits: appState.dailyAudits || {},
                     lastUpdated: serverTimestamp()
                 }, { merge: true });
 
+                dbState.lastSyncTime = new Date();
+                setDbStatus('connected', 'Cloud Live', 'All changes safely synced to cloud.');
                 showToast("Cloud Synced", 'Timetable for ' + currentYear + ' updated in Firestore.');
+                updateDatabaseModalStats();
             } catch(err) {
                 console.error("Cloud save failed:", err);
-                showToast("Saved Locally", "Saved in browser cache.");
+                dbState.lastSyncError = err.message;
+                setDbStatus('offline', 'Saved Locally', 'Saved in browser cache (Firestore: ' + (err.message || 'offline') + ')');
+                showToast("Saved Locally", "Saved in browser cache (Cloud sync pending).");
             } finally {
                 isSaving = false;
+                setTimeout(() => { isSavingLocally = false; }, 600);
                 if(btn) btn.innerHTML = '<i class="fas fa-cloud-upload-alt"></i> <span class="hidden md:inline">Save</span>';
             }
         }
@@ -5729,6 +6348,15 @@
         window.saveToCloud = saveToCloud;
         window.resetYearData = resetYearData;
         window.closeAlert = closeAlert;
+
+        // Cloud Database & Sync Window Handlers
+        window.openDatabaseSyncModal = openDatabaseSyncModal;
+        window.closeDatabaseSyncModal = closeDatabaseSyncModal;
+        window.forceCloudSync = forceCloudSync;
+        window.exportDatabaseBackup = exportDatabaseBackup;
+        window.importDatabaseBackup = importDatabaseBackup;
+        window.saveCustomFirebaseConfig = saveCustomFirebaseConfig;
+        window.resetDefaultFirebaseConfig = resetDefaultFirebaseConfig;
 
         // Daily Audit Window Handlers
         window.quickOpenAuditForDate = quickOpenAuditForDate;

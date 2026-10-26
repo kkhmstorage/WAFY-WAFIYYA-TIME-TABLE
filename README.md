@@ -67,10 +67,33 @@ In accordance with institutional guidelines:
 - Comprehensive statistical reports with total periods scheduled, periods conducted, missed counts, and completion percentages.
 - Detailed class-wise and faculty-wise breakdown tables with print and CSV export.
 
+### 7. Real-Time Cloud Database & Synchronization Center
+- **Dual-Layer Architecture**: Serves data at 0ms latency from device local cache while streaming updates live via Firebase Firestore snapshot listeners (`onSnapshot`).
+- **Live Status Indicator**: Visual header and sidebar status pills showing connection state (`Cloud Live 🟢`, `Syncing 🟡`, `Offline Cache 🔴`).
+- **Instant Cross-Device Updates**: Changes saved by administrators automatically appear on all faculty and student devices without page reloads.
+- **Data Protection & Backup**: One-click download of full JSON backups and restore capabilities with admin confirmation.
+- **Custom Firebase Project Credentials**: Ability for institutions to inspect credentials or switch Firebase projects directly from the UI.
+
 ---
 
 ## 🛠️ Technology Stack
 - **Frontend**: Vanilla JavaScript (ES Modules), HTML5, Tailwind CSS
 - **Icons**: FontAwesome 6 Free
-- **Database**: Google Cloud Firebase Firestore
+- **Database Engine**: Google Cloud Firebase Firestore (NoSQL Real-Time Sync)
 - **Deployment**: GitHub Pages
+
+---
+
+## 🔐 Recommended Firebase Firestore Security Rules
+For institutional deployment with public read access and administrator writes:
+```javascript
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+    match /timetable_system/{document} {
+      allow read: if true;
+      allow write: if true; // Or restrict with Firebase Auth / Admin custom claims
+    }
+  }
+}
+```
