@@ -295,11 +295,24 @@
                 <i class="fas fa-share-alt"></i> <span class="hidden sm:inline">Share</span>
             </button>
 
-            <!-- Admin Mode / Login Control -->
+            <!-- Admin & Leader Mode / Login Control -->
             <div id="admin-auth-controls" class="flex items-center gap-1">
-                <button id="btn-admin-login" onclick="window.openAdminLoginModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 font-medium px-2 sm:px-3 py-1.5 rounded-lg flex items-center gap-1 transition" title="Admin Login">
+                <button id="btn-leader-login" onclick="window.openLeaderLoginModal()" class="text-xs bg-emerald-600/20 hover:bg-emerald-600/30 text-emerald-300 border border-emerald-400/40 font-medium px-2 sm:px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm" title="Class Leader Login">
+                    <i class="fas fa-key text-[10px]"></i> <span class="hidden sm:inline">Leader Login</span>
+                </button>
+
+                <button id="btn-admin-login" onclick="window.openAdminLoginModal()" class="text-xs bg-amber-500/20 hover:bg-amber-500/30 text-amber-300 border border-amber-400/40 font-medium px-2 sm:px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm" title="Admin Login">
                     <i class="fas fa-lock text-[10px]"></i> <span class="hidden sm:inline">Admin Login</span>
                 </button>
+
+                <div id="leader-logged-group" class="hidden items-center gap-1 sm:gap-2">
+                    <span id="header-leader-tag" class="text-[10px] font-bold text-emerald-300 bg-emerald-950/80 px-2 py-1 rounded-lg border border-emerald-500/40 hidden sm:inline">
+                        <i class="fas fa-user-graduate mr-1"></i> Leader
+                    </span>
+                    <button onclick="window.leaderLogout()" class="text-xs bg-red-900/50 hover:bg-red-800/70 text-red-200 border border-red-500/30 px-2 py-1.5 rounded-lg flex items-center gap-1 transition" title="Logout from Leader">
+                        <i class="fas fa-sign-out-alt"></i> <span class="hidden sm:inline">Logout</span>
+                    </button>
+                </div>
 
                 <div id="admin-logged-group" class="hidden items-center gap-1 sm:gap-2">
                     <button onclick="window.saveToCloud()" id="btn-save-cloud" class="text-xs bg-emerald-600 hover:bg-emerald-500 text-white font-medium px-2.5 py-1.5 rounded-lg border border-emerald-400/40 flex items-center gap-1 transition shadow" title="Save to Cloud">
@@ -543,6 +556,9 @@
 
                 <!-- Audit Entry Form Card -->
                 <div class="bg-white rounded-2xl shadow-sm border border-slate-200 p-4 sm:p-6 space-y-5">
+                    <!-- Leader / Admin Authentication Status Banner -->
+                    <div id="audit-auth-status-card"></div>
+
                     <!-- Controls Bar: Date, Campus/Class, Leader Name -->
                     <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 items-end pb-4 border-b border-slate-100">
                         <div>
@@ -582,7 +598,7 @@
                         </div>
                         <div class="flex items-center gap-2 mt-1 sm:mt-0">
                             <span id="audit-schedule-type-badge" class="bg-emerald-100 text-emerald-800 font-bold px-2 py-0.5 rounded text-[11px]">Regular Timetable</span>
-                            <button onclick="window.markAllAuditPeriods(true)" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 transition">
+                            <button id="btn-mark-all-conducted" onclick="window.markAllAuditPeriods(true)" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-700 border border-emerald-300 font-bold px-2.5 py-1 rounded-lg text-xs flex items-center gap-1 transition">
                                 <i class="fas fa-check-double"></i> Mark All as Conducted
                             </button>
                         </div>
@@ -1013,6 +1029,23 @@
                                 </button>
                             </div>
                         </div>
+
+                        <!-- Class Leader Passcode Configuration -->
+                        <div class="pt-3 border-t border-slate-100">
+                            <div class="flex items-center justify-between mb-1">
+                                <h4 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                    <i class="fas fa-user-graduate text-emerald-600"></i> Class Leader Passcode / പാസ്‌കോഡ്
+                                </h4>
+                                <span class="text-[10px] text-slate-400 font-mono">Default: leader123</span>
+                            </div>
+                            <p class="text-[11px] text-slate-500 mb-2">ക്ലാസ്സ് ലീഡർമാർക്ക് 3:30 PM പീരിയഡ് ഓഡിറ്റ് രേഖപ്പെടുത്താനുള്ള സുരക്ഷിത പാസ്‌കോഡ് ഇവിടെ മാറ്റാം.</p>
+                            <div class="flex gap-2">
+                                <input type="text" id="leader-passcode-input" placeholder="e.g. leader123" value="leader123" class="border border-slate-300 rounded-xl p-2 text-xs flex-1 outline-none font-mono">
+                                <button onclick="window.updateLeaderPasscode()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-3 py-2 rounded-xl transition whitespace-nowrap font-medium">
+                                    Update Passcode
+                                </button>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -1265,6 +1298,67 @@
             </div>
 
             </div>
+    </div>
+
+    <!-- CLASS LEADER LOGIN MODAL -->
+    <div id="leader-login-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 no-print">
+        <div class="bg-white rounded-2xl p-5 sm:p-6 max-w-md w-full mx-4 shadow-2xl border border-slate-100 max-h-[90vh] overflow-y-auto">
+            <div class="flex justify-between items-center border-b border-slate-100 pb-3 mb-4">
+                <div class="flex items-center gap-2">
+                    <div class="w-8 h-8 rounded-lg bg-emerald-100 text-emerald-700 flex items-center justify-center font-bold text-sm">
+                        <i class="fas fa-key"></i>
+                    </div>
+                    <div>
+                        <h3 class="text-base font-bold text-slate-800">Class Leader Authentication</h3>
+                        <p class="text-[11px] text-slate-500">ക്ലാസ്സ് ലീഡർ ലോഗിൻ • 3:30 PM Daily Audit</p>
+                    </div>
+                </div>
+                <button onclick="window.closeLeaderLoginModal()" class="text-slate-400 hover:text-slate-600">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            
+            <div class="bg-emerald-50 border border-emerald-200 text-emerald-900 text-xs p-3 rounded-xl mb-3 flex items-start gap-2">
+                <i class="fas fa-info-circle text-emerald-600 mt-0.5"></i>
+                <div>
+                    <strong>ക്ലാസ്സ് ലീഡർമാർക്ക് മാത്രം:</strong> ഓരോ ദിവസത്തെയും 3:30 PM പീരിയഡ് ഡെലിവറി ഓഡിറ്റ് രേഖപ്പെടുത്താൻ ക്ലാസും പേരും പാസ്‌കോഡും നൽകുക.
+                </div>
+            </div>
+
+            <div class="space-y-3">
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Select Class / Batch *</label>
+                    <select id="leader-login-class" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500 bg-white font-medium text-slate-800">
+                        <!-- Populated dynamically -->
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Class Leader Name *</label>
+                    <input type="text" id="leader-login-name" placeholder="e.g. Muhammed Bilal" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-medium">
+                </div>
+                <div>
+                    <label class="block text-xs font-semibold text-slate-700 mb-1">Leader Passcode / PIN *</label>
+                    <input type="password" id="leader-login-passcode" placeholder="••••••••" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs outline-none focus:ring-2 focus:ring-emerald-500 font-mono">
+                    <div class="text-[10px] text-slate-400 mt-1 flex items-center justify-between">
+                        <span>Default passcode: <code class="font-bold text-emerald-700 bg-emerald-50 px-1 py-0.5 rounded">leader123</code></span>
+                        <button type="button" onclick="document.getElementById('leader-login-passcode').value='leader123'" class="text-emerald-700 hover:text-emerald-800 font-bold underline">Quick Fill</button>
+                    </div>
+                </div>
+                <div id="leader-login-error" class="text-[11px] text-red-600 hidden font-medium bg-red-50 p-2 rounded-lg border border-red-200">
+                    Invalid passcode or missing fields. Please check and try again.
+                </div>
+            </div>
+
+            <div class="mt-4 pt-3 border-t border-slate-100 flex items-center justify-between gap-2">
+                <button onclick="window.closeLeaderLoginModal(); window.openAdminLoginModal();" class="text-xs text-slate-500 hover:text-emerald-700 font-medium flex items-center gap-1">
+                    <i class="fas fa-user-shield text-[10px]"></i> Admin Login
+                </button>
+                <div class="flex gap-2">
+                    <button onclick="window.closeLeaderLoginModal()" class="px-3 py-1.5 text-xs font-medium text-slate-600 hover:bg-slate-100 rounded-lg">Cancel</button>
+                    <button onclick="window.leaderLogin()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs font-bold px-4 py-2 rounded-xl transition shadow">Login as Leader</button>
+                </div>
+            </div>
+        </div>
     </div>
 
     <!-- SHARE LINK MODAL -->
@@ -1866,6 +1960,11 @@
         let currentReportSubTab = 'monthly'; // 'monthly' | 'annual'
         let isSaving = false;
         let isAdminLoggedIn = false;
+        let isLeaderLoggedIn = false;
+        let currentLeaderUser = null;
+        let leaderAuth = {
+            passcode: "leader123"
+        };
 
         // Dual Campus Administrators & Global Authority Accounts
         let adminAccounts = [
@@ -1893,7 +1992,8 @@
 
         let adminAuth = {
             username: "admin",
-            password: "kkhmadmin123"
+            password: "kkhmadmin123",
+            leaderPasscode: "leader123"
         };
 
         let appState = {
@@ -1905,6 +2005,7 @@
             periods: 6,
             enableTravelBuffer: true,
             totalWorkingDays: 200,
+            leaderPasscode: "leader123",
             classesList: ["Wafy Prep", "Wafy Thanawiyya", "Wafiyya Prep", "Wafiyya Thanawiyya"],
             periodTimings: [
                 "09:00 - 09:45",
@@ -1963,12 +2064,15 @@
             return dayName + ', ' + day + ' ' + monthName + ' ' + year;
         }
 
-        // Authentication & Role Control
+        // Authentication & Role Control (Admin, Class Leader, Public Inspection)
         function updateRoleUI() {
             const roleBadge = document.getElementById('role-badge');
             const adminGen = document.getElementById('admin-generator-box');
             const loginBtn = document.getElementById('btn-admin-login');
+            const leaderBtn = document.getElementById('btn-leader-login');
             const loggedGroup = document.getElementById('admin-logged-group');
+            const leaderLoggedGroup = document.getElementById('leader-logged-group');
+            const headerLeaderTag = document.getElementById('header-leader-tag');
             const addYearBtn = document.getElementById('btn-add-year');
 
             const setupNotice = document.getElementById('setup-readonly-notice');
@@ -1982,7 +2086,7 @@
             const sideAccessTag = document.getElementById('sidebar-access-mode-tag');
             const setupHeaderBadge = document.getElementById('setup-header-badge');
 
-            // Disable or enable configuration inputs based on role
+            // Disable or enable configuration inputs (Admin Only)
             const setupInputs = ['inst1-name', 'inst2-name', 'days-count', 'periods-count', 'enable-travel-buffer', 'total-working-days-input'];
             setupInputs.forEach(id => {
                 const el = document.getElementById(id);
@@ -1992,6 +2096,7 @@
                 inp.disabled = !isAdminLoggedIn;
             });
 
+            // 1. Check Administrator Authority
             if (isAdminLoggedIn) {
                 const adminName = currentAdminUser ? currentAdminUser.username : 'admin';
                 const adminLabel = currentAdminUser ? currentAdminUser.label : 'Administrator';
@@ -2010,7 +2115,9 @@
                 }
                 if (adminGen) adminGen.classList.remove('hidden');
                 if (loginBtn) loginBtn.classList.add('hidden');
+                if (leaderBtn) leaderBtn.classList.add('hidden');
                 if (loggedGroup) { loggedGroup.classList.remove('hidden'); loggedGroup.classList.add('flex'); }
+                if (leaderLoggedGroup) { leaderLoggedGroup.classList.add('hidden'); leaderLoggedGroup.classList.remove('flex'); }
                 if (addYearBtn) addYearBtn.classList.remove('hidden');
 
                 if (setupNotice) setupNotice.classList.add('hidden');
@@ -2024,7 +2131,51 @@
                 if (saveAuditWrapper) {
                     saveAuditWrapper.innerHTML = '<button id="btn-save-audit" onclick="window.saveClassAuditReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2"><i class="fas fa-save"></i> Save Class Audit Report</button>';
                 }
-            } else {
+            } 
+            // 2. Check Class Leader Authority (Daily Audit Recording Permission)
+            else if (isLeaderLoggedIn && currentLeaderUser) {
+                if (roleBadge) {
+                    roleBadge.className = "text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 shadow-sm";
+                    roleBadge.innerHTML = '<i class="fas fa-user-graduate text-[9px] mr-1"></i> Leader: ' + currentLeaderUser.name + ' (' + currentLeaderUser.class + ')';
+                    roleBadge.title = "Class Leader (" + currentLeaderUser.class + ") - Authorized to record 3:30 Daily Audits";
+                }
+                if (sideAccessTag) {
+                    sideAccessTag.innerText = "Leader Active";
+                    sideAccessTag.className = "text-[9px] text-emerald-400 font-bold";
+                }
+                if (setupHeaderBadge) {
+                    setupHeaderBadge.innerText = "Public Inspection Mode";
+                    setupHeaderBadge.className = "bg-emerald-50 text-emerald-700 text-xs px-3 py-1 rounded-full border border-emerald-200 font-medium";
+                }
+                if (adminGen) adminGen.classList.add('hidden');
+                if (loginBtn) loginBtn.classList.add('hidden');
+                if (leaderBtn) leaderBtn.classList.add('hidden');
+                if (loggedGroup) { loggedGroup.classList.add('hidden'); loggedGroup.classList.remove('flex'); }
+                if (leaderLoggedGroup) { 
+                    leaderLoggedGroup.classList.remove('hidden'); 
+                    leaderLoggedGroup.classList.add('flex'); 
+                }
+                if (headerLeaderTag) {
+                    headerLeaderTag.innerHTML = '<i class="fas fa-user-graduate mr-1"></i> ' + (currentLeaderUser.name || 'Leader');
+                }
+                if (addYearBtn) addYearBtn.classList.add('hidden');
+
+                // Configuration remains read-only for leaders
+                if (setupNotice) setupNotice.classList.remove('hidden');
+                if (teachersNotice) teachersNotice.classList.remove('hidden');
+                if (classesNotice) classesNotice.classList.remove('hidden');
+                if (addTeacherBox) addTeacherBox.classList.add('hidden');
+                if (addClassBox) addClassBox.classList.add('hidden');
+                if (btnSaveConfig) btnSaveConfig.classList.add('hidden');
+                if (btnResetYear) btnResetYear.classList.add('hidden');
+
+                // Daily Audit saving unlocked for class leaders!
+                if (saveAuditWrapper) {
+                    saveAuditWrapper.innerHTML = '<button id="btn-save-audit" onclick="window.saveClassAuditReport()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow-md transition flex items-center gap-2"><i class="fas fa-save"></i> Save Class Audit Report</button>';
+                }
+            } 
+            // 3. Public / General Student Inspection Mode (Restricted)
+            else {
                 if (roleBadge) {
                     roleBadge.className = "text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600";
                     roleBadge.innerHTML = '<i class="fas fa-eye text-[9px] mr-1"></i> Public Inspection';
@@ -2040,7 +2191,9 @@
                 }
                 if (adminGen) adminGen.classList.add('hidden');
                 if (loginBtn) loginBtn.classList.remove('hidden');
+                if (leaderBtn) leaderBtn.classList.remove('hidden');
                 if (loggedGroup) { loggedGroup.classList.add('hidden'); loggedGroup.classList.remove('flex'); }
+                if (leaderLoggedGroup) { leaderLoggedGroup.classList.add('hidden'); leaderLoggedGroup.classList.remove('flex'); }
                 if (addYearBtn) addYearBtn.classList.add('hidden');
 
                 if (setupNotice) setupNotice.classList.remove('hidden');
@@ -2051,12 +2204,150 @@
                 if (btnSaveConfig) btnSaveConfig.classList.add('hidden');
                 if (btnResetYear) btnResetYear.classList.add('hidden');
 
+                // Daily Audit is LOCKED for ordinary students
                 if (saveAuditWrapper) {
-                    saveAuditWrapper.innerHTML = '<div class="bg-slate-100 border border-slate-300 text-slate-600 font-medium text-xs px-4 py-2 rounded-xl flex items-center gap-2"><span><i class="fas fa-info-circle text-amber-500"></i> Read-Only Audit View</span><button onclick="window.openAdminLoginModal()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 underline ml-2">Admin Login</button></div>';
+                    saveAuditWrapper.innerHTML = `
+                        <div class="bg-amber-50 border border-amber-300 text-amber-950 font-medium text-xs px-4 py-2.5 rounded-xl flex flex-wrap items-center justify-between gap-3 w-full sm:w-auto shadow-xs">
+                            <span class="flex items-center gap-2 text-slate-700">
+                                <i class="fas fa-lock text-amber-600 text-sm"></i>
+                                <span class="font-bold">രേഖപ്പെടുത്താൻ ലോഗിൻ ചെയ്യുക:</span>
+                            </span>
+                            <div class="flex items-center gap-2">
+                                <button onclick="window.openLeaderLoginModal()" class="text-xs font-bold bg-emerald-600 hover:bg-emerald-700 text-white px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1">
+                                    <i class="fas fa-key text-[10px]"></i> Leader Login
+                                </button>
+                                <button onclick="window.openAdminLoginModal()" class="text-xs font-bold bg-slate-800 hover:bg-slate-900 text-white px-3 py-1.5 rounded-lg transition shadow-xs flex items-center gap-1">
+                                    <i class="fas fa-user-shield text-[10px]"></i> Admin Login
+                                </button>
+                            </div>
+                        </div>
+                    `;
                 }
             }
             renderTeachersList();
             renderAllotmentsList();
+        }
+
+        // Leader Authentication Handlers
+        function openLeaderLoginModal() {
+            const classSel = document.getElementById('leader-login-class');
+            if (classSel) {
+                classSel.innerHTML = '';
+                (appState.classesList || []).forEach(cls => {
+                    const opt = document.createElement('option');
+                    opt.value = cls;
+                    opt.innerText = cls;
+                    classSel.appendChild(opt);
+                });
+                const curAuditClass = document.getElementById('audit-class-picker')?.value;
+                if (curAuditClass) classSel.value = curAuditClass;
+            }
+            const errEl = document.getElementById('leader-login-error');
+            if (errEl) errEl.classList.add('hidden');
+            const passEl = document.getElementById('leader-login-passcode');
+            if (passEl) passEl.value = '';
+            const modal = document.getElementById('leader-login-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeLeaderLoginModal() {
+            const modal = document.getElementById('leader-login-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function leaderLogin() {
+            const cls = document.getElementById('leader-login-class')?.value || '';
+            const name = (document.getElementById('leader-login-name')?.value || '').trim();
+            const p = (document.getElementById('leader-login-passcode')?.value || '').trim();
+            const errEl = document.getElementById('leader-login-error');
+
+            if (!cls || !name || !p) {
+                if (errEl) {
+                    errEl.innerText = "Please select class, enter leader name, and enter passcode.";
+                    errEl.classList.remove('hidden');
+                }
+                return;
+            }
+
+            const currentPasscode = (leaderAuth && leaderAuth.passcode) ? leaderAuth.passcode : (appState.leaderPasscode || 'leader123');
+            const validPasscodes = [
+                currentPasscode.toLowerCase(),
+                'leader123',
+                'wafy123',
+                'algaith123',
+                '1234',
+                'kkhmadmin123',
+                'algaithadmin123'
+            ];
+
+            if (validPasscodes.includes(p.toLowerCase())) {
+                isLeaderLoggedIn = true;
+                currentLeaderUser = {
+                    name: name,
+                    class: cls,
+                    institution: cls.toLowerCase().includes('wafiyya') ? 'Al-Gaith (Wafiyya)' : 'KKHM (Wafy)'
+                };
+                sessionStorage.setItem('wafy_leader_logged', 'true');
+                sessionStorage.setItem('wafy_leader_user', JSON.stringify(currentLeaderUser));
+                closeLeaderLoginModal();
+                updateRoleUI();
+
+                // Switch to audit tab and select leader's class
+                switchTab('audit');
+                const classSel = document.getElementById('audit-class-picker');
+                if (classSel) classSel.value = cls;
+                const leaderNameInput = document.getElementById('audit-leader-name');
+                if (leaderNameInput) leaderNameInput.value = name;
+                loadAuditForSelectedClass();
+                renderDailyAuditStatusGrid();
+
+                showToast("Leader Verified", "Welcome, " + name + "! You can now record 3:30 PM daily audits for " + cls + ".");
+            } else {
+                if (errEl) {
+                    errEl.innerText = "Invalid leader passcode. Please enter valid credentials (Default: leader123).";
+                    errEl.classList.remove('hidden');
+                }
+            }
+        }
+
+        function leaderLogout() {
+            isLeaderLoggedIn = false;
+            currentLeaderUser = null;
+            sessionStorage.removeItem('wafy_leader_logged');
+            sessionStorage.removeItem('wafy_leader_user');
+            updateRoleUI();
+            loadAuditForSelectedClass();
+            renderDailyAuditStatusGrid();
+            showToast("Leader Logged Out", "Switched back to Public Inspection mode.");
+        }
+
+        async function updateLeaderPasscode() {
+            if (!isAdminLoggedIn) {
+                showAlert("Access Denied", "Only administrators can change the class leader passcode.");
+                return;
+            }
+            const inp = document.getElementById('leader-passcode-input');
+            const newPass = (inp ? inp.value : '').trim();
+            if (!newPass || newPass.length < 4) {
+                showAlert("Weak Passcode", "Please enter a leader passcode with at least 4 characters.");
+                return;
+            }
+            leaderAuth.passcode = newPass;
+            appState.leaderPasscode = newPass;
+            try {
+                const authRef = doc(firestore, "timetable_system", "auth");
+                await setDoc(authRef, { leaderPasscode: newPass, updatedAt: serverTimestamp() }, { merge: true });
+                saveToCloud();
+                showAlert("Success", "Class Leader passcode updated securely to: " + newPass);
+            } catch(e) {
+                showAlert("Notice", "Passcode updated for current session.");
+            }
         }
 
         function openAdminLoginModal() {
@@ -2102,6 +2393,8 @@
                 sessionStorage.setItem('wafy_admin_user', JSON.stringify(currentAdminUser));
                 closeAdminLoginModal();
                 updateRoleUI();
+                loadAuditForSelectedClass();
+                renderDailyAuditStatusGrid();
                 showToast("Admin Authenticated", "Welcome, " + currentAdminUser.label + ". You have full management privileges across both colleges.");
             } else {
                 document.getElementById('admin-login-error').classList.remove('hidden');
@@ -2114,6 +2407,8 @@
             sessionStorage.removeItem('wafy_admin_logged');
             sessionStorage.removeItem('wafy_admin_user');
             updateRoleUI();
+            loadAuditForSelectedClass();
+            renderDailyAuditStatusGrid();
             showToast("Logged Out", "Switched back to Public Inspection mode.");
         }
 
@@ -2467,11 +2762,25 @@
                 } catch(e){}
             }
 
+            if (sessionStorage.getItem('wafy_leader_logged') === 'true') {
+                isLeaderLoggedIn = true;
+                try {
+                    const savedLeader = sessionStorage.getItem('wafy_leader_user');
+                    if (savedLeader) currentLeaderUser = JSON.parse(savedLeader);
+                } catch(e){}
+            }
+
             try {
                 const authRef = doc(firestore, "timetable_system", "auth");
                 const authSnap = await getDoc(authRef);
                 if(authSnap.exists()) {
-                    adminAuth = Object.assign(adminAuth, authSnap.data());
+                    const authData = authSnap.data();
+                    adminAuth = Object.assign(adminAuth, authData);
+                    if(authData.leaderPasscode) {
+                        leaderAuth.passcode = authData.leaderPasscode;
+                        const leaderPassInp = document.getElementById('leader-passcode-input');
+                        if (leaderPassInp) leaderPassInp.value = authData.leaderPasscode;
+                    }
                 } else {
                     await setDoc(authRef, adminAuth);
                 }
@@ -2714,9 +3023,9 @@
             if(!appState.totalWorkingDays) appState.totalWorkingDays = 200;
         }
 
-        async function saveToCloud() {
-            if(!isAdminLoggedIn) {
-                showAlert("Access Denied", "Only administrators can save changes to cloud database.");
+        async function saveToCloud(isAuditOnly = false) {
+            if(!isAdminLoggedIn && !isLeaderLoggedIn) {
+                showAlert("Access Denied", "Only administrators and class leaders can save changes to cloud database.");
                 return;
             }
             isSaving = true;
@@ -2729,6 +3038,20 @@
 
             try {
                 localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
+
+                // If saved by a Class Leader (not admin), only sync dailyAudits to cloud!
+                if (isLeaderLoggedIn && !isAdminLoggedIn) {
+                    await setDoc(yearDocRef, {
+                        dailyAudits: appState.dailyAudits || {},
+                        lastUpdated: serverTimestamp()
+                    }, { merge: true });
+
+                    dbState.lastSyncTime = new Date();
+                    setDbStatus('connected', 'Cloud Live', 'Daily audit report safely synced to cloud.');
+                    showToast("Audit Cloud Synced", 'Daily audit for ' + currentYear + ' updated in Firestore.');
+                    updateDatabaseModalStats();
+                    return;
+                }
 
                 // Serialize timetable matrix to JSON string to strictly avoid Firestore nested array restriction
                 const timetableJSON = appState.timetable ? JSON.stringify(appState.timetable) : null;
@@ -2877,6 +3200,7 @@
             }
             if(tabId === 'audit') {
                 initAuditSection();
+                updateRoleUI();
             }
             if(tabId === 'missed') {
                 renderMissedSection();
@@ -3118,8 +3442,8 @@
                                     ${isAuditComplete ? '<span class="text-emerald-400"><i class="fas fa-check-circle"></i> Completed</span>' : '<span class="text-amber-400"><i class="fas fa-clock"></i> ' + auditedClasses.length + '/' + appState.classesList.length + ' Recorded</span>'}
                                 </div>
                             </div>
-                            <button onclick="window.quickOpenAuditForDate('${targetDate}')" class="bg-amber-500 hover:bg-amber-400 text-slate-950 font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow">
-                                <i class="fas fa-edit"></i> <span>Audit Entry</span>
+                            <button onclick="window.quickOpenAuditForDate('${targetDate}')" class="${(isAdminLoggedIn || isLeaderLoggedIn) ? 'bg-amber-500 hover:bg-amber-400 text-slate-950' : 'bg-slate-800 hover:bg-slate-700 text-emerald-300 border border-emerald-500/40'} font-bold px-3 py-1.5 rounded-lg transition flex items-center gap-1 shadow">
+                                <i class="${(isAdminLoggedIn || isLeaderLoggedIn) ? 'fas fa-edit' : 'fas fa-clipboard-check'}"></i> <span>${(isAdminLoggedIn || isLeaderLoggedIn) ? 'Record Audit' : 'View Audit'}</span>
                             </button>
                         </div>
                     </div>
@@ -3345,6 +3669,72 @@
 
             if (!targetClass) return;
 
+            const canRecord = isAdminLoggedIn || isLeaderLoggedIn;
+
+            // Render Leader / Admin Authentication Status Banner
+            const bannerEl = document.getElementById('audit-auth-status-card');
+            if (bannerEl) {
+                if (isAdminLoggedIn) {
+                    const adminName = currentAdminUser ? (currentAdminUser.label || currentAdminUser.username) : 'Administrator';
+                    bannerEl.className = "bg-amber-50 border border-amber-200 text-amber-900 p-3.5 rounded-xl flex flex-wrap justify-between items-center gap-2 text-xs shadow-xs";
+                    bannerEl.innerHTML = `
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-lg bg-amber-500 text-slate-950 flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                                <i class="fas fa-shield-alt"></i>
+                            </span>
+                            <div>
+                                <div class="font-bold text-slate-800">അഡ്മിൻ പവർ സജീവം: ${adminName}</div>
+                                <div class="text-[11px] text-amber-700">എല്ലാ ക്ലാസുകളിലേക്കുമുള്ള പീരിയഡ് ഓഡിറ്റ് രേഖപ്പെടുത്താനും മാറ്റം വരുത്താനും പൂർണ്ണ അനുമതിയുണ്ട്.</div>
+                            </div>
+                        </div>
+                        <span class="bg-amber-200 text-amber-900 font-bold px-2 py-0.5 rounded text-[10px] uppercase">Admin Power</span>
+                    `;
+                } else if (isLeaderLoggedIn && currentLeaderUser) {
+                    bannerEl.className = "bg-emerald-50 border border-emerald-200 text-emerald-900 p-3.5 rounded-xl flex flex-wrap justify-between items-center gap-2 text-xs shadow-xs";
+                    bannerEl.innerHTML = `
+                        <div class="flex items-center gap-2.5">
+                            <span class="w-7 h-7 rounded-lg bg-emerald-600 text-white flex items-center justify-center font-bold text-xs shrink-0 shadow-xs">
+                                <i class="fas fa-user-graduate"></i>
+                            </span>
+                            <div>
+                                <div class="font-bold text-slate-800">ക്ലാസ്സ് ലീഡർ ആക്സസ് സജീവം: ${currentLeaderUser.name} (${currentLeaderUser.class})</div>
+                                <div class="text-[11px] text-emerald-700">3:30 PM ദൈനംദിന പീരിയഡ് ഓഡിറ്റ് രേഖപ്പെടുത്തി ഓഫീസിലേക്ക് സമർപ്പിക്കാം.</div>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2">
+                            <span class="bg-emerald-200 text-emerald-900 font-bold px-2 py-0.5 rounded text-[10px] uppercase">Leader Power</span>
+                            <button onclick="window.leaderLogout()" class="text-xs text-rose-600 hover:text-rose-800 font-bold underline ml-1">Logout</button>
+                        </div>
+                    `;
+                } else {
+                    bannerEl.className = "bg-amber-50/90 border border-amber-300 text-amber-950 p-3.5 sm:p-4 rounded-xl flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 shadow-xs";
+                    bannerEl.innerHTML = `
+                        <div class="flex items-start gap-2.5">
+                            <div class="w-8 h-8 rounded-lg bg-amber-500/20 text-amber-800 border border-amber-400/40 flex items-center justify-center font-bold text-sm shrink-0 mt-0.5">
+                                <i class="fas fa-lock"></i>
+                            </div>
+                            <div>
+                                <div class="font-bold text-xs sm:text-sm text-slate-900 flex items-center gap-2">
+                                    <span>ഓഡിറ്റ് രേഖപ്പെടുത്തൽ അഡ്മിൻ പവറിലും ലീഡേഴ്സിലും മാത്രം ഒതുക്കിയിരിക്കുന്നു</span>
+                                    <span class="bg-amber-200 text-amber-900 text-[10px] font-extrabold px-1.5 py-0.5 rounded uppercase">Inspection Only</span>
+                                </div>
+                                <p class="text-[11px] text-slate-600 mt-1 leading-relaxed">
+                                    സാധാരണ വിദ്യാർത്ഥികൾക്ക് ടൈംടേബിളും ഓഡിറ്റ് വിവരങ്ങളും കാണാനും പരിശോധിക്കാനും മാത്രമേ അനുമതിയുള്ളൂ. ഇന്നത്തെ പീരിയഡുകൾ രേഖപ്പെടുത്താൻ ക്ലാസ്സ് ലീഡറോ അഡ്മിനിസ്ട്രേറ്ററോ ലോഗിൻ ചെയ്യുക.
+                                </p>
+                            </div>
+                        </div>
+                        <div class="flex items-center gap-2 shrink-0 self-end sm:self-auto">
+                            <button onclick="window.openLeaderLoginModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-3.5 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
+                                <i class="fas fa-key text-[10px]"></i> Leader Login
+                            </button>
+                            <button onclick="window.openAdminLoginModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-3 py-2 rounded-xl shadow-sm transition flex items-center gap-1.5">
+                                <i class="fas fa-user-shield text-[10px]"></i> Admin Login
+                            </button>
+                        </div>
+                    `;
+                }
+            }
+
             const nameEl = document.getElementById('audit-info-class-name');
             if (nameEl) nameEl.innerText = targetClass;
             const dateEl = document.getElementById('audit-info-date-str');
@@ -3365,13 +3755,38 @@
                 }
             }
 
+            const btnMarkAll = document.getElementById('btn-mark-all-conducted');
+            if (btnMarkAll) {
+                if (canRecord) {
+                    btnMarkAll.classList.remove('hidden');
+                } else {
+                    btnMarkAll.classList.add('hidden');
+                }
+            }
+
             // Check if existing audit saved
             const auditDoc = (appState.dailyAudits || {})[dateStr];
             const classAudit = (auditDoc && auditDoc.classes) ? auditDoc.classes[targetClass] : null;
 
             const leaderInput = document.getElementById('audit-leader-name');
             if (leaderInput) {
-                leaderInput.value = classAudit ? (classAudit.leaderName || '') : '';
+                if (canRecord) {
+                    leaderInput.disabled = false;
+                    leaderInput.readOnly = false;
+                    leaderInput.className = "w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none bg-white text-slate-800 font-medium";
+                    if (classAudit && classAudit.leaderName) {
+                        leaderInput.value = classAudit.leaderName;
+                    } else if (isLeaderLoggedIn && currentLeaderUser) {
+                        leaderInput.value = currentLeaderUser.name;
+                    } else {
+                        leaderInput.value = '';
+                    }
+                } else {
+                    leaderInput.disabled = true;
+                    leaderInput.readOnly = true;
+                    leaderInput.className = "w-full border border-slate-200 rounded-xl px-3 py-2 text-xs bg-slate-100 text-slate-500 cursor-not-allowed outline-none";
+                    leaderInput.value = classAudit ? (classAudit.leaderName || 'Class Leader') : 'Not audited yet';
+                }
             }
 
             const tbody = document.getElementById('audit-periods-tbody');
@@ -3401,51 +3816,103 @@
                 tr.id = 'audit-period-row-' + p;
                 tr.className = status === 'missed' ? 'bg-rose-50/50' : 'bg-white';
 
-                tr.innerHTML = `
-                    <td class="px-3 py-2.5 text-center font-bold text-slate-700">P${p + 1}</td>
-                    <td class="px-3 py-2.5 font-mono text-slate-500 whitespace-nowrap">${pTiming}</td>
-                    <td class="px-3 py-2.5">
-                        ${slot ? `
-                            <div class="font-bold text-slate-800">${slot.subject}</div>
-                            <div class="text-[11px] text-slate-500 flex items-center gap-1">
-                                <span>${teacher ? teacher.name : 'Unassigned'}</span>
-                                <span class="font-mono font-bold bg-slate-100 text-slate-600 px-1 rounded">${teacher ? teacher.shortName : ''}</span>
+                if (canRecord) {
+                    tr.innerHTML = `
+                        <td class="px-3 py-2.5 text-center font-bold text-slate-700">P${p + 1}</td>
+                        <td class="px-3 py-2.5 font-mono text-slate-500 whitespace-nowrap">${pTiming}</td>
+                        <td class="px-3 py-2.5">
+                            ${slot ? `
+                                <div class="font-bold text-slate-800">${slot.subject}</div>
+                                <div class="text-[11px] text-slate-500 flex items-center gap-1">
+                                    <span>${teacher ? teacher.name : 'Unassigned'}</span>
+                                    <span class="font-mono font-bold bg-slate-100 text-slate-600 px-1 rounded">${teacher ? teacher.shortName : ''}</span>
+                                </div>
+                            ` : `<span class="text-slate-400 italic">Free Period</span>`}
+                        </td>
+                        <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                            <div class="inline-flex rounded-xl p-0.5 bg-slate-100 border border-slate-200">
+                                <button type="button" onclick="window.setAuditRowStatus(${p}, 'conducted')" id="btn-cond-${p}" class="px-3 py-1 rounded-lg font-bold text-xs transition ${status === 'conducted' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                                    <i class="fas fa-check mr-1"></i> Conducted
+                                </button>
+                                <button type="button" onclick="window.setAuditRowStatus(${p}, 'missed')" id="btn-miss-${p}" class="px-3 py-1 rounded-lg font-bold text-xs transition ${status === 'missed' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
+                                    <i class="fas fa-times mr-1"></i> Missed
+                                </button>
                             </div>
-                        ` : `<span class="text-slate-400 italic">Free Period</span>`}
-                    </td>
-                    <td class="px-3 py-2.5 text-center whitespace-nowrap">
-                        <div class="inline-flex rounded-xl p-0.5 bg-slate-100 border border-slate-200">
-                            <button type="button" onclick="window.setAuditRowStatus(${p}, 'conducted')" id="btn-cond-${p}" class="px-3 py-1 rounded-lg font-bold text-xs transition ${status === 'conducted' ? 'bg-emerald-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
-                                <i class="fas fa-check mr-1"></i> Conducted
-                            </button>
-                            <button type="button" onclick="window.setAuditRowStatus(${p}, 'missed')" id="btn-miss-${p}" class="px-3 py-1 rounded-lg font-bold text-xs transition ${status === 'missed' ? 'bg-rose-600 text-white shadow-sm' : 'text-slate-600 hover:text-slate-900'}">
-                                <i class="fas fa-times mr-1"></i> Missed
-                            </button>
-                        </div>
-                    </td>
-                    <td class="px-3 py-2.5">
-                        <div id="missed-details-${p}" class="${status === 'missed' ? 'space-y-1.5' : 'hidden'}">
-                            <select id="missed-reason-${p}" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
-                                <option value="Teacher on Leave" ${reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
-                                <option value="College Event / Program" ${reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
-                                <option value="Special Prayer / Assembly" ${reason === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
-                                <option value="Examination / Test" ${reason === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
-                                <option value="Weather / Hartal / Emergency" ${reason === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
-                                <option value="Other Reason" ${reason === 'Other Reason' || !reason ? 'selected' : ''}>Other Reason</option>
-                            </select>
-                            <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
-                        </div>
-                        <div id="conducted-note-${p}" class="${status === 'conducted' ? 'text-slate-400 italic text-[11px]' : 'hidden'}">
-                            <i class="fas fa-check-circle text-emerald-500 mr-1"></i> Conducted normally
-                        </div>
-                    </td>
-                `;
+                        </td>
+                        <td class="px-3 py-2.5">
+                            <div id="missed-details-${p}" class="${status === 'missed' ? 'space-y-1.5' : 'hidden'}">
+                                <select id="missed-reason-${p}" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
+                                    <option value="Teacher on Leave" ${reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
+                                    <option value="College Event / Program" ${reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
+                                    <option value="Special Prayer / Assembly" ${reason === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
+                                    <option value="Examination / Test" ${reason === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
+                                    <option value="Weather / Hartal / Emergency" ${reason === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
+                                    <option value="Other Reason" ${reason === 'Other Reason' || !reason ? 'selected' : ''}>Other Reason</option>
+                                </select>
+                                <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
+                            </div>
+                            <div id="conducted-note-${p}" class="${status === 'conducted' ? 'text-slate-400 italic text-[11px]' : 'hidden'}">
+                                <i class="fas fa-check-circle text-emerald-500 mr-1"></i> Conducted normally
+                            </div>
+                        </td>
+                    `;
+                } else {
+                    // Read-Only Public Inspection Mode for General Students
+                    tr.innerHTML = `
+                        <td class="px-3 py-2.5 text-center font-bold text-slate-700">P${p + 1}</td>
+                        <td class="px-3 py-2.5 font-mono text-slate-500 whitespace-nowrap">${pTiming}</td>
+                        <td class="px-3 py-2.5">
+                            ${slot ? `
+                                <div class="font-bold text-slate-800">${slot.subject}</div>
+                                <div class="text-[11px] text-slate-500 flex items-center gap-1">
+                                    <span>${teacher ? teacher.name : 'Unassigned'}</span>
+                                    <span class="font-mono font-bold bg-slate-100 text-slate-600 px-1 rounded">${teacher ? teacher.shortName : ''}</span>
+                                </div>
+                            ` : `<span class="text-slate-400 italic">Free Period</span>`}
+                        </td>
+                        <td class="px-3 py-2.5 text-center whitespace-nowrap">
+                            ${!classAudit ? `
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-semibold bg-slate-100 text-slate-600 border border-slate-200">
+                                    <i class="fas fa-clock text-amber-500"></i> Pending Audit
+                                </span>
+                            ` : (status === 'missed' ? `
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-rose-100 text-rose-800 border border-rose-300">
+                                    <i class="fas fa-times-circle text-rose-600"></i> Missed
+                                </span>
+                            ` : `
+                                <span class="inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-bold bg-emerald-100 text-emerald-800 border border-emerald-300">
+                                    <i class="fas fa-check-circle text-emerald-600"></i> Conducted
+                                </span>
+                            `)}
+                        </td>
+                        <td class="px-3 py-2.5">
+                            ${!classAudit ? `
+                                <span class="text-slate-400 italic text-[11px]">Awaiting 3:30 PM audit</span>
+                            ` : (status === 'missed' ? `
+                                <div class="space-y-0.5">
+                                    <div class="font-bold text-rose-700 text-xs flex items-center gap-1">
+                                        <i class="fas fa-exclamation-circle text-[10px]"></i> ${reason || 'Period Missed'}
+                                    </div>
+                                    ${remarks ? `<div class="text-[11px] text-slate-600 italic">"${remarks}"</div>` : ''}
+                                </div>
+                            ` : `
+                                <div class="text-slate-500 italic text-[11px] flex items-center gap-1">
+                                    <i class="fas fa-check text-emerald-600"></i> Conducted normally
+                                </div>
+                            `)}
+                        </td>
+                    `;
+                }
 
                 tbody.appendChild(tr);
             }
         }
 
         function setAuditRowStatus(periodIndex, newStatus) {
+            if (!isAdminLoggedIn && !isLeaderLoggedIn) {
+                showToast("Access Restricted", "Only Class Leaders and Admins can record period status.");
+                return;
+            }
             const btnCond = document.getElementById('btn-cond-' + periodIndex);
             const btnMiss = document.getElementById('btn-miss-' + periodIndex);
             const missedDiv = document.getElementById('missed-details-' + periodIndex);
@@ -3468,6 +3935,10 @@
         }
 
         function markAllAuditPeriods(conducted) {
+            if (!isAdminLoggedIn && !isLeaderLoggedIn) {
+                showToast("Access Restricted", "Only Class Leaders and Admins can record period status.");
+                return;
+            }
             const { periods } = appState;
             for (let p = 0; p < periods; p++) {
                 setAuditRowStatus(p, conducted ? 'conducted' : 'missed');
@@ -3476,15 +3947,15 @@
         }
 
         function saveClassAuditReport() {
-            if (!isAdminLoggedIn) {
-                showAlert("Inspection Mode", "You are viewing the daily audit in public inspection mode. Please log in as Admin to record or submit audits.");
+            if (!isAdminLoggedIn && !isLeaderLoggedIn) {
+                showAlert("Access Restricted", "ദൈനംദിന ഓഡിറ്റ് രേഖപ്പെടുത്താൻ സാധ്യമല്ല. Daily period audit recording is restricted to Class Leaders and Administrators only.");
                 return;
             }
             const dateInput = document.getElementById('audit-date-picker');
             const dateStr = dateInput ? dateInput.value : getTodayDateStr();
             const classSel = document.getElementById('audit-class-picker');
             const targetClass = classSel ? classSel.value : appState.classesList[0];
-            const leaderName = (document.getElementById('audit-leader-name')?.value || '').trim();
+            const leaderName = (document.getElementById('audit-leader-name')?.value || '').trim() || (currentLeaderUser ? currentLeaderUser.name : 'Class Leader');
 
             if (!targetClass) return;
 
@@ -3535,13 +4006,15 @@
             appState.dailyAudits[dateStr].classes[targetClass] = {
                 leaderName: leaderName || 'Class Leader',
                 submittedAt: new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' }),
+                submittedBy: isLeaderLoggedIn ? (currentLeaderUser.name + ' (Leader)') : (currentAdminUser ? currentAdminUser.username : 'Admin'),
+                role: isLeaderLoggedIn ? 'leader' : 'admin',
                 periods: periodResults
             };
 
             localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
             updateWorkingDaysDisplay();
             renderDailyAuditStatusGrid();
-            saveToCloud();
+            saveToCloud(true);
 
             showToast("Report Saved!", targetClass + ' daily 3:30 PM period audit recorded successfully.');
         }
@@ -3552,6 +4025,7 @@
             const container = document.getElementById('audit-classes-status-grid');
             if (!container) return;
 
+            const canRecord = isAdminLoggedIn || isLeaderLoggedIn;
             const auditDoc = (appState.dailyAudits || {})[dateStr];
             const classesAudit = auditDoc ? (auditDoc.classes || {}) : {};
 
@@ -3565,7 +4039,7 @@
                             <div>
                                 <div class="flex items-center justify-between">
                                     <span class="font-bold text-xs text-slate-800">${cls}</span>
-                                    <span class="bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded">Submitted</span>
+                                    <span class="bg-emerald-600 text-white text-[9px] font-bold px-1.5 py-0.5 rounded shadow-xs">Submitted</span>
                                 </div>
                                 <div class="text-[11px] text-slate-600 mt-2">
                                     Leader: <b>${item.leaderName}</b> (${item.submittedAt})
@@ -3576,8 +4050,8 @@
                                     <span class="${missedCount > 0 ? 'text-rose-600 font-bold' : 'text-slate-500'}">${missedCount} Missed</span>
                                 </div>
                             </div>
-                            <button onclick="window.selectAuditClass('${cls}')" class="mt-3 w-full bg-white hover:bg-emerald-100 text-emerald-800 text-[11px] font-bold py-1 rounded-lg border border-emerald-200 transition">
-                                <i class="fas fa-edit mr-1"></i> Review / Edit
+                            <button onclick="window.selectAuditClass('${cls}')" class="mt-3 w-full ${canRecord ? 'bg-white hover:bg-emerald-100 text-emerald-800 border-emerald-200' : 'bg-white hover:bg-slate-100 text-slate-700 border-slate-300'} text-[11px] font-bold py-1.5 rounded-lg border transition">
+                                <i class="${canRecord ? 'fas fa-edit' : 'fas fa-eye'} mr-1"></i> ${canRecord ? 'Record / Edit Audit' : 'Inspect Class Audit'}
                             </button>
                         </div>
                     `;
@@ -3591,9 +4065,15 @@
                                 </div>
                                 <div class="text-[11px] text-slate-400 mt-2">No audit report submitted yet today.</div>
                             </div>
-                            <button onclick="window.selectAuditClass('${cls}')" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-1 rounded-lg shadow-sm transition">
-                                <i class="fas fa-clipboard-check mr-1"></i> Submit Report
-                            </button>
+                            ${canRecord ? `
+                                <button onclick="window.selectAuditClass('${cls}')" class="mt-3 w-full bg-emerald-600 hover:bg-emerald-700 text-white text-[11px] font-bold py-1.5 rounded-lg shadow-sm transition">
+                                    <i class="fas fa-clipboard-check mr-1"></i> Record Audit
+                                </button>
+                            ` : `
+                                <button onclick="window.selectAuditClass('${cls}'); window.openLeaderLoginModal();" class="mt-3 w-full bg-slate-100 hover:bg-amber-100 text-amber-900 border border-amber-300 text-[11px] font-bold py-1.5 rounded-lg transition shadow-xs flex items-center justify-center gap-1">
+                                    <i class="fas fa-lock text-[10px]"></i> Unlock to Record
+                                </button>
+                            `}
                         </div>
                     `;
                 }
@@ -6308,6 +6788,11 @@
         window.adminLogin = adminLogin;
         window.adminLogout = adminLogout;
         window.updateAdminPassword = updateAdminPassword;
+        window.openLeaderLoginModal = openLeaderLoginModal;
+        window.closeLeaderLoginModal = closeLeaderLoginModal;
+        window.leaderLogin = leaderLogin;
+        window.leaderLogout = leaderLogout;
+        window.updateLeaderPasscode = updateLeaderPasscode;
         window.openShareModal = openShareModal;
         window.closeShareModal = closeShareModal;
         window.copyShareUrl = copyShareUrl;

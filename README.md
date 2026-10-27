@@ -7,10 +7,12 @@ A modern, institutional-grade academic scheduling, period delivery auditing, and
 
 ---
 
-## 🔒 Role-Based Access Control & Dual Institution Administrators
+## 🔒 Role-Based Access Control (Admin, Class Leaders & Public Inspection)
+
+The portal implements a strict 3-tier access hierarchy to ensure data integrity while maintaining full public transparency:
 
 ### 1. Dual Campus Administrator Accounts (Full Global Access)
-Two dedicated administrator credentials are provided for both institutions, with both holding overall administrative power across all sections and data:
+Two dedicated administrator credentials are provided for both institutions, holding overall administrative power across all sections, setup, and audits:
 
 | Institution | Username | Password | Role & Authority |
 |---|---|---|---|
@@ -19,22 +21,37 @@ Two dedicated administrator credentials are provided for both institutions, with
 | **General Administration** | `admin` | `kkhmadmin123` | **Super Administrator** (Universal access fallback) |
 
 - **One-Click Quick Fill**: In the Admin Login dialog, administrators can click either campus badge to automatically populate their username and password.
-- **Full Privileges**: Either administrator can configure academic working days, add/edit/delete faculty, adjust timetable allocations, generate master schedules, record and approve daily 3:30 PM audits, and sync changes with the cloud.
+- **Full Privileges**: Either administrator can configure academic working days, add/edit/delete faculty, adjust timetable allocations, generate master schedules, record and approve daily 3:30 PM audits, update the Class Leader Passcode, and sync changes with the cloud.
 
 ---
 
-### 2. Public Inspection Mode (View & Inspect Everything, Edit Restricted)
+### 2. Class Leader Access (3:30 PM Daily Period Audit Recording)
+To ensure accountability while keeping administrative overhead low, daily period audits can only be entered by authorized Class Leaders or Administrators:
+
+- **Leader Authentication**:
+  - Accessible via the **"Leader Login"** button in the header bar or the lock banner in the Daily Audit tab.
+  - Class Leaders select their **Class / Batch**, enter their **Name**, and authenticate using the **Class Leader Passcode** (default: `leader123`).
+  - **Passcode Management**: Administrators can easily modify the Class Leader Passcode at any time from the **Setup & Working Days** tab with instant cloud synchronization.
+- **Authorized Permissions**:
+  - Record and modify period delivery status (**Conducted** / **Missed**) for scheduled periods.
+  - Specify absence reasons (e.g., *Teacher On Leave*, *Official Duty*, *Late Arrival*, *College Program*) and add descriptive remarks.
+  - Submit and digitally sign the daily period report with cloud synchronization to Firestore.
+- **Scoped Security**: Class leaders are restricted from modifying faculty rosters, class allotments, timetable generation, or academic settings.
+
+---
+
+### 3. Public & Student Inspection Mode (Read-Only Transparency)
 In accordance with institutional guidelines:
-- **Full Visibility & Navigation**: Everyone (teachers, students, class leaders, public visitors) can freely view and inspect **all 8 portal sections**:
+- **Full Transparency & Visibility**: All students, faculty, and public visitors can freely view and inspect **all 8 portal sections**:
   1. **Schedule & Timetable**: View Today's schedule, college-wise schedules, class-wise schedules, faculty schedules, and master matrix.
-  2. **3:30 PM Daily Period Audit**: Inspect date-wise daily audits, review conducted/missed periods, and print daily audit slips.
+  2. **3:30 PM Daily Period Audit**: Inspect date-wise daily audits, review conducted/missed periods, see status badges (Conducted in green, Missed in red, Pending in amber), and print daily audit slips.
   3. **Missed Periods Tracker**: Inspect missed period logs, filter by date/teacher/class, and export CSV.
   4. **Special Timetable**: Inspect special exam/event timetables and print custom schedules.
   5. **Academic Reports**: Inspect monthly summaries, annual working day statistics, and department completion rates.
   6. **Config & Working Days**: Inspect total working days, periods per day, and period timings in read-only mode.
   7. **Faculty & Codes**: Inspect faculty roster, teacher codes, subject specializations, and day constraints.
   8. **Subject Allocations**: Inspect weekly hours and teacher allotments for every class across both colleges.
-- **Strict Modification Protection**: Adding, editing, deleting, generating schedules, resetting data, and saving daily audits are securely reserved for logged-in Administrators. Public visitors see clear "Public Inspection Mode" notices and disabled edit controls.
+- **Strict Modification Protection**: Adding, editing, deleting, generating schedules, resetting data, and **recording daily audits** are strictly locked for general students and visitors. When unauthenticated visitors view the Daily Audit tab, interactive toggles are replaced with read-only status badges, inputs are disabled, and a prominent bilingual (English & Malayalam) notice guides authorized Class Leaders and Administrators to log in.
 
 ---
 
