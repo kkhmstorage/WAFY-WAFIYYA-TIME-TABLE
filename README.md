@@ -30,7 +30,7 @@ To ensure accountability while keeping administrative overhead low, daily period
 
 - **Leader Authentication**:
   - Accessible via the **"Leader Login"** button in the header bar or the lock banner in the Daily Audit tab.
-  - Class Leaders select their **Class / Batch**, enter their **Name**, and authenticate using the **Class Leader Passcode** (default: `leader123`).
+  - Class Leaders select their **Class / Batch**, enter their **Name**, and authenticate using the **Class Leader Passcode** (provided by Admin).
   - **Passcode Management**: Administrators can easily modify the Class Leader Passcode at any time from the **Setup & Working Days** tab with instant cloud synchronization.
 - **Authorized Permissions**:
   - Record and modify period delivery status (**Conducted** / **Missed**) for scheduled periods.
