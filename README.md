@@ -84,7 +84,16 @@ In accordance with institutional guidelines:
 - Comprehensive statistical reports with total periods scheduled, periods conducted, missed counts, and completion percentages.
 - Detailed class-wise and faculty-wise breakdown tables with print and CSV export.
 
-### 7. Real-Time Cloud Database & Synchronization Center
+### 7. Split-Batch Electives & Shared Faculty Teaching
+- **Split-Batch Parallel Electives (Up to 3 Batches)**:
+  - Enables classes to be split simultaneously into **2 or up to 3 parallel elective batches** in the exact same period (e.g. Batch 1: Urdu, Batch 2: Malayalam, Batch 3: Arabic Literature).
+  - Flexible **"+ 3-ാം ബാച്ച് ചേർക്കുക / Add 3rd Batch"** toggle allowing administrators to add or remove a 3rd parallel batch on demand.
+  - Multi-faculty clash detection ensures all assigned teachers are available without schedule or travel conflicts.
+  - Granular 3:30 PM Daily Audit and Missed Periods tracking allows recording individual Conducted/Missed status per batch.
+- **Shared Faculty Co-Teaching**:
+  - Distributes teaching workload across two faculty members (Primary & Shared) under *Both* or *Either-Or* modes with flexible shared-period ratios.
+
+### 8. Real-Time Cloud Database & Synchronization Center
 - **Dual-Layer Architecture**: Serves data at 0ms latency from device local cache while streaming updates live via Firebase Firestore snapshot listeners (`onSnapshot`).
 - **Live Status Indicator**: Visual header and sidebar status pills showing connection state (`Cloud Live 🟢`, `Syncing 🟡`, `Offline Cache 🔴`).
 - **Instant Cross-Device Updates**: Changes saved by administrators automatically appear on all faculty and student devices without page reloads.

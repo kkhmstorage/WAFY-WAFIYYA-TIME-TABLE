@@ -1236,13 +1236,18 @@
 
                     <!-- 2. SPLIT BATCH ALLOCATION INPUTS (e.g. Urdu & Malayalam simultaneously) -->
                     <div id="allot-fields-split" class="hidden space-y-3 bg-emerald-50/50 p-4 rounded-xl border border-emerald-200">
-                        <div class="flex items-center justify-between">
+                        <div class="flex flex-wrap items-center justify-between gap-2">
                             <span class="text-xs font-bold text-emerald-900 flex items-center gap-1.5">
                                 <i class="fas fa-columns text-emerald-600"></i> Split Class / Parallel Electives (Simultaneous in same period)
                             </span>
-                            <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded-full">Half & Half Class Batch</span>
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="btn-toggle-new-batch3" onclick="window.toggleNewSplitBatch3()" class="text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-3 py-1 rounded-lg transition border border-emerald-300 inline-flex items-center gap-1 shadow-2xs">
+                                    <i class="fas fa-plus-circle text-emerald-600 mr-1"></i> + 3-ാം ബാച്ച് ചേർക്കുക (Add 3rd Batch)
+                                </button>
+                                <span class="text-[10px] text-emerald-700 font-semibold bg-emerald-100 px-2 py-0.5 rounded-full hidden sm:inline">2-3 Batches</span>
+                            </div>
                         </div>
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                        <div id="new-split-batches-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             <!-- Batch 1 -->
                             <div class="bg-white p-3 rounded-xl border border-emerald-200/80 shadow-2xs space-y-2">
                                 <div class="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
@@ -1269,6 +1274,23 @@
                                 <div>
                                     <label class="block text-[11px] font-medium text-slate-600 mb-1">Faculty for Subject 2</label>
                                     <select id="new-split-teacher2" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select>
+                                </div>
+                            </div>
+                            <!-- Batch 3 (Optional / As needed) -->
+                            <div id="new-split-batch3-card" class="hidden bg-white p-3 rounded-xl border border-cyan-300 shadow-2xs space-y-2 relative">
+                                <div class="flex items-center justify-between text-[11px] font-bold text-cyan-800">
+                                    <span class="flex items-center gap-1"><i class="fas fa-tag text-[10px]"></i> 3rd Group / Batch (e.g. Arabic Batch)</span>
+                                    <button type="button" onclick="window.toggleNewSplitBatch3(false)" class="text-slate-400 hover:text-rose-600 text-xs" title="Remove 3rd Batch">
+                                        <i class="fas fa-times"></i>
+                                    </button>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-600 mb-1">Subject 3 Name</label>
+                                    <input type="text" id="new-split-subj3" placeholder="e.g. Arabic Literature" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-cyan-500 outline-none">
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-medium text-slate-600 mb-1">Faculty for Subject 3</label>
+                                    <select id="new-split-teacher3" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-cyan-500 outline-none"></select>
                                 </div>
                             </div>
                         </div>
@@ -1759,18 +1781,35 @@
 
                 <!-- 2. EDIT SPLIT BATCH ALLOCATION -->
                 <div id="edit-fields-split" class="hidden space-y-3 bg-emerald-50/60 p-3 rounded-xl border border-emerald-200">
-                    <div class="text-[11px] font-bold text-emerald-900 flex items-center gap-1">
-                        <i class="fas fa-columns text-emerald-600"></i> Split Class Electives (Same Period)
+                    <div class="flex items-center justify-between">
+                        <div class="text-[11px] font-bold text-emerald-900 flex items-center gap-1">
+                            <i class="fas fa-columns text-emerald-600"></i> Split Class Electives (Same Period)
+                        </div>
+                        <button type="button" id="btn-toggle-edit-batch3" onclick="window.toggleEditSplitBatch3()" class="text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg transition border border-emerald-300 inline-flex items-center gap-1 shadow-2xs">
+                            <i class="fas fa-plus-circle text-emerald-600 mr-0.5"></i> + 3-ാം ബാച്ച് ചേർക്കുക (Add 3rd Batch)
+                        </button>
                     </div>
-                    <div class="p-2.5 bg-white rounded-lg border border-emerald-200 space-y-2">
-                        <div class="text-[10px] font-bold text-emerald-800">1st Group / Batch (e.g. Urdu Batch)</div>
-                        <input type="text" id="edit-split-subj1" placeholder="Subject 1 Name" class="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none">
-                        <select id="edit-split-teacher1" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none"></select>
-                    </div>
-                    <div class="p-2.5 bg-white rounded-lg border border-teal-200 space-y-2">
-                        <div class="text-[10px] font-bold text-teal-800">2nd Group / Batch (e.g. Malayalam Batch)</div>
-                        <input type="text" id="edit-split-subj2" placeholder="Subject 2 Name" class="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none">
-                        <select id="edit-split-teacher2" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none"></select>
+                    <div id="edit-split-batches-grid" class="grid grid-cols-1 md:grid-cols-2 gap-2">
+                        <div class="p-2.5 bg-white rounded-lg border border-emerald-200 space-y-2">
+                            <div class="text-[10px] font-bold text-emerald-800">1st Group / Batch (e.g. Urdu Batch)</div>
+                            <input type="text" id="edit-split-subj1" placeholder="Subject 1 Name" class="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                            <select id="edit-split-teacher1" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none"></select>
+                        </div>
+                        <div class="p-2.5 bg-white rounded-lg border border-teal-200 space-y-2">
+                            <div class="text-[10px] font-bold text-teal-800">2nd Group / Batch (e.g. Malayalam Batch)</div>
+                            <input type="text" id="edit-split-subj2" placeholder="Subject 2 Name" class="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                            <select id="edit-split-teacher2" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none"></select>
+                        </div>
+                        <div id="edit-split-batch3-card" class="hidden p-2.5 bg-white rounded-lg border border-cyan-300 space-y-2 col-span-1 md:col-span-2">
+                            <div class="flex items-center justify-between text-[10px] font-bold text-cyan-800">
+                                <span>3rd Group / Batch (e.g. Arabic Batch)</span>
+                                <button type="button" onclick="window.toggleEditSplitBatch3(false)" class="text-slate-400 hover:text-rose-600 text-xs" title="Remove 3rd Batch">
+                                    <i class="fas fa-times"></i>
+                                </button>
+                            </div>
+                            <input type="text" id="edit-split-subj3" placeholder="Subject 3 Name" class="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none">
+                            <select id="edit-split-teacher3" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none"></select>
+                        </div>
                     </div>
                     <div>
                         <label class="block font-medium text-slate-700 mb-1">Parallel Periods / Wk</label>
@@ -3747,35 +3786,35 @@
                         const bgCard = isMissed ? 'bg-rose-50/60 border-rose-200' : (isConducted ? 'bg-emerald-50/40' : 'bg-white');
 
                         if (slot.allocationType === 'split') {
-                            const s1 = (slot.splitSlots && slot.splitSlots[0]) ? slot.splitSlots[0] : { subject: '', teacherId: '' };
-                            const s2 = (slot.splitSlots && slot.splitSlots[1]) ? slot.splitSlots[1] : { subject: '', teacherId: '' };
-                            const t1 = appState.teachers.find(t=>t.id === s1.teacherId);
-                            const t2 = appState.teachers.find(t=>t.id === s2.teacherId);
+                            const splitSlots = (slot.splitSlots && slot.splitSlots.length) ? slot.splitSlots : [];
+                            const batchColors = [
+                                { border: 'border-emerald-200', text: 'text-emerald-800' },
+                                { border: 'border-teal-200', text: 'text-teal-800' },
+                                { border: 'border-cyan-200', text: 'text-cyan-800' }
+                            ];
 
                             html += `
                                 <div class="p-2.5 ${bgCard} flex flex-col justify-between min-h-[110px] relative transition hover:shadow-inner">
                                     <div>
                                         <div class="flex justify-between items-center mb-1">
                                             <span class="font-bold text-[10px] text-slate-500 uppercase">Period ${p+1}</span>
-                                            <span class="bg-indigo-100 text-indigo-800 text-[8px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider">Split Batch</span>
+                                            <span class="bg-indigo-100 text-indigo-800 text-[8px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider">Split (${splitSlots.length} Batches)</span>
                                         </div>
                                         <div class="space-y-1">
-                                            <div class="bg-slate-50 border border-emerald-200 p-1 rounded text-[10px]">
-                                                <div class="font-black text-[8px] text-emerald-800 uppercase tracking-tight">${s1.batchLabel || s1.subject + ' Batch'}</div>
-                                                <div class="font-bold text-slate-900 truncate">${s1.subject}</div>
-                                                <div class="text-slate-600 font-mono text-[9px] flex items-center justify-between">
-                                                    <span class="truncate">${t1 ? t1.name : ''}</span>
-                                                    <span class="bg-white border border-slate-200 px-1 rounded font-bold">${t1 ? t1.shortName : ''}</span>
-                                                </div>
-                                            </div>
-                                            <div class="bg-slate-50 border border-teal-200 p-1 rounded text-[10px]">
-                                                <div class="font-black text-[8px] text-teal-800 uppercase tracking-tight">${s2.batchLabel || s2.subject + ' Batch'}</div>
-                                                <div class="font-bold text-slate-900 truncate">${s2.subject}</div>
-                                                <div class="text-slate-600 font-mono text-[9px] flex items-center justify-between">
-                                                    <span class="truncate">${t2 ? t2.name : ''}</span>
-                                                    <span class="bg-white border border-slate-200 px-1 rounded font-bold">${t2 ? t2.shortName : ''}</span>
-                                                </div>
-                                            </div>
+                                            ${splitSlots.map((s, idx) => {
+                                                const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                                                const cScheme = batchColors[idx % batchColors.length];
+                                                return `
+                                                    <div class="bg-slate-50 border ${cScheme.border} p-1 rounded text-[10px]">
+                                                        <div class="font-black text-[8px] ${cScheme.text} uppercase tracking-tight">${s.batchLabel || s.subject + ' Batch'}</div>
+                                                        <div class="font-bold text-slate-900 truncate">${s.subject}</div>
+                                                        <div class="text-slate-600 font-mono text-[9px] flex items-center justify-between">
+                                                            <span class="truncate">${t ? t.name : ''}</span>
+                                                            <span class="bg-white border border-slate-200 px-1 rounded font-bold">${t ? t.shortName : ''}</span>
+                                                        </div>
+                                                    </div>
+                                                `;
+                                            }).join('')}
                                         </div>
                                     </div>
                                     <div class="mt-2 pt-1.5 border-t border-slate-100 flex justify-between items-center text-[10px]">
@@ -4076,22 +4115,36 @@
                 tr.id = 'audit-period-row-' + p;
 
                 if (slot && slot.allocationType === 'split') {
-                    const s1 = (slot.splitSlots && slot.splitSlots[0]) ? slot.splitSlots[0] : { subject: '', teacherId: '' };
-                    const s2 = (slot.splitSlots && slot.splitSlots[1]) ? slot.splitSlots[1] : { subject: '', teacherId: '' };
-                    const t1 = appState.teachers.find(t => t.id === s1.teacherId);
-                    const t2 = appState.teachers.find(t => t.id === s2.teacherId);
-                    const bLabel0 = s1.batchLabel || (s1.subject ? s1.subject + ' Batch' : 'Batch 1');
-                    const bLabel1 = s2.batchLabel || (s2.subject ? s2.subject + ' Batch' : 'Batch 2');
+                    const splitSlots = (slot.splitSlots && slot.splitSlots.length) ? slot.splitSlots : [];
+                    const batchColors = [
+                        { border: 'border-emerald-200', text: 'text-emerald-800' },
+                        { border: 'border-teal-200', text: 'text-teal-800' },
+                        { border: 'border-cyan-200', text: 'text-cyan-800' }
+                    ];
 
                     const existingSplitAudits = (existingPeriodAudit && existingPeriodAudit.splitAudits) ? existingPeriodAudit.splitAudits : null;
-                    const status0 = existingSplitAudits && existingSplitAudits[0] ? existingSplitAudits[0].status : (existingPeriodAudit ? existingPeriodAudit.status : 'conducted');
-                    const status1 = existingSplitAudits && existingSplitAudits[1] ? existingSplitAudits[1].status : (existingPeriodAudit ? existingPeriodAudit.status : 'conducted');
-                    const reason0 = existingSplitAudits && existingSplitAudits[0] ? (existingSplitAudits[0].reason || '') : '';
-                    const remarks0 = existingSplitAudits && existingSplitAudits[0] ? (existingSplitAudits[0].remarks || '') : '';
-                    const reason1 = existingSplitAudits && existingSplitAudits[1] ? (existingSplitAudits[1].reason || '') : '';
-                    const remarks1 = existingSplitAudits && existingSplitAudits[1] ? (existingSplitAudits[1].remarks || '') : '';
+                    const batchInfos = splitSlots.map((s, idx) => {
+                        const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                        const bLabel = s.batchLabel || (s.subject ? s.subject + ' Batch' : ('Batch ' + (idx + 1)));
+                        const prevAud = existingSplitAudits && existingSplitAudits[idx] ? existingSplitAudits[idx] : null;
+                        const subStatus = prevAud ? prevAud.status : (existingPeriodAudit ? existingPeriodAudit.status : 'conducted');
+                        const subReason = prevAud ? (prevAud.reason || '') : '';
+                        const subRemarks = prevAud ? (prevAud.remarks || '') : '';
+                        return {
+                            slot: s,
+                            teacher: t,
+                            label: bLabel,
+                            status: subStatus,
+                            reason: subReason,
+                            remarks: subRemarks,
+                            colors: batchColors[idx % batchColors.length]
+                        };
+                    });
 
-                    tr.className = (status0 === 'missed' || status1 === 'missed') ? 'bg-rose-50/50' : 'bg-white';
+                    const anyBatchMissed = batchInfos.some(bi => bi.status === 'missed');
+                    tr.className = anyBatchMissed ? 'bg-rose-50/50' : 'bg-white';
+
+                    const batchNamesText = batchInfos.map(bi => bi.label).join(' & ');
 
                     if (canRecord) {
                         tr.innerHTML = `
@@ -4099,75 +4152,49 @@
                             <td class="px-3 py-2.5 font-mono text-slate-500 whitespace-nowrap">${pTiming}</td>
                             <td class="px-3 py-2.5">
                                 <div class="space-y-1">
-                                    <span class="bg-indigo-100 text-indigo-800 text-[8.5px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider">Split Batch Period</span>
-                                    <div class="text-xs font-black text-slate-900">${bLabel0} & ${bLabel1}</div>
+                                    <span class="bg-indigo-100 text-indigo-800 text-[8.5px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider">Split (${batchInfos.length} Batches)</span>
+                                    <div class="text-xs font-black text-slate-900">${batchNamesText}</div>
                                 </div>
                             </td>
                             <td class="px-3 py-2.5 text-center">
                                 <div class="flex flex-col gap-2 min-w-[210px] text-left">
-                                    <div class="bg-slate-50 border border-emerald-200 p-1.5 rounded-lg">
-                                        <div class="flex items-center justify-between gap-1 mb-1">
-                                            <span class="font-extrabold text-[9px] text-emerald-800 uppercase truncate">${bLabel0}: ${s1.subject}</span>
-                                            <span class="text-[9px] font-mono text-slate-500 font-bold">${t1 ? t1.shortName : ''}</span>
+                                    ${batchInfos.map((bi, idx) => `
+                                        <div class="bg-slate-50 border ${bi.colors.border} p-1.5 rounded-lg">
+                                            <div class="flex items-center justify-between gap-1 mb-1">
+                                                <span class="font-extrabold text-[9px] ${bi.colors.text} uppercase truncate">${bi.label}: ${bi.slot.subject}</span>
+                                                <span class="text-[9px] font-mono text-slate-500 font-bold">${bi.teacher ? bi.teacher.shortName : ''}</span>
+                                            </div>
+                                            <div class="inline-flex rounded-lg p-0.5 bg-white border border-slate-200 w-full justify-center">
+                                                <button type="button" onclick="window.setAuditSplitRowStatus(${p}, ${idx}, 'conducted')" id="btn-split-cond-${p}-${idx}" class="flex-1 px-2 py-0.5 rounded-md font-bold text-[10px] transition ${bi.status === 'conducted' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}">
+                                                    <i class="fas fa-check mr-0.5"></i> Conducted
+                                                </button>
+                                                <button type="button" onclick="window.setAuditSplitRowStatus(${p}, ${idx}, 'missed')" id="btn-split-miss-${p}-${idx}" class="flex-1 px-2 py-0.5 rounded-md font-bold text-[10px] transition ${bi.status === 'missed' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}">
+                                                    <i class="fas fa-times mr-0.5"></i> Missed
+                                                </button>
+                                            </div>
                                         </div>
-                                        <div class="inline-flex rounded-lg p-0.5 bg-white border border-slate-200 w-full justify-center">
-                                            <button type="button" onclick="window.setAuditSplitRowStatus(${p}, 0, 'conducted')" id="btn-split-cond-${p}-0" class="flex-1 px-2 py-0.5 rounded-md font-bold text-[10px] transition ${status0 === 'conducted' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}">
-                                                <i class="fas fa-check mr-0.5"></i> Conducted
-                                            </button>
-                                            <button type="button" onclick="window.setAuditSplitRowStatus(${p}, 0, 'missed')" id="btn-split-miss-${p}-0" class="flex-1 px-2 py-0.5 rounded-md font-bold text-[10px] transition ${status0 === 'missed' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}">
-                                                <i class="fas fa-times mr-0.5"></i> Missed
-                                            </button>
-                                        </div>
-                                    </div>
-                                    <div class="bg-slate-50 border border-teal-200 p-1.5 rounded-lg">
-                                        <div class="flex items-center justify-between gap-1 mb-1">
-                                            <span class="font-extrabold text-[9px] text-teal-800 uppercase truncate">${bLabel1}: ${s2.subject}</span>
-                                            <span class="text-[9px] font-mono text-slate-500 font-bold">${t2 ? t2.shortName : ''}</span>
-                                        </div>
-                                        <div class="inline-flex rounded-lg p-0.5 bg-white border border-slate-200 w-full justify-center">
-                                            <button type="button" onclick="window.setAuditSplitRowStatus(${p}, 1, 'conducted')" id="btn-split-cond-${p}-1" class="flex-1 px-2 py-0.5 rounded-md font-bold text-[10px] transition ${status1 === 'conducted' ? 'bg-emerald-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}">
-                                                <i class="fas fa-check mr-0.5"></i> Conducted
-                                            </button>
-                                            <button type="button" onclick="window.setAuditSplitRowStatus(${p}, 1, 'missed')" id="btn-split-miss-${p}-1" class="flex-1 px-2 py-0.5 rounded-md font-bold text-[10px] transition ${status1 === 'missed' ? 'bg-rose-600 text-white shadow-2xs' : 'text-slate-600 hover:text-slate-900'}">
-                                                <i class="fas fa-times mr-0.5"></i> Missed
-                                            </button>
-                                        </div>
-                                    </div>
+                                    `).join('')}
                                 </div>
                             </td>
                             <td class="px-3 py-2.5">
                                 <div class="space-y-2 text-left">
-                                    <div id="split-missed-details-${p}-0" class="${status0 === 'missed' ? 'space-y-1' : 'hidden'}">
-                                        <div class="text-[9.5px] font-bold text-rose-700">${bLabel0} Missed:</div>
-                                        <select id="missed-reason-${p}-0" class="w-full border border-rose-300 rounded p-1 text-[10px] bg-white text-slate-800 outline-none">
-                                            <option value="Teacher on Leave" ${reason0 === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
-                                            <option value="College Event / Program" ${reason0 === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
-                                            <option value="Special Prayer / Assembly" ${reason0 === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
-                                            <option value="Examination / Test" ${reason0 === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
-                                            <option value="Weather / Hartal / Emergency" ${reason0 === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
-                                            <option value="Other Reason" ${reason0 === 'Other Reason' || !reason0 ? 'selected' : ''}>Other Reason</option>
-                                        </select>
-                                        <input type="text" id="missed-remarks-${p}-0" value="${remarks0}" placeholder="Remarks for ${bLabel0}..." class="w-full border border-slate-300 rounded p-1 text-[10px] outline-none">
-                                    </div>
-                                    <div id="split-conducted-note-${p}-0" class="${status0 === 'conducted' ? 'text-slate-500 text-[10px]' : 'hidden'}">
-                                        <i class="fas fa-check-circle text-emerald-500 mr-0.5"></i> ${bLabel0}: Conducted
-                                    </div>
-
-                                    <div id="split-missed-details-${p}-1" class="${status1 === 'missed' ? 'space-y-1' : 'hidden'}">
-                                        <div class="text-[9.5px] font-bold text-rose-700">${bLabel1} Missed:</div>
-                                        <select id="missed-reason-${p}-1" class="w-full border border-rose-300 rounded p-1 text-[10px] bg-white text-slate-800 outline-none">
-                                            <option value="Teacher on Leave" ${reason1 === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
-                                            <option value="College Event / Program" ${reason1 === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
-                                            <option value="Special Prayer / Assembly" ${reason1 === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
-                                            <option value="Examination / Test" ${reason1 === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
-                                            <option value="Weather / Hartal / Emergency" ${reason1 === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
-                                            <option value="Other Reason" ${reason1 === 'Other Reason' || !reason1 ? 'selected' : ''}>Other Reason</option>
-                                        </select>
-                                        <input type="text" id="missed-remarks-${p}-1" value="${remarks1}" placeholder="Remarks for ${bLabel1}..." class="w-full border border-slate-300 rounded p-1 text-[10px] outline-none">
-                                    </div>
-                                    <div id="split-conducted-note-${p}-1" class="${status1 === 'conducted' ? 'text-slate-500 text-[10px]' : 'hidden'}">
-                                        <i class="fas fa-check-circle text-emerald-500 mr-0.5"></i> ${bLabel1}: Conducted
-                                    </div>
+                                    ${batchInfos.map((bi, idx) => `
+                                        <div id="split-missed-details-${p}-${idx}" class="${bi.status === 'missed' ? 'space-y-1' : 'hidden'}">
+                                            <div class="text-[9.5px] font-bold text-rose-700">${bi.label} Missed:</div>
+                                            <select id="missed-reason-${p}-${idx}" class="w-full border border-rose-300 rounded p-1 text-[10px] bg-white text-slate-800 outline-none">
+                                                <option value="Teacher on Leave" ${bi.reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
+                                                <option value="College Event / Program" ${bi.reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
+                                                <option value="Special Prayer / Assembly" ${bi.reason === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
+                                                <option value="Examination / Test" ${bi.reason === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
+                                                <option value="Weather / Hartal / Emergency" ${bi.reason === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
+                                                <option value="Other Reason" ${bi.reason === 'Other Reason' || !bi.reason ? 'selected' : ''}>Other Reason</option>
+                                            </select>
+                                            <input type="text" id="missed-remarks-${p}-${idx}" value="${bi.remarks}" placeholder="Remarks for ${bi.label}..." class="w-full border border-slate-300 rounded p-1 text-[10px] outline-none">
+                                        </div>
+                                        <div id="split-conducted-note-${p}-${idx}" class="${bi.status === 'conducted' ? 'text-slate-500 text-[10px]' : 'hidden'}">
+                                            <i class="fas fa-check-circle text-emerald-500 mr-0.5"></i> ${bi.label}: Conducted
+                                        </div>
+                                    `).join('')}
                                 </div>
                             </td>
                         `;
@@ -4178,8 +4205,8 @@
                             <td class="px-3 py-2.5 font-mono text-slate-500 whitespace-nowrap">${pTiming}</td>
                             <td class="px-3 py-2.5">
                                 <div class="space-y-1 text-left">
-                                    <span class="bg-indigo-100 text-indigo-800 text-[8.5px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider">Split Batch</span>
-                                    <div class="text-xs font-bold text-slate-800">${bLabel0} & ${bLabel1}</div>
+                                    <span class="bg-indigo-100 text-indigo-800 text-[8.5px] font-black px-1.5 py-0.2 rounded uppercase tracking-wider">Split (${batchInfos.length} Batches)</span>
+                                    <div class="text-xs font-bold text-slate-800">${batchNamesText}</div>
                                 </div>
                             </td>
                             <td class="px-3 py-2.5 text-center">
@@ -4189,12 +4216,11 @@
                                     </span>
                                 ` : `
                                     <div class="flex flex-col gap-1 items-center">
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${status0 === 'missed' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">
-                                            ${bLabel0}: ${status0 === 'missed' ? 'Missed' : 'Conducted'}
-                                        </span>
-                                        <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${status1 === 'missed' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">
-                                            ${bLabel1}: ${status1 === 'missed' ? 'Missed' : 'Conducted'}
-                                        </span>
+                                        ${batchInfos.map(bi => `
+                                            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded text-[10px] font-bold ${bi.status === 'missed' ? 'bg-rose-100 text-rose-800 border border-rose-200' : 'bg-emerald-100 text-emerald-800 border border-emerald-200'}">
+                                                ${bi.label}: ${bi.status === 'missed' ? 'Missed' : 'Conducted'}
+                                            </span>
+                                        `).join('')}
                                     </div>
                                 `}
                             </td>
@@ -4203,8 +4229,9 @@
                                     <span class="text-slate-400 italic text-[11px]">Awaiting 3:30 PM audit</span>
                                 ` : `
                                     <div class="space-y-1 text-left">
-                                        <div><b>${bLabel0}:</b> ${status0 === 'missed' ? `<span class="text-rose-600 font-bold">${reason0 || 'Missed'}</span>` : '<span class="text-emerald-700">Conducted</span>'}</div>
-                                        <div><b>${bLabel1}:</b> ${status1 === 'missed' ? `<span class="text-rose-600 font-bold">${reason1 || 'Missed'}</span>` : '<span class="text-emerald-700">Conducted</span>'}</div>
+                                        ${batchInfos.map(bi => `
+                                            <div><b>${bi.label}:</b> ${bi.status === 'missed' ? `<span class="text-rose-600 font-bold">${bi.reason || 'Missed'}</span>` : '<span class="text-emerald-700">Conducted</span>'}</div>
+                                        `).join('')}
                                     </div>
                                 `}
                             </td>
@@ -4462,12 +4489,17 @@
                 if (condDiv) condDiv.classList.add('hidden');
             }
 
-            // Update row background if either batch is missed
+            // Update row background if any batch (0, 1, or 2) is missed
             const row = document.getElementById('audit-period-row-' + periodIndex);
-            const isMiss0 = document.getElementById(`btn-split-miss-${periodIndex}-0`)?.classList.contains('bg-rose-600');
-            const isMiss1 = document.getElementById(`btn-split-miss-${periodIndex}-1`)?.classList.contains('bg-rose-600');
+            let anyMiss = false;
+            for (let bi = 0; bi < 3; bi++) {
+                if (document.getElementById(`btn-split-miss-${periodIndex}-${bi}`)?.classList.contains('bg-rose-600')) {
+                    anyMiss = true;
+                    break;
+                }
+            }
             if (row) {
-                row.className = (isMiss0 || isMiss1) ? 'bg-rose-50/50' : 'bg-white';
+                row.className = anyMiss ? 'bg-rose-50/50' : 'bg-white';
             }
         }
 
@@ -4481,11 +4513,10 @@
                 if (document.getElementById('btn-cond-' + p)) {
                     setAuditRowStatus(p, conducted ? 'conducted' : 'missed');
                 }
-                if (document.getElementById(`btn-split-cond-${p}-0`)) {
-                    setAuditSplitRowStatus(p, 0, conducted ? 'conducted' : 'missed');
-                }
-                if (document.getElementById(`btn-split-cond-${p}-1`)) {
-                    setAuditSplitRowStatus(p, 1, conducted ? 'conducted' : 'missed');
+                for (let bi = 0; bi < 3; bi++) {
+                    if (document.getElementById(`btn-split-cond-${p}-${bi}`)) {
+                        setAuditSplitRowStatus(p, bi, conducted ? 'conducted' : 'missed');
+                    }
                 }
             }
             showToast("Updated", "All periods marked as " + (conducted ? "conducted." : "missed."));
@@ -4519,49 +4550,38 @@
                 }
 
                 if (slot && slot.allocationType === 'split') {
-                    const s1 = (slot.splitSlots && slot.splitSlots[0]) ? slot.splitSlots[0] : { subject: '', teacherId: '' };
-                    const s2 = (slot.splitSlots && slot.splitSlots[1]) ? slot.splitSlots[1] : { subject: '', teacherId: '' };
-                    const t1 = appState.teachers.find(t => t.id === s1.teacherId);
-                    const t2 = appState.teachers.find(t => t.id === s2.teacherId);
+                    const splitSlots = (slot.splitSlots && slot.splitSlots.length) ? slot.splitSlots : [];
+                    let splitAudits = [];
+                    let anyMissed = false;
 
-                    const isMissed0 = document.getElementById(`btn-split-miss-${p}-0`)?.classList.contains('bg-rose-600');
-                    const isMissed1 = document.getElementById(`btn-split-miss-${p}-1`)?.classList.contains('bg-rose-600');
-                    const reason0 = document.getElementById(`missed-reason-${p}-0`)?.value || 'Teacher on Leave';
-                    const remarks0 = (document.getElementById(`missed-remarks-${p}-0`)?.value || '').trim();
-                    const reason1 = document.getElementById(`missed-reason-${p}-1`)?.value || 'Teacher on Leave';
-                    const remarks1 = (document.getElementById(`missed-remarks-${p}-1`)?.value || '').trim();
+                    splitSlots.forEach((subSlot, sIdx) => {
+                        const t = appState.teachers.find(tch => tch.id === subSlot.teacherId);
+                        const isMissed = document.getElementById(`btn-split-miss-${p}-${sIdx}`)?.classList.contains('bg-rose-600');
+                        const reason = document.getElementById(`missed-reason-${p}-${sIdx}`)?.value || 'Teacher on Leave';
+                        const remarks = (document.getElementById(`missed-remarks-${p}-${sIdx}`)?.value || '').trim();
+                        const bLabel = subSlot.batchLabel || (subSlot.subject ? subSlot.subject + ' Batch' : ('Batch ' + (sIdx + 1)));
 
-                    const bLabel0 = s1.batchLabel || (s1.subject ? s1.subject + ' Batch' : 'Batch 1');
-                    const bLabel1 = s2.batchLabel || (s2.subject ? s2.subject + ' Batch' : 'Batch 2');
+                        if (isMissed) anyMissed = true;
+
+                        splitAudits.push({
+                            batchLabel: bLabel,
+                            subject: subSlot.subject,
+                            teacherId: subSlot.teacherId,
+                            teacherName: t ? t.name : '',
+                            teacherShort: t ? t.shortName : '',
+                            status: isMissed ? 'missed' : 'conducted',
+                            reason: isMissed ? reason : '',
+                            remarks: isMissed ? remarks : ''
+                        });
+                    });
 
                     periodResults.push({
                         period: p,
                         allocationType: 'split',
-                        subject: `${s1.subject} / ${s2.subject}`,
+                        subject: splitSlots.map(s => s.subject).join(' / '),
                         college: slot.college || (targetClass.toLowerCase().includes('wafiyya') ? 'Wafiyya' : 'Wafy'),
-                        status: (isMissed0 || isMissed1) ? 'missed' : 'conducted',
-                        splitAudits: [
-                            {
-                                batchLabel: bLabel0,
-                                subject: s1.subject,
-                                teacherId: s1.teacherId,
-                                teacherName: t1 ? t1.name : '',
-                                teacherShort: t1 ? t1.shortName : '',
-                                status: isMissed0 ? 'missed' : 'conducted',
-                                reason: isMissed0 ? reason0 : '',
-                                remarks: isMissed0 ? remarks0 : ''
-                            },
-                            {
-                                batchLabel: bLabel1,
-                                subject: s2.subject,
-                                teacherId: s2.teacherId,
-                                teacherName: t2 ? t2.name : '',
-                                teacherShort: t2 ? t2.shortName : '',
-                                status: isMissed1 ? 'missed' : 'conducted',
-                                reason: isMissed1 ? reason1 : '',
-                                remarks: isMissed1 ? remarks1 : ''
-                            }
-                        ],
+                        status: anyMissed ? 'missed' : 'conducted',
+                        splitAudits: splitAudits,
                         auditTimestamp: new Date().toISOString()
                     });
                 } else if (slot && slot.allocationType === 'shared') {
@@ -4888,8 +4908,19 @@
 
             const periodItem = aud.classes[cls].periods.find(p => p.period === pIdx);
             if (periodItem) {
-                periodItem.isCompensated = !periodItem.isCompensated;
-                periodItem.compensatedDate = periodItem.isCompensated ? getTodayDateStr() : null;
+                if (parts[3] === 'split' && parts[4] !== undefined && periodItem.splitAudits) {
+                    const saIdx = parseInt(parts[4]);
+                    if (periodItem.splitAudits[saIdx]) {
+                        periodItem.splitAudits[saIdx].isCompensated = !periodItem.splitAudits[saIdx].isCompensated;
+                        periodItem.splitAudits[saIdx].compensatedDate = periodItem.splitAudits[saIdx].isCompensated ? getTodayDateStr() : null;
+                    }
+                    const allComp = periodItem.splitAudits.every(sa => sa.status !== 'missed' || sa.isCompensated);
+                    periodItem.isCompensated = allComp;
+                    periodItem.compensatedDate = allComp ? getTodayDateStr() : null;
+                } else {
+                    periodItem.isCompensated = !periodItem.isCompensated;
+                    periodItem.compensatedDate = periodItem.isCompensated ? getTodayDateStr() : null;
+                }
                 localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
                 renderMissedSection();
                 saveToCloud();
@@ -5693,27 +5724,28 @@
             }
 
             if (slot.allocationType === 'split') {
-                const s1 = (slot.splitSlots && slot.splitSlots[0]) ? slot.splitSlots[0] : { subject: '', teacherId: '' };
-                const s2 = (slot.splitSlots && slot.splitSlots[1]) ? slot.splitSlots[1] : { subject: '', teacherId: '' };
-                const t1 = appState.teachers.find(t => t.id === s1.teacherId);
-                const t2 = appState.teachers.find(t => t.id === s2.teacherId);
+                const splitSlots = (slot.splitSlots && slot.splitSlots.length) ? slot.splitSlots : [];
+                const colors = [
+                    { border: 'border-emerald-300', text: 'text-emerald-800' },
+                    { border: 'border-teal-300', text: 'text-teal-800' },
+                    { border: 'border-cyan-300', text: 'text-cyan-800' }
+                ];
 
                 return `
                     <div class="flex flex-col gap-1 w-full text-center py-0.5">
-                        <div class="bg-white/95 p-1 rounded-md border border-emerald-300 shadow-2xs">
-                            <div class="text-[7.5px] font-extrabold uppercase text-emerald-800 tracking-tight leading-none">${s1.batchLabel || s1.subject + ' Batch'}</div>
-                            <div class="font-black text-[11px] leading-tight text-slate-900 mt-0.5 truncate">${s1.subject}</div>
-                            <div class="text-[8.5px] font-bold text-slate-600 font-mono mt-0.5 flex items-center justify-center gap-1">
-                                <span>${t1 ? t1.shortName : ''}</span>
-                            </div>
-                        </div>
-                        <div class="bg-white/95 p-1 rounded-md border border-teal-300 shadow-2xs">
-                            <div class="text-[7.5px] font-extrabold uppercase text-teal-800 tracking-tight leading-none">${s2.batchLabel || s2.subject + ' Batch'}</div>
-                            <div class="font-black text-[11px] leading-tight text-slate-900 mt-0.5 truncate">${s2.subject}</div>
-                            <div class="text-[8.5px] font-bold text-slate-600 font-mono mt-0.5 flex items-center justify-center gap-1">
-                                <span>${t2 ? t2.shortName : ''}</span>
-                            </div>
-                        </div>
+                        ${splitSlots.map((s, idx) => {
+                            const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                            const cScheme = colors[idx % colors.length];
+                            return `
+                                <div class="bg-white/95 p-1 rounded-md border ${cScheme.border} shadow-2xs">
+                                    <div class="text-[7.5px] font-extrabold uppercase ${cScheme.text} tracking-tight leading-none">${s.batchLabel || s.subject + ' Batch'}</div>
+                                    <div class="font-black text-[11px] leading-tight text-slate-900 mt-0.5 truncate">${s.subject}</div>
+                                    <div class="text-[8.5px] font-bold text-slate-600 font-mono mt-0.5 flex items-center justify-center gap-1">
+                                        <span>${t ? t.shortName : ''}</span>
+                                    </div>
+                                </div>
+                            `;
+                        }).join('')}
                     </div>
                 `;
             }
@@ -6270,13 +6302,12 @@
                         const slot = timetable[d][p][cls];
                         if (slot) {
                             if (slot.allocationType === 'split') {
-                                const s1 = (slot.splitSlots && slot.splitSlots[0]) ? slot.splitSlots[0] : { subject: '', teacherId: '' };
-                                const s2 = (slot.splitSlots && slot.splitSlots[1]) ? slot.splitSlots[1] : { subject: '', teacherId: '' };
-                                const t1 = appState.teachers.find(tch => tch.id === s1.teacherId);
-                                const t2 = appState.teachers.find(tch => tch.id === s2.teacherId);
-                                const label1 = s1.batchLabel || (s1.subject ? s1.subject + ' Batch' : 'Batch 1');
-                                const label2 = s2.batchLabel || (s2.subject ? s2.subject + ' Batch' : 'Batch 2');
-                                row.push(`"[SPLIT] ${label1}: ${s1.subject} (${t1 ? t1.shortName : ''}) | ${label2}: ${s2.subject} (${t2 ? t2.shortName : ''})"`);
+                                const splitParts = (slot.splitSlots || []).map((s, idx) => {
+                                    const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                                    const label = s.batchLabel || (s.subject ? s.subject + ' Batch' : ('Batch ' + (idx + 1)));
+                                    return `${label}: ${s.subject} (${t ? t.shortName : ''})`;
+                                });
+                                row.push(`"[SPLIT] ${splitParts.join(' | ')}"`);
                             } else if (slot.allocationType === 'shared') {
                                 const t1 = appState.teachers.find(tch => tch.id === slot.teacherId);
                                 const t2 = appState.teachers.find(tch => tch.id === slot.secondaryTeacherId);
@@ -7241,8 +7272,8 @@
 
             const teacherSelectIds = [
                 'new-class-teacher', 'edit-allotment-teacher',
-                'new-split-teacher1', 'new-split-teacher2',
-                'edit-split-teacher1', 'edit-split-teacher2',
+                'new-split-teacher1', 'new-split-teacher2', 'new-split-teacher3',
+                'edit-split-teacher1', 'edit-split-teacher2', 'edit-split-teacher3',
                 'new-shared-teacher1', 'new-shared-teacher2',
                 'edit-shared-teacher1', 'edit-shared-teacher2'
             ];
@@ -7267,6 +7298,54 @@
             if (clInput) clInput.value = appState.classesList.join(', ');
         }
 
+        function toggleNewSplitBatch3(forceState) {
+            const card = document.getElementById('new-split-batch3-card');
+            const btn = document.getElementById('btn-toggle-new-batch3');
+            if (!card) return;
+            const isCurrentlyVisible = !card.classList.contains('hidden');
+            const shouldShow = forceState !== undefined ? forceState : !isCurrentlyVisible;
+
+            if (shouldShow) {
+                card.classList.remove('hidden');
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-times-circle text-rose-600 mr-1"></i> 3-ാം ബാച്ച് ഒഴിവാക്കുക (Remove 3rd Batch)';
+                    btn.className = "text-xs font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-3 py-1 rounded-lg transition border border-rose-300 inline-flex items-center gap-1 shadow-2xs";
+                }
+            } else {
+                card.classList.add('hidden');
+                const s3Input = document.getElementById('new-split-subj3');
+                if (s3Input) s3Input.value = '';
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-plus-circle text-emerald-600 mr-1"></i> + 3-ാം ബാച്ച് ചേർക്കുക (Add 3rd Batch)';
+                    btn.className = "text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-3 py-1 rounded-lg transition border border-emerald-300 inline-flex items-center gap-1 shadow-2xs";
+                }
+            }
+        }
+
+        function toggleEditSplitBatch3(forceState) {
+            const card = document.getElementById('edit-split-batch3-card');
+            const btn = document.getElementById('btn-toggle-edit-batch3');
+            if (!card) return;
+            const isCurrentlyVisible = !card.classList.contains('hidden');
+            const shouldShow = forceState !== undefined ? forceState : !isCurrentlyVisible;
+
+            if (shouldShow) {
+                card.classList.remove('hidden');
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-times-circle text-rose-600 mr-0.5"></i> 3-ാം ബാച്ച് ഒഴിവാക്കുക (Remove 3rd)';
+                    btn.className = "text-[11px] font-bold text-rose-700 hover:text-rose-800 bg-rose-50 hover:bg-rose-100 px-2.5 py-1 rounded-lg transition border border-rose-300 inline-flex items-center gap-1 shadow-2xs";
+                }
+            } else {
+                card.classList.add('hidden');
+                const s3Input = document.getElementById('edit-split-subj3');
+                if (s3Input) s3Input.value = '';
+                if (btn) {
+                    btn.innerHTML = '<i class="fas fa-plus-circle text-emerald-600 mr-0.5"></i> + 3-ാം ബാച്ച് ചേർക്കുക (Add 3rd Batch)';
+                    btn.className = "text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg transition border border-emerald-300 inline-flex items-center gap-1 shadow-2xs";
+                }
+            }
+        }
+
         function addAllotment() {
             if (!isAdminLoggedIn) return;
             const college = document.getElementById('new-class-inst').value;
@@ -7277,32 +7356,54 @@
                 const t1 = document.getElementById('new-split-teacher1')?.value;
                 const s2 = (document.getElementById('new-split-subj2')?.value || '').trim();
                 const t2 = document.getElementById('new-split-teacher2')?.value;
+                const card3 = document.getElementById('new-split-batch3-card');
+                const isBatch3Visible = card3 && !card3.classList.contains('hidden');
+                const s3 = (document.getElementById('new-split-subj3')?.value || '').trim();
+                const t3 = document.getElementById('new-split-teacher3')?.value;
                 const hours = parseInt(document.getElementById('new-split-hours')?.value);
 
-                if (!s1 || !s2) { showAlert("Required", "Please enter subject names for both split batches (e.g. Urdu & Malayalam)."); return; }
-                if (!t1 || !t2) { showAlert("Required", "Please select faculty for both subjects."); return; }
-                if (t1 === t2) { showAlert("Invalid", "Please select two different faculty members for simultaneous split batches."); return; }
+                if (!s1 || !s2) { showAlert("Required", "Please enter subject names for Batch 1 and Batch 2 (e.g. Urdu & Malayalam)."); return; }
+                if (!t1 || !t2) { showAlert("Required", "Please select faculty for Batch 1 and Batch 2."); return; }
+                if (t1 === t2) { showAlert("Invalid", "Please select different faculty members for simultaneous split batches."); return; }
+
+                const hasBatch3 = isBatch3Visible && (s3 || t3);
+                if (hasBatch3) {
+                    if (!s3) { showAlert("Required", "Please enter subject name for 3rd batch."); return; }
+                    if (!t3) { showAlert("Required", "Please select faculty for 3rd batch."); return; }
+                    if (t3 === t1 || t3 === t2) { showAlert("Invalid", "All split batches must have different faculty members assigned."); return; }
+                }
+
                 if (isNaN(hours) || hours <= 0) { showAlert("Error", "Periods per week must be greater than zero."); return; }
+
+                const splitSlots = [
+                    { subject: s1, teacherId: t1, batchLabel: s1 + ' Batch' },
+                    { subject: s2, teacherId: t2, batchLabel: s2 + ' Batch' }
+                ];
+                if (hasBatch3) {
+                    splitSlots.push({ subject: s3, teacherId: t3, batchLabel: s3 + ' Batch' });
+                }
+
+                const subjectTitle = splitSlots.map(s => s.subject).join(' / ');
 
                 appState.classes.push({
                     id: generateId(),
                     allocationType: 'split',
                     college: college,
                     className: batch,
-                    subject: s1 + ' / ' + s2,
+                    subject: subjectTitle,
                     hours: hours,
-                    splitSlots: [
-                        { subject: s1, teacherId: t1, batchLabel: s1 + ' Batch' },
-                        { subject: s2, teacherId: t2, batchLabel: s2 + ' Batch' }
-                    ]
+                    splitSlots: splitSlots
                 });
 
                 document.getElementById('new-split-subj1').value = '';
                 document.getElementById('new-split-subj2').value = '';
+                const s3El = document.getElementById('new-split-subj3');
+                if (s3El) s3El.value = '';
+                toggleNewSplitBatch3(false);
                 renderAllotmentsList();
                 renderTeachersList();
                 saveToCloud();
-                showToast("Split Allocation Added", `${s1} (${s1} Batch) & ${s2} (${s2} Batch) created for ${batch}.`);
+                showToast("Split Allocation Added", `${splitSlots.length} parallel batches created for ${batch}.`);
                 return;
             }
 
@@ -7388,10 +7489,20 @@
                 switchEditAllotmentFormMode('split');
                 const s1 = item.splitSlots && item.splitSlots[0] ? item.splitSlots[0] : { subject: '', teacherId: '' };
                 const s2 = item.splitSlots && item.splitSlots[1] ? item.splitSlots[1] : { subject: '', teacherId: '' };
+                const s3 = item.splitSlots && item.splitSlots[2] ? item.splitSlots[2] : null;
+
                 document.getElementById('edit-split-subj1').value = s1.subject || '';
                 document.getElementById('edit-split-teacher1').value = s1.teacherId || '';
                 document.getElementById('edit-split-subj2').value = s2.subject || '';
                 document.getElementById('edit-split-teacher2').value = s2.teacherId || '';
+
+                if (s3) {
+                    toggleEditSplitBatch3(true);
+                    document.getElementById('edit-split-subj3').value = s3.subject || '';
+                    document.getElementById('edit-split-teacher3').value = s3.teacherId || '';
+                } else {
+                    toggleEditSplitBatch3(false);
+                }
                 document.getElementById('edit-split-hours').value = item.hours || 3;
             } else if (item.allocationType === 'shared') {
                 switchEditAllotmentFormMode('shared');
@@ -7434,22 +7545,39 @@
                 const t1 = document.getElementById('edit-split-teacher1')?.value;
                 const s2 = (document.getElementById('edit-split-subj2')?.value || '').trim();
                 const t2 = document.getElementById('edit-split-teacher2')?.value;
+                const card3 = document.getElementById('edit-split-batch3-card');
+                const isBatch3Visible = card3 && !card3.classList.contains('hidden');
+                const s3 = (document.getElementById('edit-split-subj3')?.value || '').trim();
+                const t3 = document.getElementById('edit-split-teacher3')?.value;
                 const hours = parseInt(document.getElementById('edit-split-hours')?.value);
 
-                if (!s1 || !s2) { showAlert("Required", "Please enter both subject names."); return; }
-                if (!t1 || !t2) { showAlert("Required", "Please select faculty for both subjects."); return; }
-                if (t1 === t2) { showAlert("Invalid", "Please select two different faculty members for split batches."); return; }
+                if (!s1 || !s2) { showAlert("Required", "Please enter subject names for Batch 1 and Batch 2."); return; }
+                if (!t1 || !t2) { showAlert("Required", "Please select faculty for Batch 1 and Batch 2."); return; }
+                if (t1 === t2) { showAlert("Invalid", "Please select different faculty members for simultaneous split batches."); return; }
+
+                const hasBatch3 = isBatch3Visible && (s3 || t3);
+                if (hasBatch3) {
+                    if (!s3) { showAlert("Required", "Please enter subject name for 3rd batch."); return; }
+                    if (!t3) { showAlert("Required", "Please select faculty for 3rd batch."); return; }
+                    if (t3 === t1 || t3 === t2) { showAlert("Invalid", "All split batches must have different faculty members assigned."); return; }
+                }
+
                 if (isNaN(hours) || hours <= 0) { showAlert("Invalid", "Hours must be greater than zero."); return; }
+
+                const splitSlots = [
+                    { subject: s1, teacherId: t1, batchLabel: s1 + ' Batch' },
+                    { subject: s2, teacherId: t2, batchLabel: s2 + ' Batch' }
+                ];
+                if (hasBatch3) {
+                    splitSlots.push({ subject: s3, teacherId: t3, batchLabel: s3 + ' Batch' });
+                }
 
                 item.allocationType = 'split';
                 item.college = college;
                 item.className = batch;
-                item.subject = s1 + ' / ' + s2;
+                item.subject = splitSlots.map(s => s.subject).join(' / ');
                 item.hours = hours;
-                item.splitSlots = [
-                    { subject: s1, teacherId: t1, batchLabel: s1 + ' Batch' },
-                    { subject: s2, teacherId: t2, batchLabel: s2 + ' Batch' }
-                ];
+                item.splitSlots = splitSlots;
                 delete item.teacherId;
                 delete item.secondaryTeacherId;
             } else if (mode === 'shared') {
@@ -7522,34 +7650,33 @@
                 let hoursDisplay = '';
 
                 if (c.allocationType === 'split') {
-                    const s1 = c.splitSlots && c.splitSlots[0] ? c.splitSlots[0] : { subject: '', teacherId: '' };
-                    const s2 = c.splitSlots && c.splitSlots[1] ? c.splitSlots[1] : { subject: '', teacherId: '' };
-                    const t1 = appState.teachers.find(t => t.id === s1.teacherId);
-                    const t2 = appState.teachers.find(t => t.id === s2.teacherId);
+                    const slots = (c.splitSlots && c.splitSlots.length) ? c.splitSlots : [];
 
                     subjDisplay = `
                         <div class="space-y-1">
                             <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-2xs">
-                                <i class="fas fa-columns text-[8px]"></i> Split Batch
+                                <i class="fas fa-columns text-[8px]"></i> Split Batch (${slots.length} Batches)
                             </span>
-                            <div class="font-bold text-slate-800 text-xs">
-                                <span>${s1.subject}</span> <span class="text-slate-400 font-normal">(${s1.batchLabel || 'Batch 1'})</span>
-                                <span class="text-emerald-600 mx-1">&amp;</span>
-                                <span>${s2.subject}</span> <span class="text-slate-400 font-normal">(${s2.batchLabel || 'Batch 2'})</span>
+                            <div class="font-bold text-slate-800 text-xs flex flex-wrap items-center gap-1">
+                                ${slots.map((s, idx) => `
+                                    <span>${s.subject}</span> <span class="text-slate-400 font-normal">(${s.batchLabel || 'Batch ' + (idx + 1)})</span>
+                                    ${idx < slots.length - 1 ? '<span class="text-emerald-600 font-bold mx-0.5">&amp;</span>' : ''}
+                                `).join('')}
                             </div>
                         </div>
                     `;
 
                     facultyDisplay = `
                         <div class="text-xs space-y-0.5">
-                            <div class="flex items-center gap-1">
-                                <span class="text-slate-700 font-semibold">${t1 ? t1.name : 'Unassigned'}</span>
-                                <span class="font-mono text-[9px] bg-slate-100 px-1 rounded">${t1 ? t1.shortName : ''}</span>
-                            </div>
-                            <div class="flex items-center gap-1 text-slate-500">
-                                <span>${t2 ? t2.name : 'Unassigned'}</span>
-                                <span class="font-mono text-[9px] bg-slate-100 px-1 rounded">${t2 ? t2.shortName : ''}</span>
-                            </div>
+                            ${slots.map(s => {
+                                const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                                return `
+                                    <div class="flex items-center gap-1 text-slate-700">
+                                        <span class="font-semibold">${t ? t.name : 'Unassigned'}</span>
+                                        <span class="font-mono text-[9px] bg-slate-100 px-1 rounded">${t ? t.shortName : ''}</span>
+                                    </div>
+                                `;
+                            }).join('')}
                         </div>
                     `;
 
@@ -7987,6 +8114,8 @@
         window.addAllotment = addAllotment;
         window.switchAllotmentFormMode = switchAllotmentFormMode;
         window.switchEditAllotmentFormMode = switchEditAllotmentFormMode;
+        window.toggleNewSplitBatch3 = toggleNewSplitBatch3;
+        window.toggleEditSplitBatch3 = toggleEditSplitBatch3;
         window.deleteAllotment = deleteAllotment;
         window.openEditAllotmentModal = openEditAllotmentModal;
         window.closeEditAllotmentModal = closeEditAllotmentModal;
