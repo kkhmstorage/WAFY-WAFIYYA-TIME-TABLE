@@ -281,6 +281,16 @@
                 </button>
             </div>
 
+            <!-- Academic Semester Selector in Header -->
+            <div class="flex items-center bg-slate-900/80 border border-emerald-500/40 rounded-lg px-2 py-1 text-xs">
+                <i class="fas fa-layer-group text-teal-300 mr-1 text-[11px]"></i>
+                <label for="header-semester-select" class="text-emerald-200 mr-1 hidden sm:inline text-[11px]">Sem:</label>
+                <select id="header-semester-select" onchange="window.switchActiveSemester(this.value)" class="bg-transparent text-emerald-100 font-bold outline-none cursor-pointer pr-1 text-xs">
+                    <option value="sem1" class="bg-slate-900 text-white">Semester 1</option>
+                    <option value="sem2" class="bg-slate-900 text-white">Semester 2</option>
+                </select>
+            </div>
+
             <!-- Cloud Database Status & Sync Center Button -->
             <button id="db-status-btn" onclick="window.openDatabaseSyncModal()" class="text-xs bg-slate-900/90 hover:bg-slate-800 text-emerald-300 border border-emerald-500/40 px-2 sm:px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow" title="Cloud Database: Initializing...">
                 <span class="relative flex h-2 w-2">
@@ -929,36 +939,249 @@
                     </button>
                 </div>
 
-                <!-- Academic Working Days Configuration Banner -->
-                <div class="bg-gradient-to-r from-emerald-50 via-teal-50 to-slate-50 border border-emerald-200 rounded-2xl p-4 sm:p-5">
-                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
+                <!-- Academic Semesters & Working Days Management Center -->
+                <div class="bg-gradient-to-br from-emerald-50/70 via-teal-50/50 to-slate-50 border border-emerald-200 rounded-2xl p-4 sm:p-5 shadow-xs space-y-4">
+                    <!-- Top Header: Title & Semester Switcher Tabs -->
+                    <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 border-b border-emerald-200/60 pb-3">
                         <div class="flex items-center gap-3">
-                            <div class="w-10 h-10 rounded-xl bg-emerald-600 text-white flex items-center justify-center font-bold text-lg shadow-sm">
-                                <i class="fas fa-calendar-check"></i>
+                            <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-600 to-teal-700 text-white flex items-center justify-center font-bold text-lg shadow-sm">
+                                <i class="fas fa-calendar-alt"></i>
                             </div>
                             <div>
-                                <h3 class="font-bold text-slate-800 text-sm">Total Academic Working Days</h3>
-                                <p class="text-xs text-slate-500">Set the institutional working days goal for the academic calendar.</p>
+                                <h3 class="font-bold text-slate-800 text-sm sm:text-base flex items-center gap-2">
+                                    <span>Academic Semesters & Working Days</span>
+                                    <span id="active-sem-badge" class="text-[10px] bg-emerald-100 text-emerald-800 font-extrabold px-2 py-0.5 rounded-full border border-emerald-300">Active: Semester 1</span>
+                                </h3>
+                                <p class="text-xs text-slate-500">സെമസ്റ്റർ 1, 2 ക്രമീകരണങ്ങൾ, തീയതികൾ, വർക്കിംഗ് ദിനങ്ങൾ, ഞായറാഴ്ചകൾ & മാസാന്ത അവധികൾ.</p>
                             </div>
                         </div>
-                        <div class="flex items-center gap-2">
-                            <label class="text-xs font-bold text-slate-700">Target Days:</label>
-                            <input type="number" id="total-working-days-input" value="200" min="50" max="365" class="w-24 border border-emerald-300 rounded-xl px-3 py-1.5 text-sm font-bold text-emerald-900 bg-white focus:ring-2 focus:ring-emerald-500 outline-none text-center">
+
+                        <!-- Semester Tab Navigation -->
+                        <div class="inline-flex rounded-xl p-1 bg-white border border-emerald-200 text-xs font-bold shrink-0 shadow-2xs">
+                            <button type="button" id="btn-sem-tab-sem1" onclick="window.switchSemesterTab('sem1')" class="px-3 py-1.5 rounded-lg transition bg-emerald-600 text-white shadow-xs flex items-center gap-1.5">
+                                <i class="fas fa-bookmark text-[10px]"></i> <span>Semester 1</span>
+                            </button>
+                            <button type="button" id="btn-sem-tab-sem2" onclick="window.switchSemesterTab('sem2')" class="px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+                                <i class="fas fa-bookmark text-[10px]"></i> <span>Semester 2</span>
+                            </button>
+                            <button type="button" id="btn-sem-tab-overview" onclick="window.switchSemesterTab('overview')" class="px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5">
+                                <i class="fas fa-chart-pie text-[10px]"></i> <span>Annual Summary</span>
+                            </button>
                         </div>
                     </div>
 
-                    <div class="grid grid-cols-3 gap-3 mt-4 pt-3 border-t border-emerald-200/60 text-center text-xs">
-                        <div class="bg-white/80 p-2.5 rounded-xl border border-emerald-100">
-                            <div class="text-[10px] text-slate-400 font-bold uppercase">Target Days</div>
-                            <div id="setup-kpi-target-days" class="text-base font-extrabold text-slate-800 mt-0.5">200</div>
+                    <!-- Hidden legacy inputs to guarantee 100% backward compatibility for all existing scripts -->
+                    <input type="hidden" id="total-working-days-input" value="200">
+                    <span id="setup-kpi-target-days" class="hidden">200</span>
+                    <span id="setup-kpi-conducted-days" class="hidden">0</span>
+                    <span id="setup-kpi-remaining-days" class="hidden">200</span>
+
+                    <!-- PANEL A: INDIVIDUAL SEMESTER CONFIGURATION (Sem 1 / Sem 2) -->
+                    <div id="sem-config-detail-panel" class="space-y-4">
+                        <!-- Row 1: Dates, Duration & Target Days -->
+                        <div class="grid grid-cols-1 md:grid-cols-3 gap-3">
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                                    <span><i class="fas fa-play text-emerald-600 text-[10px] mr-1"></i> Start Date (ആരംഭം)</span>
+                                    <span id="sem-start-day-name" class="text-[10px] text-slate-400 font-normal">Monday</span>
+                                </label>
+                                <input type="date" id="sem-input-start-date" onchange="window.onSemesterFieldChange()" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                                    <span><i class="fas fa-flag-checkered text-rose-600 text-[10px] mr-1"></i> End Date (അവസാനം)</span>
+                                    <span id="sem-end-day-name" class="text-[10px] text-slate-400 font-normal">Saturday</span>
+                                </label>
+                                <input type="date" id="sem-input-end-date" onchange="window.onSemesterFieldChange()" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs font-bold text-slate-800 bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                            </div>
+                            <div>
+                                <label class="block text-xs font-bold text-slate-700 mb-1 flex items-center justify-between">
+                                    <span><i class="fas fa-bullseye text-teal-600 text-[10px] mr-1"></i> Target Working Days (ആകെ വേണ്ടവ)</span>
+                                    <span class="text-[10px] text-emerald-700 font-semibold">ലക്ഷ്യം</span>
+                                </label>
+                                <div class="flex items-center gap-2">
+                                    <input type="number" id="sem-input-target-days" min="10" max="200" value="100" onchange="window.onSemesterFieldChange()" class="w-full border border-emerald-300 rounded-xl p-2.5 text-xs font-bold text-emerald-900 bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                                    <span id="sem-duration-tag" class="whitespace-nowrap text-[11px] font-bold text-slate-600 bg-white px-2.5 py-2.5 rounded-xl border border-slate-200">153 Days</span>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-white/80 p-2.5 rounded-xl border border-emerald-100">
-                            <div class="text-[10px] text-slate-400 font-bold uppercase">Audited Days</div>
-                            <div id="setup-kpi-conducted-days" class="text-base font-extrabold text-emerald-700 mt-0.5">0</div>
+
+                        <!-- Row 2: Holidays & Leaves (Sundays, Monthly Leaves, Other) -->
+                        <div class="bg-white p-3.5 rounded-xl border border-emerald-200/80 shadow-2xs space-y-3">
+                            <div class="flex items-center justify-between border-b border-slate-100 pb-2">
+                                <span class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <i class="fas fa-umbrella-beach text-amber-500"></i> അവധികൾ & ഒഴിവുദിനങ്ങൾ (Holidays & Off-Days)
+                                </span>
+                                <span class="text-[10px] text-slate-400 font-medium">ഓട്ടോമാറ്റിക് കണക്കുകൂട്ടൽ & എൻട്രി</span>
+                            </div>
+
+                            <div class="grid grid-cols-1 md:grid-cols-3 gap-3 items-start">
+                                <!-- 1. Sundays -->
+                                <div class="p-2.5 bg-slate-50/80 rounded-xl border border-slate-200 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-slate-800 flex items-center gap-1">
+                                            <i class="fas fa-calendar-day text-rose-500 text-[11px]"></i> ഞായറാഴ്ചകൾ (Sundays)
+                                        </span>
+                                        <span id="sem-sundays-count-badge" class="text-xs font-extrabold text-rose-700 bg-rose-50 border border-rose-200 px-2 py-0.5 rounded-full">21 Sundays</span>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-1">
+                                        <label class="flex items-center gap-1.5 cursor-pointer text-[11px] text-slate-700">
+                                            <input type="checkbox" id="sem-sundays-off-checkbox" checked onchange="window.onSemesterFieldChange()" class="w-3.5 h-3.5 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500">
+                                            <span>അവധി ദിനമായി കണക്കാക്കുക</span>
+                                        </label>
+                                        <button type="button" onclick="window.openSundaysListModal()" class="text-[10px] text-emerald-700 hover:text-emerald-900 font-semibold underline">
+                                            ലിസ്റ്റ് കാണുക
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 2. Monthly Leaves (3 days/month) -->
+                                <div class="p-2.5 bg-teal-50/60 rounded-xl border border-teal-200 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-teal-900 flex items-center gap-1">
+                                            <i class="fas fa-home text-teal-600 text-[11px]"></i> മാസാന്ത ലീവുകൾ (Monthly)
+                                        </span>
+                                        <span id="sem-monthly-total-badge" class="text-xs font-extrabold text-teal-800 bg-teal-100/80 border border-teal-300 px-2 py-0.5 rounded-full">15 Days (5 Mo × 3)</span>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-1 gap-2">
+                                        <div class="flex items-center gap-1 text-[11px] text-slate-700">
+                                            <input type="number" id="sem-monthly-rate-input" value="3" min="0" max="10" onchange="window.onSemesterFieldChange()" class="w-12 border border-slate-300 rounded-lg p-1 text-center font-bold text-xs bg-white">
+                                            <span>ദിവസം/മാസം</span>
+                                        </div>
+                                        <button type="button" onclick="window.openMonthlyLeavesModal()" class="text-[10px] bg-teal-600 hover:bg-teal-700 text-white font-bold px-2 py-1 rounded-lg transition flex items-center gap-1 shadow-2xs">
+                                            <i class="fas fa-pen text-[9px]"></i> തിയ്യതികൾ രേഖപ്പെടുത്തുക (<span id="sem-recorded-leaves-count">0</span>)
+                                        </button>
+                                    </div>
+                                </div>
+
+                                <!-- 3. Other Holidays -->
+                                <div class="p-2.5 bg-amber-50/60 rounded-xl border border-amber-200 space-y-1.5">
+                                    <div class="flex items-center justify-between">
+                                        <span class="text-xs font-bold text-amber-900 flex items-center gap-1">
+                                            <i class="fas fa-star-and-crescent text-amber-600 text-[11px]"></i> മറ്റു പൊതുഅവധികൾ (Other)
+                                        </span>
+                                        <span id="sem-other-badge" class="text-xs font-extrabold text-amber-800 bg-amber-100/80 border border-amber-300 px-2 py-0.5 rounded-full">5 Days</span>
+                                    </div>
+                                    <div class="flex items-center justify-between pt-1 gap-2">
+                                        <div class="flex items-center gap-1 text-[11px] text-slate-700">
+                                            <input type="number" id="sem-other-holidays-input" value="5" min="0" max="50" onchange="window.onSemesterFieldChange()" class="w-14 border border-slate-300 rounded-lg p-1 text-center font-bold text-xs bg-white">
+                                            <span>പെരുന്നാൾ / സ്പെഷ്യൽ</span>
+                                        </div>
+                                        <span class="text-[10px] text-slate-400 font-medium">Extra Off</span>
+                                    </div>
+                                </div>
+                            </div>
                         </div>
-                        <div class="bg-white/80 p-2.5 rounded-xl border border-emerald-100">
-                            <div class="text-[10px] text-slate-400 font-bold uppercase">Remaining Days</div>
-                            <div id="setup-kpi-remaining-days" class="text-base font-extrabold text-amber-600 mt-0.5">200</div>
+
+                        <!-- Row 3: KPI Metrics: Target, Conducted, Deficit (കുറവ്), Holidays & Available -->
+                        <div class="grid grid-cols-2 sm:grid-cols-5 gap-2.5 text-center text-xs">
+                            <!-- 1. Target -->
+                            <div class="bg-white p-3 rounded-xl border border-emerald-200 shadow-2xs">
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ആകെ വേണ്ടവ (Target)</div>
+                                <div id="sem-kpi-target-display" class="text-base sm:text-lg font-black text-slate-800 mt-0.5">100</div>
+                                <div class="text-[9px] text-slate-400">നിശ്ചയിച്ച ദിവസങ്ങൾ</div>
+                            </div>
+
+                            <!-- 2. Conducted -->
+                            <div class="bg-white p-3 rounded-xl border border-emerald-200 shadow-2xs">
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">നടന്നവ (Conducted)</div>
+                                <div id="sem-kpi-conducted-display" class="text-base sm:text-lg font-black text-emerald-700 mt-0.5">0</div>
+                                <div class="text-[9px] text-emerald-600 font-semibold" id="sem-kpi-conducted-sub">0% Audited</div>
+                            </div>
+
+                            <!-- 3. Deficit / Shortfall (എത്ര കുറവു വന്നു) -->
+                            <div class="bg-gradient-to-br from-rose-50 to-amber-50 p-3 rounded-xl border-2 border-rose-300 shadow-2xs relative">
+                                <div class="text-[10px] text-rose-800 font-extrabold uppercase tracking-wider">കുറവ് (Deficit / ബാക്കി)</div>
+                                <div id="sem-kpi-deficit-display" class="text-base sm:text-lg font-black text-rose-700 mt-0.5">100</div>
+                                <div id="sem-kpi-deficit-badge" class="text-[9px] text-rose-800 font-bold bg-rose-100 px-1.5 py-0.2 rounded-full inline-block mt-0.5">100 ദിവസങ്ങളുടെ കുറവ്</div>
+                            </div>
+
+                            <!-- 4. Total Holidays -->
+                            <div class="bg-white p-3 rounded-xl border border-slate-200 shadow-2xs">
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ആകെ അവധികൾ (Leaves)</div>
+                                <div id="sem-kpi-holidays-display" class="text-base sm:text-lg font-black text-amber-700 mt-0.5">41</div>
+                                <div class="text-[9px] text-slate-400 truncate" id="sem-kpi-holidays-sub">21 ഞായർ + 15 മാസാന്ത + 5 മറ്റ്</div>
+                            </div>
+
+                            <!-- 5. Available & Capacity Buffer -->
+                            <div class="bg-white p-3 rounded-xl border border-teal-200 shadow-2xs col-span-2 sm:col-span-1">
+                                <div class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">ലഭ്യമായവ & Buffer</div>
+                                <div id="sem-kpi-available-display" class="text-base sm:text-lg font-black text-teal-800 mt-0.5">112</div>
+                                <div id="sem-kpi-buffer-badge" class="text-[9px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded inline-block mt-0.5">+12 Days Buffer</div>
+                            </div>
+                        </div>
+
+                        <!-- Action Bar for Semester Form -->
+                        <div class="flex flex-wrap items-center justify-between gap-2 pt-2 border-t border-emerald-200/50">
+                            <div class="flex items-center gap-2">
+                                <button type="button" id="btn-set-active-semester" onclick="window.setCurrentSemesterAsActive()" class="text-xs bg-white hover:bg-slate-50 text-slate-700 border border-slate-300 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 shadow-2xs">
+                                    <i class="fas fa-check-circle text-emerald-600"></i> <span>ഈ സെമസ്റ്റർ ആക്റ്റീവ് ആക്കുക (Set as Active)</span>
+                                </button>
+                                <span class="text-[11px] text-slate-500 hidden md:inline">നിങ്ങൾ വരുത്തിയ മാറ്റങ്ങൾ സേവ് ചെയ്യാൻ താഴെയുള്ള ബട്ടൺ അമർത്തുക.</span>
+                            </div>
+                            <button type="button" onclick="window.saveSemesterConfig()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-4 py-2 rounded-xl transition flex items-center gap-2 shadow-sm">
+                                <i class="fas fa-save"></i> <span>സെമസ്റ്റർ വിവരങ്ങൾ സേവ് ചെയ്യുക (Save)</span>
+                            </button>
+                        </div>
+                    </div>
+
+                    <!-- PANEL B: ANNUAL ACADEMIC OVERVIEW (Sem 1 + Sem 2 Table) -->
+                    <div id="sem-config-overview-panel" class="hidden space-y-3">
+                        <div class="overflow-x-auto bg-white rounded-xl border border-emerald-200 shadow-2xs">
+                            <table class="w-full text-xs text-left">
+                                <thead class="bg-emerald-100/70 text-emerald-950 font-extrabold uppercase text-[10px] tracking-wider">
+                                    <tr>
+                                        <th class="p-2.5">Semester</th>
+                                        <th class="p-2.5">Period (തീയതികൾ)</th>
+                                        <th class="p-2.5 text-center">ആകെ വേണ്ടവ (Target)</th>
+                                        <th class="p-2.5 text-center">പൂർത്തിയായവ (Conducted)</th>
+                                        <th class="p-2.5 text-center">കുറവ് (Deficit)</th>
+                                        <th class="p-2.5 text-center">ആകെ അവധികൾ (Leaves)</th>
+                                        <th class="p-2.5 text-center">ലഭ്യമായ വർക്കിംഗ് ദിനങ്ങൾ</th>
+                                        <th class="p-2.5 text-center">സ്റ്റാറ്റസ്</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-slate-100 text-slate-700">
+                                    <!-- Sem 1 Row -->
+                                    <tr class="hover:bg-slate-50/80">
+                                        <td class="p-2.5 font-bold text-emerald-800 flex items-center gap-1.5">
+                                            <i class="fas fa-bookmark text-emerald-600 text-[10px]"></i> Semester 1
+                                        </td>
+                                        <td class="p-2.5 text-slate-600 font-mono text-[11px]" id="ov-sem1-dates">2026-06-01 to 2026-10-31</td>
+                                        <td class="p-2.5 text-center font-bold" id="ov-sem1-target">100</td>
+                                        <td class="p-2.5 text-center font-bold text-emerald-700" id="ov-sem1-conducted">0</td>
+                                        <td class="p-2.5 text-center font-bold text-rose-600" id="ov-sem1-deficit">100</td>
+                                        <td class="p-2.5 text-center" id="ov-sem1-leaves">41</td>
+                                        <td class="p-2.5 text-center font-bold text-teal-800" id="ov-sem1-available">112</td>
+                                        <td class="p-2.5 text-center" id="ov-sem1-status"><span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full">In Progress</span></td>
+                                    </tr>
+                                    <!-- Sem 2 Row -->
+                                    <tr class="hover:bg-slate-50/80">
+                                        <td class="p-2.5 font-bold text-teal-800 flex items-center gap-1.5">
+                                            <i class="fas fa-bookmark text-teal-600 text-[10px]"></i> Semester 2
+                                        </td>
+                                        <td class="p-2.5 text-slate-600 font-mono text-[11px]" id="ov-sem2-dates">2026-11-01 to 2027-03-31</td>
+                                        <td class="p-2.5 text-center font-bold" id="ov-sem2-target">100</td>
+                                        <td class="p-2.5 text-center font-bold text-emerald-700" id="ov-sem2-conducted">0</td>
+                                        <td class="p-2.5 text-center font-bold text-rose-600" id="ov-sem2-deficit">100</td>
+                                        <td class="p-2.5 text-center" id="ov-sem2-leaves">42</td>
+                                        <td class="p-2.5 text-center font-bold text-teal-800" id="ov-sem2-available">109</td>
+                                        <td class="p-2.5 text-center" id="ov-sem2-status"><span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Upcoming</span></td>
+                                    </tr>
+                                </tbody>
+                                <tfoot class="bg-emerald-50/90 font-extrabold text-slate-900 border-t-2 border-emerald-300">
+                                    <tr>
+                                        <td class="p-2.5 text-emerald-900 font-black">ആകെ അക്കാദമിക് വർഷം</td>
+                                        <td class="p-2.5 font-mono text-[11px]" id="ov-year-label">Year 2026-2027</td>
+                                        <td class="p-2.5 text-center text-slate-900 font-black" id="ov-total-target">200</td>
+                                        <td class="p-2.5 text-center text-emerald-800 font-black" id="ov-total-conducted">0</td>
+                                        <td class="p-2.5 text-center text-rose-700 font-black" id="ov-total-deficit">200</td>
+                                        <td class="p-2.5 text-center" id="ov-total-leaves">83</td>
+                                        <td class="p-2.5 text-center text-teal-900 font-black" id="ov-total-available">221</td>
+                                        <td class="p-2.5 text-center" id="ov-total-status"><span class="bg-emerald-100 text-emerald-900 text-[10px] font-extrabold px-2 py-0.5 rounded-full">Annual Planned</span></td>
+                                    </tr>
+                                </tfoot>
+                            </table>
                         </div>
                     </div>
                 </div>
@@ -2137,6 +2360,99 @@
     </div>
 
 
+    <!-- Monthly Leaves Date Recording Modal -->
+    <div id="modal-monthly-leaves" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-lg w-full overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="p-4 bg-gradient-to-r from-teal-700 to-emerald-800 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-calendar-check text-teal-200"></i>
+                    <div>
+                        <h3 class="font-bold text-sm">മാസാന്ത ലീവുകൾ രേഖപ്പെടുത്തുക (Monthly Leaves)</h3>
+                        <p class="text-[10px] text-teal-200" id="monthly-leaves-modal-subtitle">Semester 1 • 3 Days per Month</p>
+                    </div>
+                </div>
+                <button onclick="window.closeMonthlyLeavesModal()" class="text-teal-200 hover:text-white text-base">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto space-y-4 flex-1">
+                <!-- Add New Monthly Leave Date Form -->
+                <div class="bg-teal-50/70 p-3 rounded-xl border border-teal-200 space-y-2">
+                    <span class="text-xs font-bold text-teal-900 flex items-center gap-1">
+                        <i class="fas fa-plus-circle text-teal-600"></i> പുതിയ മാസാന്ത ലീവ് തീയതി ചേർക്കുക (Add Date)
+                    </span>
+                    <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-700 mb-0.5">തീയതി (Date)</label>
+                            <input type="date" id="new-monthly-leave-date" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                        <div>
+                            <label class="block text-[11px] font-medium text-slate-700 mb-0.5">കുറിപ്പ് / Note (Optional)</label>
+                            <input type="text" id="new-monthly-leave-note" placeholder="e.g. ഒക്ടോബർ മാസാന്ത അവധി" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none focus:ring-2 focus:ring-teal-500">
+                        </div>
+                    </div>
+                    <div class="flex justify-between items-center pt-1">
+                        <button type="button" onclick="window.autoSuggestMonthlyLeaves()" class="text-[11px] text-teal-700 hover:text-teal-900 font-bold underline">
+                            <i class="fas fa-magic text-[10px] mr-1"></i> ഓരോ മാസവും 3 ദിവസം ഓട്ടോ-ഫിൽ ചെയ്യുക
+                        </button>
+                        <button type="button" onclick="window.addMonthlyLeaveDate()" class="bg-teal-600 hover:bg-teal-700 text-white font-bold text-xs px-3 py-1.5 rounded-lg transition shadow-2xs">
+                            <i class="fas fa-plus mr-1"></i> ചേർക്കുക (Add)
+                        </button>
+                    </div>
+                </div>
+
+                <!-- List of Recorded Monthly Leave Dates -->
+                <div class="space-y-2">
+                    <div class="flex justify-between items-center text-xs font-bold text-slate-700">
+                        <span>രേഖപ്പെടുത്തിയ ദിവസങ്ങൾ (Recorded Dates)</span>
+                        <span id="monthly-leaves-list-count" class="bg-teal-100 text-teal-800 text-[10px] px-2 py-0.5 rounded-full font-bold">0 Dates</span>
+                    </div>
+                    <div id="monthly-leaves-dates-list" class="space-y-1.5 max-h-56 overflow-y-auto">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+            </div>
+            <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-between items-center shrink-0">
+                <span class="text-[10px] text-slate-400">തീയതികൾ സേവ് ചെയ്യപ്പെടുകയും വർക്കിംഗ് ദിന കണക്കുകളിൽ കുറയ്ക്കപ്പെടുകയും ചെയ്യും.</span>
+                <button type="button" onclick="window.closeMonthlyLeavesModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2 rounded-xl transition">
+                    Done
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sundays List Modal -->
+    <div id="modal-sundays-list" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-md w-full overflow-hidden flex flex-col max-h-[85vh]">
+            <div class="p-4 bg-gradient-to-r from-rose-700 to-rose-900 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2">
+                    <i class="fas fa-calendar-alt text-rose-200"></i>
+                    <div>
+                        <h3 class="font-bold text-sm">ഞായറാഴ്ച അവധികൾ (Sundays Calendar)</h3>
+                        <p class="text-[10px] text-rose-200" id="sundays-modal-subtitle">Semester 1 • Total Sundays</p>
+                    </div>
+                </div>
+                <button onclick="window.closeSundaysListModal()" class="text-rose-200 hover:text-white text-base">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="p-4 overflow-y-auto flex-1 space-y-2">
+                <div class="flex justify-between items-center text-xs font-bold text-slate-700 mb-2">
+                    <span>സെമസ്റ്ററിലെ എല്ലാ ഞായറാഴ്ചകളും</span>
+                    <span id="sundays-modal-count-badge" class="bg-rose-100 text-rose-800 text-[10px] px-2 py-0.5 rounded-full font-bold">0 Days</span>
+                </div>
+                <div id="sundays-list-container" class="space-y-1 max-h-64 overflow-y-auto">
+                    <!-- Populated dynamically -->
+                </div>
+            </div>
+            <div class="p-3 bg-slate-50 border-t border-slate-200 flex justify-end shrink-0">
+                <button type="button" onclick="window.closeSundaysListModal()" class="bg-slate-800 hover:bg-slate-900 text-white font-bold text-xs px-4 py-2 rounded-xl transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
     <!-- FIREBASE MODULE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -3246,6 +3562,7 @@
             if(!appState.specialTimetables) appState.specialTimetables = [];
             if(!appState.dailyAudits) appState.dailyAudits = {};
             if(!appState.totalWorkingDays) appState.totalWorkingDays = 200;
+            initSemestersData();
         }
 
         async function saveToCloud(isAuditOnly = false) {
@@ -3287,6 +3604,7 @@
                     periods: appState.periods,
                     enableTravelBuffer: appState.enableTravelBuffer,
                     totalWorkingDays: appState.totalWorkingDays || 200,
+                    semesters: appState.semesters || null,
                     classesList: appState.classesList,
                     periodTimings: appState.periodTimings,
                     teachers: appState.teachers,
@@ -3359,8 +3677,622 @@
             return Math.random().toString(36).substring(2, 10);
         }
 
+        let currentSemesterKey = 'sem1'; // 'sem1' | 'sem2' | 'overview'
+
+        function initSemestersData() {
+            const yStart = (currentYear || "2026-2027").split('-')[0] || "2026";
+            const yEnd = (currentYear || "2026-2027").split('-')[1] || "2027";
+            if (!appState.semesters) {
+                appState.semesters = {
+                    activeSemester: 'sem1',
+                    sem1: {
+                        name: 'Semester 1',
+                        startDate: `${yStart}-06-01`,
+                        endDate: `${yStart}-10-31`,
+                        targetWorkingDays: 100,
+                        sundaysOff: true,
+                        monthlyLeavesPerMonth: 3,
+                        otherHolidays: 5,
+                        monthlyLeaveDates: []
+                    },
+                    sem2: {
+                        name: 'Semester 2',
+                        startDate: `${yStart}-11-01`,
+                        endDate: `${yEnd}-03-31`,
+                        targetWorkingDays: 100,
+                        sundaysOff: true,
+                        monthlyLeavesPerMonth: 3,
+                        otherHolidays: 5,
+                        monthlyLeaveDates: []
+                    }
+                };
+            } else {
+                if (!appState.semesters.activeSemester) appState.semesters.activeSemester = 'sem1';
+                if (!appState.semesters.sem1) {
+                    appState.semesters.sem1 = {
+                        name: 'Semester 1',
+                        startDate: `${yStart}-06-01`,
+                        endDate: `${yStart}-10-31`,
+                        targetWorkingDays: 100,
+                        sundaysOff: true,
+                        monthlyLeavesPerMonth: 3,
+                        otherHolidays: 5,
+                        monthlyLeaveDates: []
+                    };
+                }
+                if (!appState.semesters.sem2) {
+                    appState.semesters.sem2 = {
+                        name: 'Semester 2',
+                        startDate: `${yStart}-11-01`,
+                        endDate: `${yEnd}-03-31`,
+                        targetWorkingDays: 100,
+                        sundaysOff: true,
+                        monthlyLeavesPerMonth: 3,
+                        otherHolidays: 5,
+                        monthlyLeaveDates: []
+                    };
+                }
+            }
+        }
+
+        function getSundaysBetween(startStr, endStr) {
+            if (!startStr || !endStr) return [];
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            if (isNaN(start) || isNaN(end) || start > end) return [];
+            const sundays = [];
+            let cur = new Date(start);
+            while (cur <= end) {
+                if (cur.getDay() === 0) {
+                    sundays.push(cur.toISOString().split('T')[0]);
+                }
+                cur.setDate(cur.getDate() + 1);
+            }
+            return sundays;
+        }
+
+        function getMonthsCount(startStr, endStr) {
+            if (!startStr || !endStr) return 0;
+            const start = new Date(startStr);
+            const end = new Date(endStr);
+            if (isNaN(start) || isNaN(end) || start > end) return 0;
+            const months = ((end.getFullYear() - start.getFullYear()) * 12) + (end.getMonth() - start.getMonth()) + 1;
+            return Math.max(1, months);
+        }
+
+        function calculateSemesterStats(semKey) {
+            initSemestersData();
+            const sem = appState.semesters[semKey];
+            if (!sem) return null;
+
+            const start = new Date(sem.startDate);
+            const end = new Date(sem.endDate);
+            let calendarDays = 0;
+            if (!isNaN(start) && !isNaN(end) && end >= start) {
+                calendarDays = Math.round((end - start) / (1000 * 60 * 60 * 24)) + 1;
+            }
+
+            const sundays = getSundaysBetween(sem.startDate, sem.endDate);
+            const months = getMonthsCount(sem.startDate, sem.endDate);
+            const monthlyRate = (sem.monthlyLeavesPerMonth !== undefined) ? Number(sem.monthlyLeavesPerMonth) : 3;
+            const calculatedMonthly = months * monthlyRate;
+            const recordedMonthlyCount = (sem.monthlyLeaveDates && Array.isArray(sem.monthlyLeaveDates)) ? sem.monthlyLeaveDates.length : 0;
+            const monthlyLeavesTotal = recordedMonthlyCount > 0 ? recordedMonthlyCount : calculatedMonthly;
+            
+            const otherHolidays = Number(sem.otherHolidays) || 0;
+            const sundaysCount = (sem.sundaysOff !== false) ? sundays.length : 0;
+            const totalLeaves = sundaysCount + monthlyLeavesTotal + otherHolidays;
+            const availableWorkingDays = Math.max(0, calendarDays - totalLeaves);
+
+            const target = Number(sem.targetWorkingDays) || 100;
+            
+            // Count conducted audited days in this semester's date range
+            const auditedDates = Object.keys(appState.dailyAudits || {});
+            let conducted = 0;
+            auditedDates.forEach(d => {
+                if (sem.startDate && sem.endDate && d >= sem.startDate && d <= sem.endDate) {
+                    conducted++;
+                }
+            });
+
+            const deficit = Math.max(0, target - conducted);
+            const buffer = availableWorkingDays - target;
+
+            return {
+                semKey,
+                name: sem.name,
+                startDate: sem.startDate,
+                endDate: sem.endDate,
+                calendarDays,
+                sundays,
+                sundaysCount,
+                months,
+                monthlyRate,
+                monthlyLeavesTotal,
+                recordedMonthlyCount,
+                otherHolidays,
+                totalLeaves,
+                availableWorkingDays,
+                target,
+                conducted,
+                deficit,
+                buffer
+            };
+        }
+
+        function switchSemesterTab(semKey) {
+            currentSemesterKey = semKey;
+            renderSemesterConfigurationUI();
+        }
+
+        function switchActiveSemester(semKey) {
+            initSemestersData();
+            if (semKey !== 'sem1' && semKey !== 'sem2') semKey = 'sem1';
+            appState.semesters.activeSemester = semKey;
+            
+            const headerSel = document.getElementById('header-semester-select');
+            if (headerSel) headerSel.value = semKey;
+
+            renderSemesterConfigurationUI();
+            updateWorkingDaysDisplay();
+            
+            if (isAdminLoggedIn || isLeaderLoggedIn) {
+                saveToCloud();
+            } else {
+                localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
+            }
+            showToast("Active Semester", "Active semester set to " + (semKey === 'sem1' ? 'Semester 1' : 'Semester 2'));
+        }
+
+        function setCurrentSemesterAsActive() {
+            if (currentSemesterKey === 'sem1' || currentSemesterKey === 'sem2') {
+                switchActiveSemester(currentSemesterKey);
+            }
+        }
+
+        function onSemesterFieldChange() {
+            if (currentSemesterKey !== 'sem1' && currentSemesterKey !== 'sem2') return;
+            initSemestersData();
+            const sem = appState.semesters[currentSemesterKey];
+
+            const startInp = document.getElementById('sem-input-start-date');
+            const endInp = document.getElementById('sem-input-end-date');
+            const targetInp = document.getElementById('sem-input-target-days');
+            const sundaysOffCheck = document.getElementById('sem-sundays-off-checkbox');
+            const monthlyRateInp = document.getElementById('sem-monthly-rate-input');
+            const otherInp = document.getElementById('sem-other-holidays-input');
+
+            if (startInp && startInp.value) sem.startDate = startInp.value;
+            if (endInp && endInp.value) sem.endDate = endInp.value;
+            if (targetInp && !isNaN(Number(targetInp.value))) sem.targetWorkingDays = Math.max(1, Number(targetInp.value));
+            if (sundaysOffCheck) sem.sundaysOff = sundaysOffCheck.checked;
+            if (monthlyRateInp && !isNaN(Number(monthlyRateInp.value))) sem.monthlyLeavesPerMonth = Math.max(0, Number(monthlyRateInp.value));
+            if (otherInp && !isNaN(Number(otherInp.value))) sem.otherHolidays = Math.max(0, Number(otherInp.value));
+
+            renderSemesterConfigurationUI();
+            updateWorkingDaysDisplay();
+        }
+
+        function saveSemesterConfig() {
+            if (!isAdminLoggedIn) {
+                showAlert("Admin Login Required", "Please log in as Administrator to save semester configurations.");
+                return;
+            }
+            onSemesterFieldChange();
+            
+            // Recalculate totalWorkingDays as sum of both semester targets
+            const s1Target = Number(appState.semesters.sem1.targetWorkingDays) || 100;
+            const s2Target = Number(appState.semesters.sem2.targetWorkingDays) || 100;
+            appState.totalWorkingDays = s1Target + s2Target;
+
+            localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
+            saveToCloud();
+            showToast("Saved Successfully", "Semester configurations & working days saved.");
+        }
+
+        function renderSemesterConfigurationUI() {
+            initSemestersData();
+
+            // 1. Header sync
+            const headerSel = document.getElementById('header-semester-select');
+            if (headerSel && appState.semesters.activeSemester) {
+                headerSel.value = appState.semesters.activeSemester;
+            }
+            const activeBadge = document.getElementById('active-sem-badge');
+            if (activeBadge) {
+                activeBadge.innerText = 'Active: ' + (appState.semesters.activeSemester === 'sem1' ? 'Semester 1' : 'Semester 2');
+            }
+
+            // 2. Tab buttons highlight
+            ['sem1', 'sem2', 'overview'].forEach(k => {
+                const btn = document.getElementById('btn-sem-tab-' + k);
+                if (btn) {
+                    if (k === currentSemesterKey) {
+                        btn.className = "px-3 py-1.5 rounded-lg transition bg-emerald-600 text-white shadow-xs flex items-center gap-1.5";
+                    } else {
+                        btn.className = "px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900 flex items-center gap-1.5";
+                    }
+                }
+            });
+
+            const detailPanel = document.getElementById('sem-config-detail-panel');
+            const overviewPanel = document.getElementById('sem-config-overview-panel');
+
+            if (currentSemesterKey === 'overview') {
+                if (detailPanel) detailPanel.classList.add('hidden');
+                if (overviewPanel) overviewPanel.classList.remove('hidden');
+
+                // Populate Overview Table
+                const st1 = calculateSemesterStats('sem1');
+                const st2 = calculateSemesterStats('sem2');
+
+                const ovS1Dates = document.getElementById('ov-sem1-dates');
+                if (ovS1Dates) ovS1Dates.innerText = `${st1.startDate} to ${st1.endDate}`;
+                const ovS1Tgt = document.getElementById('ov-sem1-target');
+                if (ovS1Tgt) ovS1Tgt.innerText = st1.target;
+                const ovS1Cond = document.getElementById('ov-sem1-conducted');
+                if (ovS1Cond) ovS1Cond.innerText = st1.conducted;
+                const ovS1Def = document.getElementById('ov-sem1-deficit');
+                if (ovS1Def) ovS1Def.innerText = st1.deficit;
+                const ovS1Leaves = document.getElementById('ov-sem1-leaves');
+                if (ovS1Leaves) ovS1Leaves.innerText = `${st1.totalLeaves} (${st1.sundaysCount} ഞായർ + ${st1.monthlyLeavesTotal} മാസാന്ത + ${st1.otherHolidays} മറ്റ്)`;
+                const ovS1Avail = document.getElementById('ov-sem1-available');
+                if (ovS1Avail) ovS1Avail.innerText = st1.availableWorkingDays;
+
+                const ovS2Dates = document.getElementById('ov-sem2-dates');
+                if (ovS2Dates) ovS2Dates.innerText = `${st2.startDate} to ${st2.endDate}`;
+                const ovS2Tgt = document.getElementById('ov-sem2-target');
+                if (ovS2Tgt) ovS2Tgt.innerText = st2.target;
+                const ovS2Cond = document.getElementById('ov-sem2-conducted');
+                if (ovS2Cond) ovS2Cond.innerText = st2.conducted;
+                const ovS2Def = document.getElementById('ov-sem2-deficit');
+                if (ovS2Def) ovS2Def.innerText = st2.deficit;
+                const ovS2Leaves = document.getElementById('ov-sem2-leaves');
+                if (ovS2Leaves) ovS2Leaves.innerText = `${st2.totalLeaves} (${st2.sundaysCount} ഞായർ + ${st2.monthlyLeavesTotal} മാസാന്ത + ${st2.otherHolidays} മറ്റ്)`;
+                const ovS2Avail = document.getElementById('ov-sem2-available');
+                if (ovS2Avail) ovS2Avail.innerText = st2.availableWorkingDays;
+
+                // Total Row
+                const ovYrLbl = document.getElementById('ov-year-label');
+                if (ovYrLbl) ovYrLbl.innerText = 'Year ' + currentYear;
+                const ovTotTgt = document.getElementById('ov-total-target');
+                if (ovTotTgt) ovTotTgt.innerText = st1.target + st2.target;
+                const ovTotCond = document.getElementById('ov-total-conducted');
+                if (ovTotCond) ovTotCond.innerText = st1.conducted + st2.conducted;
+                const ovTotDef = document.getElementById('ov-total-deficit');
+                if (ovTotDef) ovTotDef.innerText = st1.deficit + st2.deficit;
+                const ovTotLeaves = document.getElementById('ov-total-leaves');
+                if (ovTotLeaves) ovTotLeaves.innerText = st1.totalLeaves + st2.totalLeaves;
+                const ovTotAvail = document.getElementById('ov-total-available');
+                if (ovTotAvail) ovTotAvail.innerText = st1.availableWorkingDays + st2.availableWorkingDays;
+
+                return;
+            }
+
+            // Individual Semester (sem1 or sem2)
+            if (detailPanel) detailPanel.classList.remove('hidden');
+            if (overviewPanel) overviewPanel.classList.hidden;
+
+            const stats = calculateSemesterStats(currentSemesterKey);
+            if (!stats) return;
+
+            // Form inputs
+            const startInp = document.getElementById('sem-input-start-date');
+            if (startInp && document.activeElement !== startInp) startInp.value = stats.startDate;
+            const endInp = document.getElementById('sem-input-end-date');
+            if (endInp && document.activeElement !== endInp) endInp.value = stats.endDate;
+            const targetInp = document.getElementById('sem-input-target-days');
+            if (targetInp && document.activeElement !== targetInp) targetInp.value = stats.target;
+
+            // Start & End Day Names
+            const startDName = document.getElementById('sem-start-day-name');
+            if (startDName && stats.startDate) {
+                const d = new Date(stats.startDate);
+                if (!isNaN(d)) startDName.innerText = dayNames[d.getDay() === 0 ? 6 : d.getDay() - 1] || 'Day';
+            }
+            const endDName = document.getElementById('sem-end-day-name');
+            if (endDName && stats.endDate) {
+                const d = new Date(stats.endDate);
+                if (!isNaN(d)) endDName.innerText = dayNames[d.getDay() === 0 ? 6 : d.getDay() - 1] || 'Day';
+            }
+
+            // Duration tag
+            const durTag = document.getElementById('sem-duration-tag');
+            if (durTag) {
+                const wks = Math.round(stats.calendarDays / 7);
+                durTag.innerText = `${stats.calendarDays} Days (${wks} Wks)`;
+            }
+
+            // Sundays
+            const sunBadge = document.getElementById('sem-sundays-count-badge');
+            if (sunBadge) sunBadge.innerText = `${stats.sundays.length} Sundays`;
+            const sunOff = document.getElementById('sem-sundays-off-checkbox');
+            if (sunOff) sunOff.checked = (appState.semesters[currentSemesterKey].sundaysOff !== false);
+
+            // Monthly Leaves
+            const moRate = document.getElementById('sem-monthly-rate-input');
+            if (moRate && document.activeElement !== moRate) moRate.value = stats.monthlyRate;
+            const moTotal = document.getElementById('sem-monthly-total-badge');
+            if (moTotal) moTotal.innerText = `${stats.monthlyLeavesTotal} Days (${stats.months} Mo × ${stats.monthlyRate})`;
+            const recCount = document.getElementById('sem-recorded-leaves-count');
+            if (recCount) recCount.innerText = stats.recordedMonthlyCount;
+
+            // Other Holidays
+            const othInp = document.getElementById('sem-other-holidays-input');
+            if (othInp && document.activeElement !== othInp) othInp.value = stats.otherHolidays;
+            const othBadge = document.getElementById('sem-other-badge');
+            if (othBadge) othBadge.innerText = `${stats.otherHolidays} Days`;
+
+            // 5 KPI Metric Cards
+            const kpiTgt = document.getElementById('sem-kpi-target-display');
+            if (kpiTgt) kpiTgt.innerText = stats.target;
+
+            const kpiCond = document.getElementById('sem-kpi-conducted-display');
+            if (kpiCond) kpiCond.innerText = stats.conducted;
+            const kpiCondSub = document.getElementById('sem-kpi-conducted-sub');
+            if (kpiCondSub) {
+                const pct = Math.min(100, Math.round((stats.conducted / stats.target) * 100)) || 0;
+                kpiCondSub.innerText = `${pct}% Audited (${stats.conducted}/${stats.target})`;
+            }
+
+            // Deficit Card (highlighted)
+            const kpiDef = document.getElementById('sem-kpi-deficit-display');
+            if (kpiDef) kpiDef.innerText = stats.deficit;
+            const kpiDefBadge = document.getElementById('sem-kpi-deficit-badge');
+            if (kpiDefBadge) {
+                if (stats.deficit > 0) {
+                    kpiDefBadge.innerText = `${stats.deficit} ദിവസങ്ങളുടെ കുറവ്`;
+                    kpiDefBadge.className = "text-[9px] text-rose-800 font-bold bg-rose-100 px-1.5 py-0.2 rounded-full inline-block mt-0.5";
+                } else {
+                    kpiDefBadge.innerText = "ലക്ഷ്യം പൂർത്തിയായി ✓";
+                    kpiDefBadge.className = "text-[9px] text-emerald-800 font-bold bg-emerald-100 px-1.5 py-0.2 rounded-full inline-block mt-0.5";
+                }
+            }
+
+            // Holidays Card
+            const kpiHol = document.getElementById('sem-kpi-holidays-display');
+            if (kpiHol) kpiHol.innerText = stats.totalLeaves;
+            const kpiHolSub = document.getElementById('sem-kpi-holidays-sub');
+            if (kpiHolSub) {
+                kpiHolSub.innerText = `${stats.sundaysCount} ഞായർ + ${stats.monthlyLeavesTotal} മാസാന്ത + ${stats.otherHolidays} മറ്റ്`;
+            }
+
+            // Available & Buffer Card
+            const kpiAvail = document.getElementById('sem-kpi-available-display');
+            if (kpiAvail) kpiAvail.innerText = stats.availableWorkingDays;
+            const kpiBufBadge = document.getElementById('sem-kpi-buffer-badge');
+            if (kpiBufBadge) {
+                if (stats.buffer >= 0) {
+                    kpiBufBadge.innerText = `+${stats.buffer} Days Buffer`;
+                    kpiBufBadge.className = "text-[9px] text-emerald-700 font-bold bg-emerald-50 border border-emerald-200 px-1 py-0.2 rounded inline-block mt-0.5";
+                } else {
+                    kpiBufBadge.innerText = `കുറവ്: ${Math.abs(stats.buffer)} Days Shortfall!`;
+                    kpiBufBadge.className = "text-[9px] text-rose-700 font-bold bg-rose-50 border border-rose-200 px-1 py-0.2 rounded inline-block mt-0.5";
+                }
+            }
+        }
+
+        // Monthly Leaves Modal functions
+        function openMonthlyLeavesModal() {
+            initSemestersData();
+            const semKey = (currentSemesterKey === 'overview' ? 'sem1' : currentSemesterKey);
+            const sem = appState.semesters[semKey];
+            const sub = document.getElementById('monthly-leaves-modal-subtitle');
+            if (sub) sub.innerText = `${sem.name} • ${sem.startDate} to ${sem.endDate} • ${sem.monthlyLeavesPerMonth || 3} Days/Month`;
+
+            renderMonthlyLeavesList();
+            const modal = document.getElementById('modal-monthly-leaves');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeMonthlyLeavesModal() {
+            const modal = document.getElementById('modal-monthly-leaves');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            renderSemesterConfigurationUI();
+            updateWorkingDaysDisplay();
+        }
+
+        function renderMonthlyLeavesList() {
+            initSemestersData();
+            const semKey = (currentSemesterKey === 'overview' ? 'sem1' : currentSemesterKey);
+            const sem = appState.semesters[semKey];
+            const dates = sem.monthlyLeaveDates || [];
+
+            const countBadge = document.getElementById('monthly-leaves-list-count');
+            if (countBadge) countBadge.innerText = `${dates.length} Dates Recorded`;
+
+            const listEl = document.getElementById('monthly-leaves-dates-list');
+            if (!listEl) return;
+
+            if (dates.length === 0) {
+                listEl.innerHTML = `<div class="text-center py-6 text-slate-400 text-xs bg-slate-50 rounded-xl border border-dashed border-slate-200">
+                    <i class="fas fa-calendar-times text-slate-300 text-2xl mb-1 block"></i>
+                    പ്രത്യേക തീയതികൾ ഒന്നും രേഖപ്പെടുത്തിയിട്ടില്ല.<br>
+                    <span class="text-[11px] text-slate-500">മുകളിലെ ഫോം ഉപയോഗിച്ച് തീയതി ചേർക്കുകയോ ഓട്ടോ-ഫിൽ ക്ലിക്ക് ചെയ്യുകയോ ചെയ്യാം.</span>
+                </div>`;
+                return;
+            }
+
+            // Sort dates ascending
+            dates.sort((a, b) => (a.date || a).localeCompare(b.date || b));
+
+            listEl.innerHTML = dates.map((item, idx) => {
+                const dateStr = typeof item === 'string' ? item : item.date;
+                const note = (typeof item === 'object' && item.note) ? item.note : 'മാസാന്ത അവധി (Monthly Leave)';
+                const d = new Date(dateStr);
+                const dayName = !isNaN(d) ? dayNames[d.getDay() === 0 ? 6 : d.getDay() - 1] : '';
+
+                return `
+                    <div class="flex items-center justify-between p-2.5 bg-slate-50 hover:bg-teal-50/50 rounded-xl border border-slate-200 transition text-xs">
+                        <div class="flex items-center gap-2">
+                            <span class="w-6 h-6 rounded-lg bg-teal-100 text-teal-800 flex items-center justify-center font-bold text-[10px] shrink-0">${idx + 1}</span>
+                            <div>
+                                <div class="font-bold text-slate-800 font-mono flex items-center gap-1.5">
+                                    <span>${dateStr}</span>
+                                    <span class="text-[10px] text-slate-500 font-sans font-normal">(${dayName})</span>
+                                </div>
+                                <div class="text-[10px] text-slate-500">${note}</div>
+                            </div>
+                        </div>
+                        <button type="button" onclick="window.removeMonthlyLeaveDate(${idx})" class="text-slate-400 hover:text-rose-600 p-1 transition" title="Delete date">
+                            <i class="fas fa-trash-alt text-xs"></i>
+                        </button>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function addMonthlyLeaveDate() {
+            initSemestersData();
+            const semKey = (currentSemesterKey === 'overview' ? 'sem1' : currentSemesterKey);
+            const sem = appState.semesters[semKey];
+            if (!sem.monthlyLeaveDates) sem.monthlyLeaveDates = [];
+
+            const dateInp = document.getElementById('new-monthly-leave-date');
+            const noteInp = document.getElementById('new-monthly-leave-note');
+
+            if (!dateInp || !dateInp.value) {
+                showAlert("Date Required", "Please select a date for the monthly leave.");
+                return;
+            }
+            const dateVal = dateInp.value;
+            const noteVal = noteInp ? (noteInp.value.trim() || 'മാസാന്ത അവധി') : 'മാസാന്ത അവധി';
+
+            if (sem.monthlyLeaveDates.some(x => (typeof x === 'string' ? x === dateVal : x.date === dateVal))) {
+                showAlert("Duplicate Date", "This date is already recorded.");
+                return;
+            }
+
+            sem.monthlyLeaveDates.push({ date: dateVal, note: noteVal });
+            dateInp.value = '';
+            if (noteInp) noteInp.value = '';
+
+            renderMonthlyLeavesList();
+            renderSemesterConfigurationUI();
+            updateWorkingDaysDisplay();
+            showToast("Added", "Monthly leave date recorded: " + dateVal);
+        }
+
+        function removeMonthlyLeaveDate(idx) {
+            initSemestersData();
+            const semKey = (currentSemesterKey === 'overview' ? 'sem1' : currentSemesterKey);
+            const sem = appState.semesters[semKey];
+            if (!sem.monthlyLeaveDates) return;
+
+            sem.monthlyLeaveDates.splice(idx, 1);
+            renderMonthlyLeavesList();
+            renderSemesterConfigurationUI();
+            updateWorkingDaysDisplay();
+        }
+
+        function autoSuggestMonthlyLeaves() {
+            initSemestersData();
+            const semKey = (currentSemesterKey === 'overview' ? 'sem1' : currentSemesterKey);
+            const sem = appState.semesters[semKey];
+            if (!sem.startDate || !sem.endDate) return;
+
+            const start = new Date(sem.startDate);
+            const end = new Date(sem.endDate);
+            if (isNaN(start) || isNaN(end) || start > end) return;
+
+            if (!sem.monthlyLeaveDates) sem.monthlyLeaveDates = [];
+
+            // For each month, pick 3 days (e.g. days 24, 25, 26 of that month)
+            let cur = new Date(start.getFullYear(), start.getMonth(), 1);
+            const lastMonth = new Date(end.getFullYear(), end.getMonth(), 1);
+
+            let addedCount = 0;
+            while (cur <= lastMonth) {
+                const yr = cur.getFullYear();
+                const m = cur.getMonth();
+                const mName = monthNames[m] || 'Month';
+
+                [24, 25, 26].forEach(dNum => {
+                    const candidate = new Date(yr, m, dNum);
+                    if (candidate >= start && candidate <= end) {
+                        const dStr = candidate.toISOString().split('T')[0];
+                        if (!sem.monthlyLeaveDates.some(x => (typeof x === 'string' ? x === dStr : x.date === dStr))) {
+                            sem.monthlyLeaveDates.push({
+                                date: dStr,
+                                note: `${mName} മാസാന്ത ലീവ് (Day ${dNum - 23})`
+                            });
+                            addedCount++;
+                        }
+                    }
+                });
+
+                cur.setMonth(cur.getMonth() + 1);
+            }
+
+            renderMonthlyLeavesList();
+            renderSemesterConfigurationUI();
+            updateWorkingDaysDisplay();
+            showToast("Auto-filled", `${addedCount} monthly leave dates auto-generated for ${sem.name}.`);
+        }
+
+        // Sundays Modal functions
+        function openSundaysListModal() {
+            initSemestersData();
+            const semKey = (currentSemesterKey === 'overview' ? 'sem1' : currentSemesterKey);
+            const sem = appState.semesters[semKey];
+            const sundays = getSundaysBetween(sem.startDate, sem.endDate);
+
+            const sub = document.getElementById('sundays-modal-subtitle');
+            if (sub) sub.innerText = `${sem.name} • ${sem.startDate} to ${sem.endDate}`;
+            const countBadge = document.getElementById('sundays-modal-count-badge');
+            if (countBadge) countBadge.innerText = `${sundays.length} Sundays`;
+
+            const listEl = document.getElementById('sundays-list-container');
+            if (listEl) {
+                if (sundays.length === 0) {
+                    listEl.innerHTML = '<div class="text-center py-4 text-slate-400 text-xs">തീയതികളിൽ ഞായറാഴ്ചകൾ ലഭ്യമല്ല.</div>';
+                } else {
+                    listEl.innerHTML = sundays.map((sDate, idx) => {
+                        const d = new Date(sDate);
+                        const mName = monthNames[d.getMonth()] || '';
+                        return `
+                            <div class="flex items-center justify-between p-2 bg-slate-50 rounded-xl border border-slate-200 text-xs">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-5 h-5 rounded bg-rose-100 text-rose-700 flex items-center justify-center font-bold text-[10px]">${idx + 1}</span>
+                                    <span class="font-mono font-bold text-slate-800">${sDate}</span>
+                                </div>
+                                <span class="text-[11px] text-slate-500 font-medium">${mName} ${d.getDate()}</span>
+                            </div>
+                        `;
+                    }).join('');
+                }
+            }
+
+            const modal = document.getElementById('modal-sundays-list');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeSundaysListModal() {
+            const modal = document.getElementById('modal-sundays-list');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
         function updateWorkingDaysDisplay() {
-            const total = appState.totalWorkingDays || 200;
+            initSemestersData();
+
+            // Total working days is the sum of semester targets
+            const s1Target = Number(appState.semesters.sem1.targetWorkingDays) || 100;
+            const s2Target = Number(appState.semesters.sem2.targetWorkingDays) || 100;
+            const total = s1Target + s2Target;
+            appState.totalWorkingDays = total;
+
             const auditedDates = Object.keys(appState.dailyAudits || {});
             const conducted = auditedDates.length;
             const remaining = Math.max(0, total - conducted);
@@ -3376,7 +4308,7 @@
             const sideRem = document.getElementById('side-remaining-days');
             if(sideRem) sideRem.innerText = remaining;
 
-            // Setup section
+            // Setup section legacy targets
             const inp = document.getElementById('total-working-days-input');
             if(inp && document.activeElement !== inp) inp.value = total;
             const kpiTgt = document.getElementById('setup-kpi-target-days');
@@ -3385,6 +4317,9 @@
             if(kpiCond) kpiCond.innerText = conducted;
             const kpiRem = document.getElementById('setup-kpi-remaining-days');
             if(kpiRem) kpiRem.innerText = remaining;
+
+            // Render current semester panel
+            renderSemesterConfigurationUI();
         }
 
         function switchTab(tabId) {
@@ -8117,6 +9052,19 @@
         window.toggleNewSplitBatch3 = toggleNewSplitBatch3;
         window.toggleEditSplitBatch3 = toggleEditSplitBatch3;
         window.deleteAllotment = deleteAllotment;
+        window.initSemestersData = initSemestersData;
+        window.switchSemesterTab = switchSemesterTab;
+        window.switchActiveSemester = switchActiveSemester;
+        window.setCurrentSemesterAsActive = setCurrentSemesterAsActive;
+        window.onSemesterFieldChange = onSemesterFieldChange;
+        window.saveSemesterConfig = saveSemesterConfig;
+        window.openMonthlyLeavesModal = openMonthlyLeavesModal;
+        window.closeMonthlyLeavesModal = closeMonthlyLeavesModal;
+        window.addMonthlyLeaveDate = addMonthlyLeaveDate;
+        window.removeMonthlyLeaveDate = removeMonthlyLeaveDate;
+        window.autoSuggestMonthlyLeaves = autoSuggestMonthlyLeaves;
+        window.openSundaysListModal = openSundaysListModal;
+        window.closeSundaysListModal = closeSundaysListModal;
         window.openEditAllotmentModal = openEditAllotmentModal;
         window.closeEditAllotmentModal = closeEditAllotmentModal;
         window.saveEditedAllotment = saveEditedAllotment;

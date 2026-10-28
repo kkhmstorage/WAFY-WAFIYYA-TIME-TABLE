@@ -64,9 +64,19 @@ In accordance with institutional guidelines:
   - **AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)**
 - Clean, institutional-themed schedules with distinct badges (Emerald for KKHM Wafy, Purple for Al-Gaith Wafiyya).
 
-### 2. Total Working Days Target & Progress
-- Configurable annual working days target (default: 200 days) displayed prominently in the sidebar widget and header.
-- Real-time tracking of conducted days, remaining days, and progress percentage.
+### 2. Academic Semesters & Working Days Center (Semesters 1 & 2)
+- **Two Semesters per Academic Year (സെമസ്റ്റർ 1 & 2)**:
+  - Each academic session (e.g. 2026-2027) is divided into **Semester 1** and **Semester 2** with dedicated start and end dates.
+  - Quick semester selector in the header and intuitive tab switcher in the configuration center.
+- **Working Days Target, Conducted & Deficit Tracking (ലക്ഷ്യം, പൂർത്തിയായവ & കുറവ്)**:
+  - Configurable semester-wise target working days (e.g., 100 days per semester, summing to 200 annual target days).
+  - Real-time tracking of conducted days audited through 3:30 PM daily period reports.
+  - Granular **Deficit / Shortfall tracking (എത്ര കുറവു വന്നു / ബാക്കി)** with active warning badges when audited days lag behind targets.
+- **Sundays & Monthly Home Leaves Recording (ഞായർ & മാസാന്ത അവധികൾ)**:
+  - **Sunday Off-Days**: Automatic calculation of all Sundays occurring within the semester date range, with dedicated calendar preview.
+  - **Monthly Leaves (മാസത്തിൽ 3 മാസാന്ത ലീവുകൾ)**: Standard 3 days/month monthly vacation tracking (e.g. 5 months × 3 days = 15 days) with an interactive modal to record, inspect, or auto-fill specific monthly break dates.
+  - **Feasibility & Buffer Analytics**: Real-time formula calculates `Net Available Days = Calendar Days - (Sundays + Monthly Leaves + Other Holidays)`, displaying capacity buffers or scheduling deficit warnings.
+- **Annual Academic Overview**: Consolidated comparative matrix tab detailing Semester 1, Semester 2, and the cumulative academic year.
 
 ### 3. 3:30 PM Daily Period Delivery Audit
 - Formal daily reconciliation workflow where class leaders report conducted and missed periods at 3:30 PM.
