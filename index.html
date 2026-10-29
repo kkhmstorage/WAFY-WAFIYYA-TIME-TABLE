@@ -9139,6 +9139,25 @@
                 }
             });
 
+            // Helper: identify science lab subjects that should be scheduled in 2 consecutive periods
+            const isConsecutiveSubject = (subjectName) => {
+                if (!subjectName) return false;
+                const s = subjectName.toLowerCase();
+                return /physics|chemistry|computer|biology|science|lab|ഫിസിക്സ്|കെമിസ്ട്രി|കമ്പ്യൂട്ടർ|കംബ്യൂട്ടർ|ബയോളജി|الحاسوب/i.test(s);
+            };
+
+            // Helper: identify teachers teaching across both Wafy & Wafiyya
+            const dualCampusTeacherSet = new Set();
+            teachers.forEach(t => {
+                const colleges = new Set();
+                classes.forEach(c => {
+                    if (c.teacherId === t.id) colleges.add(c.college);
+                    if (c.splitSlots && c.splitSlots.some(s => s.teacherId === t.id)) colleges.add(c.college);
+                    if (c.secondaryTeacherId === t.id) colleges.add(c.college);
+                });
+                if (colleges.size > 1) dualCampusTeacherSet.add(t.id);
+            });
+
             // Helper: check if a teacher has explicit day/period constraints
             const isTeacherUnavailable = (tId, d, p) => {
                 if (!tId) return false;
@@ -9229,9 +9248,45 @@
                 return true;
             };
 
+            // Helper: Proximity & Clustering Scoring for candidate placement
+            const getCandidatePlacementScore = (slot, d, p, currentSchedule) => {
+                let score = 0;
+
+                // 1. Science Lab Subject Double Period Bonus (+100 for adjacent period of same subject)
+                if (isConsecutiveSubject(slot.subject)) {
+                    const prevSlot = p > 0 ? currentSchedule[d][p - 1][slot.className] : null;
+                    const nextSlot = p < periods - 1 ? currentSchedule[d][p + 1][slot.className] : null;
+                    if ((prevSlot && prevSlot.subject === slot.subject) || (nextSlot && nextSlot.subject === slot.subject)) {
+                        score += 100;
+                    }
+                }
+
+                // 2. Dual-Campus Faculty Clustering Bonus (+60 for back-to-back period at same college)
+                const tIds = getSlotTeachers(slot);
+                for (let tId of tIds) {
+                    if (dualCampusTeacherSet.has(tId)) {
+                        for (let adjP of [p - 1, p + 1]) {
+                            if (adjP >= 0 && adjP < periods) {
+                                const adjSlotMap = currentSchedule[d][adjP];
+                                for (let cls in adjSlotMap) {
+                                    const adjSlot = adjSlotMap[cls];
+                                    if (adjSlot && slotContainsTeacher(adjSlot, tId) && adjSlot.college === slot.college) {
+                                        score += 60;
+                                        break;
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+
+                return score;
+            };
+
             // MULTI-RESTART STOCHASTIC CONSTRAINT OPTIMIZER (Up to 50 Restarts)
             let bestSchedule = null;
             let minUnscheduledCount = 999999;
+            let bestConsecutivePairs = -1;
             let bestUnscheduledList = [];
             const maxAttempts = 50;
 
@@ -9243,13 +9298,70 @@
                 // Clone slot tokens for this attempt
                 let slots = rawSlots.map(s => ({ ...s }));
 
-                // Heuristic ordering: prioritizes split electives, shared teaching & constrained faculty with randomized jitter
+                // PASS 1A: Pair-wise atomic double periods for Science Lab subjects (Physics, Chem, CS, Bio)
+                const scienceGroups = {};
+                const otherSlots = [];
+                slots.forEach(s => {
+                    if (isConsecutiveSubject(s.subject)) {
+                        const key = `${s.className}:::${s.subject}`;
+                        if (!scienceGroups[key]) scienceGroups[key] = [];
+                        scienceGroups[key].push(s);
+                    } else {
+                        otherSlots.push(s);
+                    }
+                });
+
+                // Place pairs of science subjects consecutively
+                for (let key in scienceGroups) {
+                    const group = scienceGroups[key];
+                    while (group.length >= 2) {
+                        const s1 = group[0];
+                        const s2 = group[1];
+                        let pairPlaced = false;
+
+                        const dayOrder = Array.from({length: days}, (_, i) => i).sort(() => Math.random() - 0.5);
+                        const startPeriods = [0, 2, 4, 6, 1, 3, 5].filter(p => p < periods - 1).sort(() => Math.random() - 0.5);
+
+                        for (let d of dayOrder) {
+                            if (pairPlaced) break;
+                            let existingOnDay = 0;
+                            for (let cp = 0; cp < periods; cp++) {
+                                const chk = currentSchedule[d][cp][s1.className];
+                                if (chk && chk.subject === s1.subject) existingOnDay++;
+                            }
+                            if (existingOnDay > 0) continue; // Keep pairs spread on separate days
+
+                            for (let p of startPeriods) {
+                                if (canPlaceSlot(s1, d, p, currentSchedule, 2, true, true)) {
+                                    currentSchedule[d][p][s1.className] = s1;
+                                    if (canPlaceSlot(s2, d, p + 1, currentSchedule, 2, true, false)) {
+                                        currentSchedule[d][p + 1][s2.className] = s2;
+                                        pairPlaced = true;
+                                        group.splice(0, 2);
+                                        break;
+                                    } else {
+                                        delete currentSchedule[d][p][s1.className];
+                                    }
+                                }
+                            }
+                        }
+
+                        if (!pairPlaced) {
+                            break;
+                        }
+                    }
+                    while (group.length > 0) {
+                        otherSlots.push(group.shift());
+                    }
+                }
+
+                // Heuristic ordering for remaining slots
                 const getTeacherScore = (tid) => {
                     const t = teachers.find(tch => tch.id === tid);
                     return t ? (t.constraints || []).length * 3 : 0;
                 };
 
-                slots.sort((a, b) => {
+                otherSlots.sort((a, b) => {
                     let scoreA = a.hours;
                     if (a.allocationType === 'split') {
                         scoreA += 18 + (a.splitSlots || []).reduce((acc, s) => acc + getTeacherScore(s.teacherId), 0);
@@ -9268,46 +9380,54 @@
                         scoreB += getTeacherScore(b.teacherId);
                     }
 
-                    // Randomized perturbation explores distinct branches of combinatorial search space
                     return (scoreB + Math.random() * 4) - (scoreA + Math.random() * 4);
                 });
 
                 let unscheduled = [];
 
-                // PASS 1: Strict Placement (Max 2 periods/day per subject, Strict Travel Buffer)
-                for (let slot of slots) {
+                // PASS 1B: Strict Placement with Proximity & Clustering Scoring
+                for (let slot of otherSlots) {
                     let placed = false;
-                    let dayOrder = Array.from({length: days}, (_, i) => i).sort(() => Math.random() - 0.5);
-
-                    for (let d of dayOrder) {
-                        if (placed) break;
-                        let periodOrder = Array.from({length: periods}, (_, i) => i).sort(() => Math.random() - 0.5);
-                        for (let p of periodOrder) {
+                    let candidates = [];
+                    for (let d = 0; d < days; d++) {
+                        for (let p = 0; p < periods; p++) {
                             if (canPlaceSlot(slot, d, p, currentSchedule, 2, true, true)) {
-                                currentSchedule[d][p][slot.className] = slot;
-                                placed = true;
-                                break;
+                                const sc = getCandidatePlacementScore(slot, d, p, currentSchedule);
+                                candidates.push({ d, p, score: sc });
                             }
                         }
                     }
+
+                    if (candidates.length > 0) {
+                        candidates.sort((c1, c2) => (c2.score + Math.random() * 8) - (c1.score + Math.random() * 8));
+                        const best = candidates[0];
+                        currentSchedule[best.d][best.p][slot.className] = slot;
+                        placed = true;
+                    }
+
                     if (!placed) unscheduled.push(slot);
                 }
 
-                // PASS 2: Soft Subject Limit Relaxation (Max 3, then Max 4 periods/day if classroom would otherwise sit vacant)
+                // PASS 2: Soft Subject Limit Relaxation with Clustering Scoring
                 for (let maxSubLimit of [3, 4]) {
                     if (unscheduled.length === 0) break;
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
                         let placed = false;
+                        let candidates = [];
                         for (let d = 0; d < days; d++) {
-                            if (placed) break;
                             for (let p = 0; p < periods; p++) {
                                 if (canPlaceSlot(slot, d, p, currentSchedule, maxSubLimit, true, true)) {
-                                    currentSchedule[d][p][slot.className] = slot;
-                                    placed = true;
-                                    break;
+                                    const sc = getCandidatePlacementScore(slot, d, p, currentSchedule);
+                                    candidates.push({ d, p, score: sc });
                                 }
                             }
+                        }
+                        if (candidates.length > 0) {
+                            candidates.sort((c1, c2) => (c2.score + Math.random() * 8) - (c1.score + Math.random() * 8));
+                            const best = candidates[0];
+                            currentSchedule[best.d][best.p][slot.className] = slot;
+                            placed = true;
                         }
                         if (!placed) stillUnscheduled.push(slot);
                     }
@@ -9468,15 +9588,49 @@
                     unscheduled = stillUnscheduled;
                 }
 
+                // Count consecutive science pairs & dual-campus clustered blocks
+                let consecutivePairsCount = 0;
+                for (let d = 0; d < days; d++) {
+                    for (let p = 0; p < periods - 1; p++) {
+                        for (let cls in currentSchedule[d][p]) {
+                            const s1 = currentSchedule[d][p][cls];
+                            const s2 = currentSchedule[d][p + 1][cls];
+                            if (s1 && s2 && s1.subject === s2.subject && isConsecutiveSubject(s1.subject)) {
+                                consecutivePairsCount += 2; // high weight for science double periods
+                            }
+                        }
+                        // Dual-campus faculty consecutive blocks at same college
+                        dualCampusTeacherSet.forEach(tId => {
+                            let slotAtP = null;
+                            let slotAtPNext = null;
+                            for (let cls in currentSchedule[d][p]) {
+                                const s = currentSchedule[d][p][cls];
+                                if (s && slotContainsTeacher(s, tId)) { slotAtP = s; break; }
+                            }
+                            if (slotAtP) {
+                                for (let cls in currentSchedule[d][p + 1]) {
+                                    const s = currentSchedule[d][p + 1][cls];
+                                    if (s && slotContainsTeacher(s, tId)) { slotAtPNext = s; break; }
+                                }
+                                if (slotAtPNext && slotAtP.college === slotAtPNext.college) {
+                                    consecutivePairsCount += 1;
+                                }
+                            }
+                        });
+                    }
+                }
+
                 // Keep track of the mathematically best attempt found across all restarts
-                if (unscheduled.length < minUnscheduledCount) {
+                if (unscheduled.length < minUnscheduledCount || 
+                    (unscheduled.length === minUnscheduledCount && consecutivePairsCount > bestConsecutivePairs)) {
                     minUnscheduledCount = unscheduled.length;
+                    bestConsecutivePairs = consecutivePairsCount;
                     bestSchedule = currentSchedule;
                     bestUnscheduledList = unscheduled;
                 }
 
-                // If 100% of all periods are successfully placed (zero gaps), terminate early!
-                if (minUnscheduledCount === 0) {
+                // If zero unscheduled and high consecutive pairs count, early stop after at least 25 attempts
+                if (minUnscheduledCount === 0 && attempt >= 25 && bestConsecutivePairs >= 25) {
                     break;
                 }
             }

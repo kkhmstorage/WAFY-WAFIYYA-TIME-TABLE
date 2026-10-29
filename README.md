@@ -113,9 +113,15 @@ In accordance with institutional guidelines:
 
 ### 9. High-Density Timetable Multi-Pass Constraint Optimizer (Zero Empty Periods)
 - **Multi-Restart Stochastic Solver**: Performs up to 50 randomized heuristic iterations within milliseconds to find a mathematically optimal, 100% gapless timetable.
+- **Consecutive Double Periods for Science Lab Subjects (രണ്ടു പിരീഡുകൾ അടുപ്പിച്ച്)**:
+  - Automatically identifies science subjects (*Physics*, *Chemistry*, *Computer Science*, *Biology*, *Lab*) and schedules them in paired 2-hour continuous blocks (`Period p` & `Period p+1`).
+  - Aligns practical laboratory experiments and concentrated theory on optimal periods without mid-session breaks.
+- **Dual-Campus Faculty Clustering (രണ്ടു സ്ഥാപനങ്ങളിലുമുള്ള അധ്യാപകർക്ക് തുടർച്ചയായ പിരീഡുകൾ)**:
+  - Identifies faculty teaching across both Wafy & Wafiyya institutions.
+  - Scores candidate placements to cluster periods at the same campus back-to-back, minimizing cross-campus transit friction and preventing travel buffer gridlocks.
 - **Progressive Multi-Pass Resolution**:
-  - *Pass 1 (Strict Constraints)*: Prioritizes multi-faculty split batches, cross-campus travel buffers, and daily distribution limits (max 2 periods/day).
-  - *Pass 2 (Soft Subject Limit Relaxation)*: Relaxes subject-per-day thresholds (to 3, then 4) to prevent leaving class slots vacant when faculty availability is tight.
+  - *Pass 1A & 1B (Atomic Double Periods & Scored Clustering Placement)*: Schedules science subjects in atomic 2-period blocks, followed by proximity & clustering-scored placement for all remaining slots.
+  - *Pass 2 (Soft Subject Limit Relaxation with Clustering Scoring)*: Relaxes subject-per-day thresholds (to 3, then 4) while maintaining proximity scoring so classrooms never sit vacant.
   - *Pass 3 (Intra-Class Relocation / Self-Swap)*: Dynamically rearranges periods within the same class to resolve gridlocks with zero external disruption.
   - *Pass 4 (Multi-Class Ejection Chain Swapping)*: Moves blocking periods in conflicting classes to alternate available slots (supporting standard, split, and shared batches).
   - *Pass 5 (Soft Travel Buffer Fallback)*: Relaxes inter-campus travel buffers if travel distance is the sole reason a period remains vacant.
