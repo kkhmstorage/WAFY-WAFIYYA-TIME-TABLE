@@ -1213,6 +1213,24 @@
                             <label class="block text-xs font-medium text-slate-600 mb-1">Classes / Batches (Comma Separated)</label>
                             <textarea id="classes-list-input" rows="2" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs focus:ring-2 focus:ring-emerald-500 outline-none" placeholder="e.g. Wafy Prep, Wafy Thanawiyya, Wafiyya Prep, Wafiyya Thanawiyya"></textarea>
                         </div>
+
+                        <!-- Class Working Days Configuration -->
+                        <div class="pt-4 border-t border-slate-200 mt-3">
+                            <div class="flex flex-col sm:flex-row sm:items-center justify-between gap-2 mb-2.5">
+                                <div>
+                                    <h4 class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                        <i class="fas fa-calendar-check text-emerald-600"></i> ക്ലാസ് വർക്കിംഗ് ദിനങ്ങൾ (Class Working Days)
+                                    </h4>
+                                    <p class="text-[11px] text-slate-500">ഓരോ ക്ലാസുകൾക്കുമുള്ള ആഴ്ചയിലെ പ്രവർത്തന ദിനങ്ങൾ ടിക്ക് ചെയ്തു നൽകുക (ഉദാ: PG ക്ലാസുകൾക്ക് തിങ്കൾ, ചൊവ്വ, ബുധൻ മാത്രം).</p>
+                                </div>
+                                <button type="button" onclick="window.resetAllClassWorkingDays()" class="text-[10px] text-slate-600 hover:text-slate-900 border border-slate-200 bg-white px-2 py-1 rounded-lg font-medium shadow-2xs self-start sm:self-auto transition">
+                                    <i class="fas fa-undo-alt mr-1"></i> Reset
+                                </button>
+                            </div>
+                            <div id="class-working-days-container" class="space-y-2.5 max-h-[420px] overflow-y-auto pr-1">
+                                <!-- Populated dynamically by renderClassWorkingDaysSettings() -->
+                            </div>
+                        </div>
                     </div>
                     
                     <div class="space-y-4">
@@ -1412,17 +1430,22 @@
                             <h2 class="text-xl font-bold text-slate-800">Subject Allocation Entry</h2>
                             <p class="text-xs text-slate-500">Assign subjects to classes and faculty with standard, split-batch, or shared co-teaching options.</p>
                         </div>
-                        <!-- Allocation Mode Selector Tabs -->
-                        <div class="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 text-xs font-bold shrink-0">
-                            <button type="button" onclick="window.switchAllotmentFormMode('standard')" id="btn-allot-mode-standard" class="px-3 py-1.5 rounded-lg transition bg-white text-emerald-800 shadow-xs">
-                                <i class="fas fa-book mr-1"></i> Standard
+                        <!-- Allocation Mode Selector & Working Days Shortcut -->
+                        <div class="flex items-center gap-2 flex-wrap shrink-0">
+                            <button type="button" onclick="window.switchTab('setup'); setTimeout(() => document.getElementById('class-working-days-container')?.scrollIntoView({behavior:'smooth'}), 150);" class="px-3 py-1.5 rounded-xl transition text-emerald-800 bg-emerald-50 hover:bg-emerald-100 border border-emerald-200 text-xs font-bold flex items-center gap-1.5 shadow-2xs" title="ക്ലാസ് വർക്കിംഗ് ദിനങ്ങൾ സെറ്റ് ചെയ്യുക">
+                                <i class="fas fa-calendar-check text-emerald-600"></i> വർക്കിംഗ് ദിനങ്ങൾ (Working Days)
                             </button>
-                            <button type="button" onclick="window.switchAllotmentFormMode('split')" id="btn-allot-mode-split" class="px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
-                                <i class="fas fa-columns mr-1"></i> Split Batch
-                            </button>
-                            <button type="button" onclick="window.switchAllotmentFormMode('shared')" id="btn-allot-mode-shared" class="px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
-                                <i class="fas fa-user-friends mr-1"></i> Shared Faculty
-                            </button>
+                            <div class="inline-flex rounded-xl p-1 bg-slate-100 border border-slate-200 text-xs font-bold">
+                                <button type="button" onclick="window.switchAllotmentFormMode('standard')" id="btn-allot-mode-standard" class="px-3 py-1.5 rounded-lg transition bg-white text-emerald-800 shadow-xs">
+                                    <i class="fas fa-book mr-1"></i> Standard
+                                </button>
+                                <button type="button" onclick="window.switchAllotmentFormMode('split')" id="btn-allot-mode-split" class="px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
+                                    <i class="fas fa-columns mr-1"></i> Split Batch
+                                </button>
+                                <button type="button" onclick="window.switchAllotmentFormMode('shared')" id="btn-allot-mode-shared" class="px-3 py-1.5 rounded-lg transition text-slate-600 hover:text-slate-900">
+                                    <i class="fas fa-user-friends mr-1"></i> Shared Faculty
+                                </button>
+                            </div>
                         </div>
                     </div>
 
@@ -2611,6 +2634,7 @@
             teachers: [],
             deletedTeachers: [],
             classes: [],
+            classWorkingDays: {},
             timetable: null,
             specialTimetables: [],
             dailyAudits: {}
@@ -3612,6 +3636,7 @@
             if(!appState.specialTimetables) appState.specialTimetables = [];
             if(!appState.dailyAudits) appState.dailyAudits = {};
             if(!appState.totalWorkingDays) appState.totalWorkingDays = 200;
+            if(!appState.classWorkingDays) appState.classWorkingDays = {};
             initSemestersData();
         }
 
@@ -3656,6 +3681,7 @@
                     totalWorkingDays: appState.totalWorkingDays || 200,
                     semesters: appState.semesters || null,
                     classesList: appState.classesList,
+                    classWorkingDays: appState.classWorkingDays || {},
                     periodTimings: appState.periodTimings,
                     teachers: appState.teachers,
                     deletedTeachers: appState.deletedTeachers || [],
@@ -4728,6 +4754,32 @@
                 const isAuditedForClass = auditData && auditData.classes && auditData.classes[cls];
                 const auditPeriodsStatus = isAuditedForClass ? isAuditedForClass.periods : [];
                 const isWafyClass = cls.toLowerCase().includes('wafiyya') ? false : true;
+                const isActiveToday = (scheduleRes.dayIndex !== undefined && scheduleRes.dayIndex !== null)
+                    ? (typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(cls, scheduleRes.dayIndex))
+                    : true;
+
+                if (!isActiveToday && !scheduleRes.isSpecial) {
+                    const activeDayNames = (typeof getClassWorkingDays === 'function') 
+                        ? getClassWorkingDays(cls).map(d => dayNames[d]).join(', ') 
+                        : '';
+                    html += `
+                        <div class="mb-6 border border-slate-200 rounded-2xl overflow-hidden shadow-xs bg-slate-50/70">
+                            <div class="px-4 py-3 flex justify-between items-center flex-wrap gap-2">
+                                <div class="flex items-center gap-2">
+                                    <span class="px-2 py-0.5 rounded text-[10px] font-bold uppercase ${isWafyClass ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800'}">
+                                        ${isWafyClass ? 'Wafy Campus' : 'Wafiyya Campus'}
+                                    </span>
+                                    <h3 class="font-bold text-sm text-slate-700">${cls}</h3>
+                                    <span class="bg-slate-200 text-slate-700 text-[10px] font-bold px-2.5 py-0.5 rounded-full inline-flex items-center gap-1">
+                                        <i class="fas fa-bed text-[9px] text-slate-500"></i> ഇന്ന് ക്ലാസുകളില്ല (Off Day)
+                                    </span>
+                                </div>
+                                <div class="text-[11px] text-slate-500 italic">വർക്കിംഗ് ദിനങ്ങൾ: <b>${activeDayNames}</b></div>
+                            </div>
+                        </div>
+                    `;
+                    return;
+                }
 
                 html += `
                     <div class="mb-6 border border-slate-200 rounded-2xl overflow-hidden shadow-sm bg-white">
@@ -5651,6 +5703,7 @@
             const canRecord = isAdminLoggedIn || isLeaderLoggedIn;
             const auditDoc = (appState.dailyAudits || {})[dateStr];
             const classesAudit = auditDoc ? (auditDoc.classes || {}) : {};
+            const scheduleRes = getActiveScheduleForDate(dateStr);
 
             container.innerHTML = appState.classesList.map(cls => {
                 const item = classesAudit[cls];
@@ -5679,6 +5732,25 @@
                         </div>
                     `;
                 } else {
+                    const isClassOff = (scheduleRes && scheduleRes.dayIndex !== undefined && scheduleRes.dayIndex !== null && !scheduleRes.isSpecial)
+                        ? (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(cls, scheduleRes.dayIndex))
+                        : false;
+
+                    if (isClassOff) {
+                        return `
+                            <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50/60 shadow-2xs flex flex-col justify-between">
+                                <div>
+                                    <div class="flex items-center justify-between">
+                                        <span class="font-bold text-xs text-slate-600">${cls}</span>
+                                        <span class="bg-slate-200 text-slate-700 text-[9px] font-bold px-1.5 py-0.5 rounded">Off Day</span>
+                                    </div>
+                                    <div class="text-[11px] text-slate-400 mt-2">ഈ ബാച്ചിന് ഇന്ന് പ്രവൃത്തി ദിനമല്ല.</div>
+                                </div>
+                                <div class="mt-3 text-[10px] text-slate-400 italic">No classes scheduled</div>
+                            </div>
+                        `;
+                    }
+
                     return `
                         <div class="p-3.5 rounded-2xl border border-slate-200 bg-slate-50 shadow-sm flex flex-col justify-between">
                             <div>
@@ -6965,8 +7037,22 @@
             `;
 
             for (let d = 0; d < days; d++) {
-                html += `<tr class="day-block">`;
+                const isActiveDay = typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(targetClass, d);
+                html += `<tr class="day-block ${!isActiveDay ? 'bg-slate-50/70' : ''}">`;
                 html += `<td class="px-3 py-2.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}</td>`;
+
+                if (!isActiveDay) {
+                    html += `
+                        <td colspan="${periods}" class="border border-slate-200 p-2.5 text-center align-middle bg-slate-50/60 text-slate-400">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200">
+                                <i class="fas fa-bed text-[11px] text-slate-400"></i>
+                                <span>ക്ലാസുകളില്ല (Off Day / No Classes Scheduled)</span>
+                            </span>
+                        </td>
+                    `;
+                    html += `</tr>`;
+                    continue;
+                }
 
                 for (let p = 0; p < periods; p++) {
                     const slot = (timetable && timetable[d] && timetable[d][p]) ? timetable[d][p][targetClass] : null;
@@ -7111,12 +7197,25 @@
                 for (let d = 0; d < days; d++) {
                     html += `<tbody class="day-block border-b-2 border-slate-300 text-xs bg-white">`;
                     collegeClasses.forEach((cls, rIdx) => {
+                        const isActiveDay = typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(cls, d);
                         html += `<tr>`;
                         if (rIdx === 0) {
                             html += `<td rowspan="${collegeClasses.length}" class="px-2.5 py-2 border border-slate-300 font-black bg-slate-100 text-slate-900 text-center align-middle whitespace-nowrap tracking-wider text-xs uppercase select-none">${dayNamesEn[d]}</td>`;
                         }
 
                         html += `<td class="px-2.5 py-2 border border-slate-300 font-extrabold text-slate-900 text-center align-middle bg-slate-50/80 whitespace-nowrap text-xs">${cls}</td>`;
+
+                        if (!isActiveDay) {
+                            html += `
+                                <td colspan="${periods}" class="border border-slate-300 p-2 text-center align-middle bg-slate-50/80 text-slate-400">
+                                    <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
+                                        <i class="fas fa-bed text-[10px] text-slate-400"></i> ക്ലാസുകളില്ല (Off Day)
+                                    </span>
+                                </td>
+                            `;
+                            html += `</tr>`;
+                            return;
+                        }
 
                         for (let p = 0; p < periods; p++) {
                             const slot = (timetable && timetable[d] && timetable[d][p]) ? timetable[d][p][cls] : null;
@@ -7282,8 +7381,13 @@
 
             for (let d = 0; d < days; d++) {
                 classesList.forEach(cls => {
+                    const isActiveDay = typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(cls, d);
                     let row = ['"' + dayNamesEn[d] + '"', '"' + cls + '"'];
                     for (let p = 0; p < periods; p++) {
+                        if (!isActiveDay) {
+                            row.push('"Off Day"');
+                            continue;
+                        }
                         const slot = timetable[d][p][cls];
                         if (slot) {
                             if (slot.allocationType === 'split') {
@@ -7356,6 +7460,7 @@
             if (val >= 1 && val <= 7) { 
                 appState.days = val; 
                 renderTeachersList(); 
+                if (typeof renderClassWorkingDaysSettings === 'function') renderClassWorkingDaysSettings();
                 saveToCloud();
             }
         });
@@ -7365,6 +7470,7 @@
                 appState.periods = val; 
                 renderPeriodTimingInputs();
                 renderTeachersList(); 
+                if (typeof renderClassWorkingDaysSettings === 'function') renderClassWorkingDaysSettings();
                 saveToCloud();
             }
         });
@@ -7377,6 +7483,7 @@
             if (list.length > 0) {
                 appState.classesList = list;
                 updateDropdowns();
+                if (typeof renderClassWorkingDaysSettings === 'function') renderClassWorkingDaysSettings();
                 saveToCloud();
             }
         });
@@ -7409,6 +7516,190 @@
             div.textContent = str;
             return div.innerHTML;
         }
+
+        // -------------------------------------------------------------
+        // CLASS-WISE WORKING DAYS CONFIGURATION
+        // Allows setting specific working days per class (e.g. PG = Mon, Tue, Wed)
+        // -------------------------------------------------------------
+        function getClassWorkingDays(className) {
+            if (!className) return Array.from({ length: appState.days || 6 }, (_, i) => i);
+            if (!appState.classWorkingDays) appState.classWorkingDays = {};
+            const saved = appState.classWorkingDays[className];
+            if (Array.isArray(saved) && saved.length > 0) {
+                const valid = saved.filter(d => typeof d === 'number' && d >= 0 && d < (appState.days || 6));
+                if (valid.length > 0) return valid.sort((a, b) => a - b);
+            }
+            // Smart defaults: PG batches default to 3 days (Mon, Tue, Wed = [0, 1, 2])
+            const lower = className.toLowerCase();
+            if (lower.includes('pg') || lower.includes('post graduate') || lower.includes('postgraduate')) {
+                return [0, 1, 2].filter(d => d < (appState.days || 6));
+            }
+            // Standard default: all regular working days
+            return Array.from({ length: appState.days || 6 }, (_, i) => i);
+        }
+
+        function isClassActiveOnDay(className, dayIndex) {
+            const activeDays = getClassWorkingDays(className);
+            return activeDays.includes(dayIndex);
+        }
+
+        function setClassWorkingDays(className, daysArr, skipSave) {
+            if (!isAdminLoggedIn) return;
+            if (!appState.classWorkingDays) appState.classWorkingDays = {};
+            appState.classWorkingDays[className] = Array.from(new Set(daysArr)).sort((a, b) => a - b);
+            renderClassWorkingDaysSettings();
+            if (typeof renderClassCapacityAuditUI === 'function') renderClassCapacityAuditUI();
+            if (appState.timetable) renderTimetable();
+            if (!skipSave) saveToCloud();
+        }
+
+        function toggleClassWorkingDay(className, dayIndex) {
+            if (!isAdminLoggedIn) return;
+            const current = getClassWorkingDays(className);
+            let next;
+            if (current.includes(dayIndex)) {
+                if (current.length <= 1) {
+                    showAlert("Warning", "ഒരു ക്ലാസ്സിന് ചുരുങ്ങിയത് 1 വർക്കിംഗ് ദിവസമെങ്കിലും ആവശ്യമാണ്.");
+                    return;
+                }
+                next = current.filter(d => d !== dayIndex);
+            } else {
+                next = [...current, dayIndex];
+            }
+            setClassWorkingDays(className, next);
+        }
+
+        function setClassWorkingDaysPreset(className, preset) {
+            if (!isAdminLoggedIn) return;
+            const maxDays = appState.days || 6;
+            let daysArr = [];
+            if (preset === 'pg_3days') {
+                daysArr = [0, 1, 2].filter(d => d < maxDays);
+            } else if (preset === 'all') {
+                daysArr = Array.from({ length: maxDays }, (_, i) => i);
+            } else if (preset === '5days') {
+                daysArr = [0, 1, 2, 3, 4].filter(d => d < maxDays);
+            }
+            setClassWorkingDays(className, daysArr);
+            showToast("Working Days Updated", `${className} ബാച്ചിന്റെ ദിവസങ്ങൾ ക്രമീകരിച്ചു.`);
+        }
+
+        function resetAllClassWorkingDays() {
+            if (!isAdminLoggedIn) return;
+            if (confirm("എല്ലാ ബാച്ചുകളുടെയും വർക്കിംഗ് ദിവസങ്ങൾ ഡിഫോൾട്ടിലേക്ക് മാറ്റണമോ? (PG = തിങ്കൾ-ബുധൻ, മറ്റുള്ളവ = എല്ലാ ദിവസവും)")) {
+                appState.classWorkingDays = {};
+                renderClassWorkingDaysSettings();
+                if (typeof renderClassCapacityAuditUI === 'function') renderClassCapacityAuditUI();
+                if (appState.timetable) renderTimetable();
+                saveToCloud();
+                showToast("Reset Completed", "എല്ലാ ബാച്ചുകളുടെയും വർക്കിംഗ് ദിവസങ്ങൾ പുനഃക്രമീകരിച്ചു.");
+            }
+        }
+
+        function renderClassWorkingDaysSettings() {
+            const container = document.getElementById('class-working-days-container');
+            if (!container) return;
+
+            const daysCount = appState.days || 6;
+            const periodsCount = appState.periods || 8;
+            const classes = Array.from(new Set([
+                ...(appState.classesList || []),
+                ...(appState.classes || []).map(c => c.className)
+            ])).filter(Boolean);
+
+            if (classes.length === 0) {
+                container.innerHTML = '<div class="p-4 text-center text-slate-400 italic text-xs">ബാച്ചുകളൊന്നും ചേർത്തിട്ടില്ല.</div>';
+                return;
+            }
+
+            const dayShortNamesMl = ['തിങ്കൾ (Mon)', 'ചൊവ്വ (Tue)', 'ബുധൻ (Wed)', 'വ്യാഴം (Thu)', 'വെള്ളി (Fri)', 'ശനി (Sat)', 'ഞായർ (Sun)'];
+
+            let html = `
+                <div class="overflow-x-auto">
+                    <table class="min-w-full divide-y divide-slate-200 text-xs">
+                        <thead class="bg-slate-50 text-slate-700 font-bold">
+                            <tr>
+                                <th class="px-3 py-2 text-left w-48">ബാച്ച് (Class Batch)</th>
+                                <th class="px-3 py-2 text-center">ആകെ വർക്കിംഗ് ദിവസങ്ങൾ (Active Days)</th>
+                                <th class="px-3 py-2 text-center w-28">ആകെ കപ്പാസിറ്റി</th>
+                                <th class="px-3 py-2 text-right w-44">ഷോർട്ട്കട്ട് പ്രിസെറ്റുകൾ</th>
+                            </tr>
+                        </thead>
+                        <tbody class="divide-y divide-slate-100 bg-white">
+            `;
+
+            classes.forEach(cls => {
+                const activeDays = getClassWorkingDays(cls);
+                const isPG = cls.toLowerCase().includes('pg');
+                const isWafy = cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya');
+                const campusBadge = isWafy 
+                    ? '<span class="bg-emerald-100 text-emerald-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Wafy</span>' 
+                    : '<span class="bg-purple-100 text-purple-800 text-[9px] font-bold px-1.5 py-0.5 rounded">Wafiyya</span>';
+                const capacity = activeDays.length * periodsCount;
+
+                html += `
+                    <tr class="hover:bg-slate-50/70 transition">
+                        <td class="px-3 py-2.5">
+                            <div class="flex items-center gap-1.5">
+                                ${campusBadge}
+                                <span class="font-bold text-slate-800 text-xs">${cls}</span>
+                                ${isPG ? '<span class="bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-1 rounded-full uppercase">PG</span>' : ''}
+                            </div>
+                        </td>
+                        <td class="px-3 py-2.5">
+                            <div class="flex items-center justify-center gap-1.5 flex-wrap">
+                                ${Array.from({ length: daysCount }, (_, d) => {
+                                    const isChecked = activeDays.includes(d);
+                                    const dLabel = dayShortNamesMl[d] || ('Day ' + (d + 1));
+                                    const btnColor = isChecked 
+                                        ? 'bg-emerald-600 text-white border-emerald-600 shadow-2xs font-bold' 
+                                        : 'bg-slate-100 text-slate-400 border-slate-200 line-through opacity-70 hover:opacity-100';
+                                    return `
+                                        <button type="button" 
+                                            onclick="window.toggleClassWorkingDay('${escapeHtml(cls)}', ${d})"
+                                            ${!isAdminLoggedIn ? 'disabled' : ''}
+                                            title="${dLabel} ${isChecked ? 'സജീവം (Active)' : 'അവധി (Off Day)'}"
+                                            class="px-2 py-1 rounded-lg text-[10.5px] border transition flex items-center gap-1 ${btnColor} ${!isAdminLoggedIn ? 'cursor-not-allowed opacity-80' : 'cursor-pointer'}">
+                                            <i class="fas ${isChecked ? 'fa-check-square' : 'fa-square'} text-[10px]"></i>
+                                            <span>${dLabel.split(' ')[0]}</span>
+                                        </button>
+                                    `;
+                                }).join('')}
+                            </div>
+                        </td>
+                        <td class="px-3 py-2.5 text-center">
+                            <div class="font-extrabold text-xs text-slate-800">${activeDays.length} ദിനം • <span class="text-emerald-700">${capacity}h</span></div>
+                        </td>
+                        <td class="px-3 py-2.5 text-right whitespace-nowrap space-x-1">
+                            ${isAdminLoggedIn ? `
+                                <button type="button" onclick="window.setClassWorkingDaysPreset('${escapeHtml(cls)}', 'pg_3days')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-amber-50 hover:bg-amber-100 text-amber-900 border border-amber-300 transition" title="തിങ്കൾ, ചൊവ്വ, ബുധൻ (3 Days)">
+                                    3 Days (Mon-Wed)
+                                </button>
+                                <button type="button" onclick="window.setClassWorkingDaysPreset('${escapeHtml(cls)}', 'all')" class="px-2 py-0.5 rounded text-[10px] font-bold bg-slate-100 hover:bg-slate-200 text-slate-700 border border-slate-300 transition" title="എല്ലാ പ്രവൃത്തി ദിനങ്ങളും (All Days)">
+                                    All Days
+                                </button>
+                            ` : `<span class="text-slate-400 italic text-[10px]">അഡ്മിൻ ഒൺലി</span>`}
+                        </td>
+                    </tr>
+                `;
+            });
+
+            html += `
+                        </tbody>
+                    </table>
+                </div>
+            `;
+
+            container.innerHTML = html;
+        }
+
+        window.getClassWorkingDays = getClassWorkingDays;
+        window.isClassActiveOnDay = isClassActiveOnDay;
+        window.setClassWorkingDays = setClassWorkingDays;
+        window.toggleClassWorkingDay = toggleClassWorkingDay;
+        window.setClassWorkingDaysPreset = setClassWorkingDaysPreset;
+        window.resetAllClassWorkingDays = resetAllClassWorkingDays;
+        window.renderClassWorkingDaysSettings = renderClassWorkingDaysSettings;
 
         function openEditTeacherModal(teacherId) {
             if (!isAdminLoggedIn) {
@@ -8714,12 +9005,15 @@
                 const classAllotments = appState.classes.filter(c => c.className === cls);
                 const totalHours = classAllotments.reduce((sum, c) => sum + Number(c.hours || 0), 0);
                 const college = classAllotments.length > 0 ? classAllotments[0].college : (cls.toLowerCase().includes('wafiyya') ? appState.institutions[1] : appState.institutions[0]);
-                const diff = totalCapacity - totalHours;
+                const classDays = typeof getClassWorkingDays === 'function' ? getClassWorkingDays(cls).length : days;
+                const classCapacity = classDays * periods;
+                const diff = classCapacity - totalHours;
                 return {
                     className: cls,
                     college: college,
                     totalHours: totalHours,
-                    capacity: totalCapacity,
+                    capacity: classCapacity,
+                    classDays: classDays,
                     diff: diff
                 };
             });
@@ -9024,6 +9318,7 @@
 
             renderPeriodTimingInputs();
             updateDropdowns();
+            renderClassWorkingDaysSettings();
             renderTeachersList();
             renderAllotmentsList();
         }
@@ -9225,6 +9520,9 @@
 
             // Verify if a slot can be placed at (d, p) in currentSchedule with configurable constraint relaxation
             const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true, checkSubjectCount = true) => {
+                // Must be an active working day for this class
+                if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) return false;
+
                 // Period must be empty for this class
                 if (currentSchedule[d][p][slot.className]) return false;
 
@@ -9319,7 +9617,9 @@
                         const s2 = group[1];
                         let pairPlaced = false;
 
-                        const dayOrder = Array.from({length: days}, (_, i) => i).sort(() => Math.random() - 0.5);
+                        const dayOrder = Array.from({length: days}, (_, i) => i)
+                            .filter(d => typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(s1.className, d))
+                            .sort(() => Math.random() - 0.5);
                         const startPeriods = [0, 2, 4, 6, 1, 3, 5].filter(p => p < periods - 1).sort(() => Math.random() - 0.5);
 
                         for (let d of dayOrder) {
@@ -9390,6 +9690,7 @@
                     let placed = false;
                     let candidates = [];
                     for (let d = 0; d < days; d++) {
+                        if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
                         for (let p = 0; p < periods; p++) {
                             if (canPlaceSlot(slot, d, p, currentSchedule, 2, true, true)) {
                                 const sc = getCandidatePlacementScore(slot, d, p, currentSchedule);
@@ -9416,6 +9717,7 @@
                         let placed = false;
                         let candidates = [];
                         for (let d = 0; d < days; d++) {
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
                             for (let p = 0; p < periods; p++) {
                                 if (canPlaceSlot(slot, d, p, currentSchedule, maxSubLimit, true, true)) {
                                     const sc = getCandidatePlacementScore(slot, d, p, currentSchedule);
@@ -9444,12 +9746,14 @@
                         let placed = false;
                         for (let d = 0; d < days; d++) {
                             if (placed) break;
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
                             for (let p = 0; p < periods; p++) {
                                 if (placed) break;
                                 if (currentSchedule[d][p][slot.className]) continue;
 
                                 for (let d2 = 0; d2 < days; d2++) {
                                     if (placed) break;
+                                    if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d2)) continue;
                                     for (let p2 = 0; p2 < periods; p2++) {
                                         if (d2 === d && p2 === p) continue;
                                         const s2 = currentSchedule[d2][p2][slot.className];
@@ -9486,6 +9790,7 @@
                         let placed = false;
                         for (let d = 0; d < days; d++) {
                             if (placed) break;
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
                             for (let p = 0; p < periods; p++) {
                                 if (placed) break;
                                 if (currentSchedule[d][p][slot.className]) continue;
@@ -9509,6 +9814,7 @@
                                     if (blockerSlot && blockerClass) {
                                         for (let d2 = 0; d2 < days; d2++) {
                                             if (placed) break;
+                                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(blockerClass, d2)) continue;
                                             for (let p2 = 0; p2 < periods; p2++) {
                                                 if (d2 === d && p2 === p) continue;
                                                 if (currentSchedule[d2][p2][blockerClass]) continue;
@@ -9546,6 +9852,7 @@
                         let placed = false;
                         for (let d = 0; d < days; d++) {
                             if (placed) break;
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
                             for (let p = 0; p < periods; p++) {
                                 if (canPlaceSlot(slot, d, p, currentSchedule, 4, false, true)) {
                                     currentSchedule[d][p][slot.className] = slot;
@@ -9567,6 +9874,7 @@
                         let placed = false;
                         for (let d = 0; d < days; d++) {
                             if (placed) break;
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
                             for (let p = 0; p < periods; p++) {
                                 if (currentSchedule[d][p][slot.className]) continue;
 

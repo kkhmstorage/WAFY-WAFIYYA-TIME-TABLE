@@ -127,6 +127,20 @@ In accordance with institutional guidelines:
   - *Pass 5 (Soft Travel Buffer Fallback)*: Relaxes inter-campus travel buffers if travel distance is the sole reason a period remains vacant.
   - *Pass 6 (Zero-Gap Guarantee)*: Exhaustive final placement ensuring dense schedules (e.g., 47/48 or 48/48 periods) achieve 100% gapless, zero-blank timetables.
 
+### 10. Class-Wise Working Days & PG 3-Day Scheduling (ക്ലാസ്-വൈസ് വർക്കിംഗ് ദിനങ്ങളും പി.ജി 3-ദിവസ ഷെഡ്യൂളും)
+- **Interactive Day-by-Day Ticking per Class (പ്രവൃത്തി ദിനങ്ങൾ ടിക്ക് ചെയ്ത് സെറ്റ് ചെയ്യാം)**:
+  - Setup tab features a dedicated **"ക്ലാസ് അടിസ്ഥാനത്തിൽ വർക്കിംഗ് ദിവസങ്ങൾ ക്രമീകരിക്കൽ (Class-Wise Working Days Configuration)"** interface with interactive checkboxes for every day of the week: `തിങ്കൾ (Mon)`, `ചൊവ്വ (Tue)`, `ബുധൻ (Wed)`, `വ്യാഴം (Thu)`, `വെള്ളി (Fri)`, `ശനി (Sat)`.
+  - Enables administrators to customize individual batch operating days with 1-click presets (`3 Days (Mon-Wed)` and `All Days`) and a master reset button.
+- **Post-Graduate (PG) 3-Day Scheduling Guarantee (തിങ്കൾ - ബുധൻ മാത്രം)**:
+  - Post Graduate classes (e.g. `Wafiyya PG`) operate only 3 days a week. The multi-pass optimizer strictly confines PG allotments (24 periods = 8 periods × 3 days) exclusively to Monday, Tuesday, and Wednesday.
+  - Thursday, Friday, and Saturday are permanently locked with zero scheduled periods and zero misplaced hours.
+- **Off-Day Timetable & Audit Integration**:
+  - **Classroom Noticeboard & College Master View**: Non-working days render an elegant, unified `ക്ലാസുകളില്ല (Off Day / No Classes Scheduled)` banner across all periods instead of blank cells.
+  - **Today's Live Timetable**: Inactive batches show an informative Off Day notice along with their configured active days.
+  - **3:30 PM Daily Audit Grid**: Shows an `Off Day` status pill for inactive classes, preventing false "Pending" warnings on non-working days.
+  - **Accurate Capacity & Workload Audit**: Dynamically calculates weekly capacity (`Active Working Days × Periods/Day`), recognizing 24 hours as 100% balanced for PG batches and eliminating false deficit alerts.
+  - **Cloud Synchronization**: Class-wise working days persist in Firebase Firestore under `classWorkingDays` for seamless multi-device collaboration.
+
 ---
 
 ## 🛠️ Technology Stack
