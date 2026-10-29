@@ -95,8 +95,9 @@ In accordance with institutional guidelines:
 - Detailed class-wise and faculty-wise breakdown tables with print and CSV export.
 
 ### 7. Split-Batch Electives & Shared Faculty Teaching
-- **Split-Batch Parallel Electives (Up to 3 Batches)**:
+- **Split-Batch Parallel Electives (Up to 3 Batches with Differential Hours)**:
   - Enables classes to be split simultaneously into **2 or up to 3 parallel elective batches** in the exact same period (e.g. Batch 1: Urdu, Batch 2: Malayalam, Batch 3: Arabic Literature).
+  - **Individual Subject Periods (വെവ്വേറെ പിരീഡുകൾ)**: Record specific periods/week per batch (e.g. Urdu 4 hrs, Malayalam 3 hrs). The system automatically schedules common periods simultaneously in parallel and excess periods individually for the respective batch, crediting each faculty member with their exact teaching hours.
   - Flexible **"+ 3-ാം ബാച്ച് ചേർക്കുക / Add 3rd Batch"** toggle allowing administrators to add or remove a 3rd parallel batch on demand.
   - Multi-faculty clash detection ensures all assigned teachers are available without schedule or travel conflicts.
   - Granular 3:30 PM Daily Audit and Missed Periods tracking allows recording individual Conducted/Missed status per batch.

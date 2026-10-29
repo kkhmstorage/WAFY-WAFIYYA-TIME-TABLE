@@ -1473,8 +1473,8 @@
                         <div id="new-split-batches-grid" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-3">
                             <!-- Batch 1 -->
                             <div class="bg-white p-3 rounded-xl border border-emerald-200/80 shadow-2xs space-y-2">
-                                <div class="text-[11px] font-bold text-emerald-800 flex items-center gap-1">
-                                    <i class="fas fa-tag text-[10px]"></i> 1st Group / Batch (e.g. Urdu Batch)
+                                <div class="text-[11px] font-bold text-emerald-800 flex items-center justify-between">
+                                    <span class="flex items-center gap-1"><i class="fas fa-tag text-[10px]"></i> 1st Group / Batch (e.g. Urdu Batch)</span>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-medium text-slate-600 mb-1">Subject 1 Name</label>
@@ -1484,19 +1484,33 @@
                                     <label class="block text-[11px] font-medium text-slate-600 mb-1">Faculty for Subject 1</label>
                                     <select id="new-split-teacher1" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select>
                                 </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-emerald-800 mb-1 flex items-center justify-between">
+                                        <span>Periods / Wk (പിരീഡുകൾ) *</span>
+                                        <span class="text-[9px] text-slate-400 font-normal">ആഴ്ചയിൽ</span>
+                                    </label>
+                                    <input type="number" id="new-split-hours1" value="3" min="1" max="25" oninput="window.updateSplitHoursSummary()" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white font-bold text-slate-800 focus:ring-2 focus:ring-emerald-500 outline-none">
+                                </div>
                             </div>
                             <!-- Batch 2 -->
                             <div class="bg-white p-3 rounded-xl border border-teal-200/80 shadow-2xs space-y-2">
-                                <div class="text-[11px] font-bold text-teal-800 flex items-center gap-1">
-                                    <i class="fas fa-tag text-[10px]"></i> 2nd Group / Batch (e.g. Malayalam Batch)
+                                <div class="text-[11px] font-bold text-teal-800 flex items-center justify-between">
+                                    <span class="flex items-center gap-1"><i class="fas fa-tag text-[10px]"></i> 2nd Group / Batch (e.g. Malayalam Batch)</span>
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-medium text-slate-600 mb-1">Subject 2 Name</label>
-                                    <input type="text" id="new-split-subj2" placeholder="e.g. Malayalam" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                                    <input type="text" id="new-split-subj2" placeholder="e.g. Malayalam" class="w-full border border-slate-300 rounded-lg p-2 text-xs focus:ring-2 focus:ring-teal-500 outline-none">
                                 </div>
                                 <div>
                                     <label class="block text-[11px] font-medium text-slate-600 mb-1">Faculty for Subject 2</label>
-                                    <select id="new-split-teacher2" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none"></select>
+                                    <select id="new-split-teacher2" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-teal-500 outline-none"></select>
+                                </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-teal-800 mb-1 flex items-center justify-between">
+                                        <span>Periods / Wk (പിരീഡുകൾ) *</span>
+                                        <span class="text-[9px] text-slate-400 font-normal">ആഴ്ചയിൽ</span>
+                                    </label>
+                                    <input type="number" id="new-split-hours2" value="3" min="1" max="25" oninput="window.updateSplitHoursSummary()" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white font-bold text-slate-800 focus:ring-2 focus:ring-teal-500 outline-none">
                                 </div>
                             </div>
                             <!-- Batch 3 (Optional / As needed) -->
@@ -1515,11 +1529,27 @@
                                     <label class="block text-[11px] font-medium text-slate-600 mb-1">Faculty for Subject 3</label>
                                     <select id="new-split-teacher3" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white focus:ring-2 focus:ring-cyan-500 outline-none"></select>
                                 </div>
+                                <div>
+                                    <label class="block text-[11px] font-semibold text-cyan-800 mb-1 flex items-center justify-between">
+                                        <span>Periods / Wk (പിരീഡുകൾ) *</span>
+                                        <span class="text-[9px] text-slate-400 font-normal">ആഴ്ചയിൽ</span>
+                                    </label>
+                                    <input type="number" id="new-split-hours3" value="3" min="1" max="25" oninput="window.updateSplitHoursSummary()" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white font-bold text-slate-800 focus:ring-2 focus:ring-cyan-500 outline-none">
+                                </div>
                             </div>
                         </div>
-                        <div class="w-full sm:w-48 pt-1">
-                            <label class="block text-xs font-semibold text-slate-700 mb-1">Parallel Periods / Wk</label>
-                            <input type="number" id="new-split-hours" value="3" min="1" max="25" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-white focus:ring-2 focus:ring-emerald-500 outline-none">
+                        <!-- Split Batch Live Summary & Class Timetable Periods Info -->
+                        <div class="bg-white/90 p-3 rounded-xl border border-emerald-200 flex flex-wrap items-center justify-between gap-3 text-xs shadow-2xs">
+                            <div class="flex items-center gap-2 text-emerald-950 flex-1 min-w-[240px]">
+                                <i class="fas fa-info-circle text-emerald-600 text-sm shrink-0"></i>
+                                <span id="new-split-summary-text" class="text-xs font-medium leading-relaxed">
+                                    ഓരോ വിഷയത്തിനും വെവ്വേറെ പിരീഡുകൾ നൽകാം. തുല്യമായ പിരീഡുകൾ ഒരേ സമയത്തും (Parallel), ബാക്കി വരുന്നവ അതത് ബാച്ചിന് മാത്രമായും ഷെഡ്യൂൾ ചെയ്യപ്പെടും.
+                                </span>
+                            </div>
+                            <div class="flex items-center gap-2 shrink-0">
+                                <label for="new-split-hours" class="text-xs font-bold text-slate-700">Class Timetable Periods:</label>
+                                <input type="number" id="new-split-hours" value="3" min="1" max="25" class="w-20 border border-emerald-300 rounded-lg px-2.5 py-1.5 text-xs font-black text-emerald-800 bg-emerald-50 text-center outline-none" title="Total periods occupied by this elective block in class timetable">
+                            </div>
                         </div>
                     </div>
 
@@ -2020,11 +2050,19 @@
                             <div class="text-[10px] font-bold text-emerald-800">1st Group / Batch (e.g. Urdu Batch)</div>
                             <input type="text" id="edit-split-subj1" placeholder="Subject 1 Name" class="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none">
                             <select id="edit-split-teacher1" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none"></select>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-emerald-800 mb-0.5">Periods / Wk (പിരീഡുകൾ) *</label>
+                                <input type="number" id="edit-split-hours1" min="1" max="25" oninput="window.updateEditSplitHoursSummary()" class="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 outline-none">
+                            </div>
                         </div>
                         <div class="p-2.5 bg-white rounded-lg border border-teal-200 space-y-2">
                             <div class="text-[10px] font-bold text-teal-800">2nd Group / Batch (e.g. Malayalam Batch)</div>
                             <input type="text" id="edit-split-subj2" placeholder="Subject 2 Name" class="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none">
                             <select id="edit-split-teacher2" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none"></select>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-teal-800 mb-0.5">Periods / Wk (പിരീഡുകൾ) *</label>
+                                <input type="number" id="edit-split-hours2" min="1" max="25" oninput="window.updateEditSplitHoursSummary()" class="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 outline-none">
+                            </div>
                         </div>
                         <div id="edit-split-batch3-card" class="hidden p-2.5 bg-white rounded-lg border border-cyan-300 space-y-2 col-span-1 md:col-span-2">
                             <div class="flex items-center justify-between text-[10px] font-bold text-cyan-800">
@@ -2035,11 +2073,20 @@
                             </div>
                             <input type="text" id="edit-split-subj3" placeholder="Subject 3 Name" class="w-full border border-slate-300 rounded-lg p-2 text-xs outline-none">
                             <select id="edit-split-teacher3" class="w-full border border-slate-300 rounded-lg p-2 text-xs bg-white outline-none"></select>
+                            <div>
+                                <label class="block text-[10px] font-semibold text-cyan-800 mb-0.5">Periods / Wk (പിരീഡുകൾ) *</label>
+                                <input type="number" id="edit-split-hours3" min="1" max="25" oninput="window.updateEditSplitHoursSummary()" class="w-full border border-slate-300 rounded-lg p-1.5 text-xs font-bold text-slate-800 outline-none">
+                            </div>
                         </div>
                     </div>
-                    <div>
-                        <label class="block font-medium text-slate-700 mb-1">Parallel Periods / Wk</label>
-                        <input type="number" id="edit-split-hours" min="1" max="25" class="w-full border border-slate-300 rounded-xl p-2.5 text-xs bg-white outline-none">
+                    <div class="bg-white/90 p-2.5 rounded-lg border border-emerald-200 flex items-center justify-between gap-2 text-xs shadow-2xs">
+                        <span id="edit-split-summary-text" class="text-[11px] font-medium text-emerald-950">
+                            Class Timetable Periods:
+                        </span>
+                        <div class="flex items-center gap-1.5">
+                            <label for="edit-split-hours" class="text-[11px] font-bold text-slate-600">Total:</label>
+                            <input type="number" id="edit-split-hours" min="1" max="25" class="w-20 border border-emerald-300 rounded-lg px-2 py-1 text-xs font-black text-emerald-800 bg-emerald-50 text-center outline-none">
+                        </div>
                     </div>
                 </div>
 
@@ -8013,15 +8060,16 @@
                         if (cItem.allocationType === 'split') {
                             var subSlot = (cItem.splitSlots || []).find(function(s) { return s.teacherId === tid; });
                             if (subSlot) {
+                                var subHours = (subSlot.hours !== undefined && subSlot.hours !== null && subSlot.hours !== '') ? Number(subSlot.hours) : Number(cItem.hours);
                                 assignedClasses.push({
                                     id: cItem.id,
                                     college: cItem.college,
                                     className: cItem.className,
                                     subject: subSlot.subject + ' (' + (subSlot.batchLabel || 'Split Batch') + ')',
-                                    hours: cItem.hours,
+                                    hours: subHours,
                                     teacherId: tid
                                 });
-                                totalHours += (Number(cItem.hours) || 0);
+                                totalHours += (Number(subHours) || 0);
                             }
                         } else if (cItem.allocationType === 'shared') {
                             if (cItem.teacherId === tid) {
@@ -8236,6 +8284,52 @@
             if (clInput) clInput.value = appState.classesList.join(', ');
         }
 
+        function updateSplitHoursSummary() {
+            const h1 = parseInt(document.getElementById('new-split-hours1')?.value) || 0;
+            const h2 = parseInt(document.getElementById('new-split-hours2')?.value) || 0;
+            const card3 = document.getElementById('new-split-batch3-card');
+            const isB3 = card3 && !card3.classList.contains('hidden');
+            const h3 = isB3 ? (parseInt(document.getElementById('new-split-hours3')?.value) || 0) : 0;
+
+            const maxH = Math.max(h1, h2, h3, 1);
+            const minH = isB3 ? Math.min(h1, h2, h3) : Math.min(h1, h2);
+            const hInput = document.getElementById('new-split-hours');
+            if (hInput) hInput.value = maxH;
+
+            const summaryEl = document.getElementById('new-split-summary-text');
+            if (summaryEl) {
+                if (h1 === h2 && (!isB3 || h1 === h3)) {
+                    summaryEl.innerHTML = `എല്ലാ ബാച്ചുകൾക്കും തുല്യമായ <b>${maxH}</b> പിരീഡുകൾ ഒരേ സമയം (Parallel) നടക്കും.`;
+                } else {
+                    summaryEl.innerHTML = `ആകെ <b>${maxH}</b> പിരീഡുകൾ: <b>${minH}</b> പിരീഡുകൾ ഒരേ സമയത്തും (Parallel), ബാക്കി <b>${maxH - minH}</b> പിരീഡുകൾ അതത് ബാച്ചിന് മാത്രമായും ഷെഡ്യൂൾ ചെയ്യപ്പെടും.`;
+                }
+            }
+        }
+        window.updateSplitHoursSummary = updateSplitHoursSummary;
+
+        function updateEditSplitHoursSummary() {
+            const h1 = parseInt(document.getElementById('edit-split-hours1')?.value) || 0;
+            const h2 = parseInt(document.getElementById('edit-split-hours2')?.value) || 0;
+            const card3 = document.getElementById('edit-split-batch3-card');
+            const isB3 = card3 && !card3.classList.contains('hidden');
+            const h3 = isB3 ? (parseInt(document.getElementById('edit-split-hours3')?.value) || 0) : 0;
+
+            const maxH = Math.max(h1, h2, h3, 1);
+            const minH = isB3 ? Math.min(h1, h2, h3) : Math.min(h1, h2);
+            const hInput = document.getElementById('edit-split-hours');
+            if (hInput) hInput.value = maxH;
+
+            const summaryEl = document.getElementById('edit-split-summary-text');
+            if (summaryEl) {
+                if (h1 === h2 && (!isB3 || h1 === h3)) {
+                    summaryEl.innerHTML = `എല്ലാ ബാച്ചുകൾക്കും തുല്യമായ <b>${maxH}</b> പിരീഡുകൾ ഒരേ സമയം (Parallel) നടക്കും.`;
+                } else {
+                    summaryEl.innerHTML = `ആകെ <b>${maxH}</b> പിരീഡുകൾ (<b>${minH}</b> parallel + <b>${maxH - minH}</b> individual).`;
+                }
+            }
+        }
+        window.updateEditSplitHoursSummary = updateEditSplitHoursSummary;
+
         function toggleNewSplitBatch3(forceState) {
             const card = document.getElementById('new-split-batch3-card');
             const btn = document.getElementById('btn-toggle-new-batch3');
@@ -8253,11 +8347,14 @@
                 card.classList.add('hidden');
                 const s3Input = document.getElementById('new-split-subj3');
                 if (s3Input) s3Input.value = '';
+                const h3Input = document.getElementById('new-split-hours3');
+                if (h3Input) h3Input.value = '3';
                 if (btn) {
                     btn.innerHTML = '<i class="fas fa-plus-circle text-emerald-600 mr-1"></i> + 3-ാം ബാച്ച് ചേർക്കുക (Add 3rd Batch)';
                     btn.className = "text-xs font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-3 py-1 rounded-lg transition border border-emerald-300 inline-flex items-center gap-1 shadow-2xs";
                 }
             }
+            updateSplitHoursSummary();
         }
 
         function toggleEditSplitBatch3(forceState) {
@@ -8277,11 +8374,14 @@
                 card.classList.add('hidden');
                 const s3Input = document.getElementById('edit-split-subj3');
                 if (s3Input) s3Input.value = '';
+                const h3Input = document.getElementById('edit-split-hours3');
+                if (h3Input) h3Input.value = '3';
                 if (btn) {
                     btn.innerHTML = '<i class="fas fa-plus-circle text-emerald-600 mr-0.5"></i> + 3-ാം ബാച്ച് ചേർക്കുക (Add 3rd Batch)';
                     btn.className = "text-[11px] font-bold text-emerald-700 hover:text-emerald-800 bg-emerald-100 hover:bg-emerald-200 px-2.5 py-1 rounded-lg transition border border-emerald-300 inline-flex items-center gap-1 shadow-2xs";
                 }
             }
+            updateEditSplitHoursSummary();
         }
 
         function addAllotment() {
@@ -8292,36 +8392,42 @@
             if (currentAllotmentFormMode === 'split') {
                 const s1 = (document.getElementById('new-split-subj1')?.value || '').trim();
                 const t1 = document.getElementById('new-split-teacher1')?.value;
+                const h1 = parseInt(document.getElementById('new-split-hours1')?.value);
                 const s2 = (document.getElementById('new-split-subj2')?.value || '').trim();
                 const t2 = document.getElementById('new-split-teacher2')?.value;
+                const h2 = parseInt(document.getElementById('new-split-hours2')?.value);
                 const card3 = document.getElementById('new-split-batch3-card');
                 const isBatch3Visible = card3 && !card3.classList.contains('hidden');
                 const s3 = (document.getElementById('new-split-subj3')?.value || '').trim();
                 const t3 = document.getElementById('new-split-teacher3')?.value;
+                const h3 = parseInt(document.getElementById('new-split-hours3')?.value);
                 const hours = parseInt(document.getElementById('new-split-hours')?.value);
 
                 if (!s1 || !s2) { showAlert("Required", "Please enter subject names for Batch 1 and Batch 2 (e.g. Urdu & Malayalam)."); return; }
                 if (!t1 || !t2) { showAlert("Required", "Please select faculty for Batch 1 and Batch 2."); return; }
                 if (t1 === t2) { showAlert("Invalid", "Please select different faculty members for simultaneous split batches."); return; }
+                if (isNaN(h1) || h1 <= 0) { showAlert("Error", "Periods per week for Batch 1 must be greater than zero."); return; }
+                if (isNaN(h2) || h2 <= 0) { showAlert("Error", "Periods per week for Batch 2 must be greater than zero."); return; }
 
                 const hasBatch3 = isBatch3Visible && (s3 || t3);
                 if (hasBatch3) {
                     if (!s3) { showAlert("Required", "Please enter subject name for 3rd batch."); return; }
                     if (!t3) { showAlert("Required", "Please select faculty for 3rd batch."); return; }
                     if (t3 === t1 || t3 === t2) { showAlert("Invalid", "All split batches must have different faculty members assigned."); return; }
+                    if (isNaN(h3) || h3 <= 0) { showAlert("Error", "Periods per week for Batch 3 must be greater than zero."); return; }
                 }
-
-                if (isNaN(hours) || hours <= 0) { showAlert("Error", "Periods per week must be greater than zero."); return; }
 
                 const splitSlots = [
-                    { subject: s1, teacherId: t1, batchLabel: s1 + ' Batch' },
-                    { subject: s2, teacherId: t2, batchLabel: s2 + ' Batch' }
+                    { subject: s1, teacherId: t1, batchLabel: s1 + ' Batch', hours: h1 },
+                    { subject: s2, teacherId: t2, batchLabel: s2 + ' Batch', hours: h2 }
                 ];
                 if (hasBatch3) {
-                    splitSlots.push({ subject: s3, teacherId: t3, batchLabel: s3 + ' Batch' });
+                    splitSlots.push({ subject: s3, teacherId: t3, batchLabel: s3 + ' Batch', hours: h3 });
                 }
 
-                const subjectTitle = splitSlots.map(s => s.subject).join(' / ');
+                const maxHours = Math.max(...splitSlots.map(s => Number(s.hours) || 0));
+                const finalHours = !isNaN(hours) && hours >= maxHours ? hours : maxHours;
+                const subjectTitle = splitSlots.map(s => `${s.subject} (${s.hours}h)`).join(' / ');
 
                 appState.classes.push({
                     id: generateId(),
@@ -8329,7 +8435,7 @@
                     college: college,
                     className: batch,
                     subject: subjectTitle,
-                    hours: hours,
+                    hours: finalHours,
                     splitSlots: splitSlots
                 });
 
@@ -8337,11 +8443,18 @@
                 document.getElementById('new-split-subj2').value = '';
                 const s3El = document.getElementById('new-split-subj3');
                 if (s3El) s3El.value = '';
+                const h1El = document.getElementById('new-split-hours1');
+                if (h1El) h1El.value = '3';
+                const h2El = document.getElementById('new-split-hours2');
+                if (h2El) h2El.value = '3';
+                const h3El = document.getElementById('new-split-hours3');
+                if (h3El) h3El.value = '3';
                 toggleNewSplitBatch3(false);
+                updateSplitHoursSummary();
                 renderAllotmentsList();
                 renderTeachersList();
                 saveToCloud();
-                showToast("Split Allocation Added", `${splitSlots.length} parallel batches created for ${batch}.`);
+                showToast("Split Allocation Added", `${splitSlots.length} batches created for ${batch} (${splitSlots.map(s=>s.hours + 'h').join('/')}).`);
                 return;
             }
 
@@ -8425,23 +8538,31 @@
 
             if (item.allocationType === 'split') {
                 switchEditAllotmentFormMode('split');
-                const s1 = item.splitSlots && item.splitSlots[0] ? item.splitSlots[0] : { subject: '', teacherId: '' };
-                const s2 = item.splitSlots && item.splitSlots[1] ? item.splitSlots[1] : { subject: '', teacherId: '' };
+                const s1 = item.splitSlots && item.splitSlots[0] ? item.splitSlots[0] : { subject: '', teacherId: '', hours: item.hours || 3 };
+                const s2 = item.splitSlots && item.splitSlots[1] ? item.splitSlots[1] : { subject: '', teacherId: '', hours: item.hours || 3 };
                 const s3 = item.splitSlots && item.splitSlots[2] ? item.splitSlots[2] : null;
 
                 document.getElementById('edit-split-subj1').value = s1.subject || '';
                 document.getElementById('edit-split-teacher1').value = s1.teacherId || '';
+                const h1Val = (s1.hours !== undefined && s1.hours !== null && s1.hours !== '') ? s1.hours : (item.hours || 3);
+                document.getElementById('edit-split-hours1').value = h1Val;
+
                 document.getElementById('edit-split-subj2').value = s2.subject || '';
                 document.getElementById('edit-split-teacher2').value = s2.teacherId || '';
+                const h2Val = (s2.hours !== undefined && s2.hours !== null && s2.hours !== '') ? s2.hours : (item.hours || 3);
+                document.getElementById('edit-split-hours2').value = h2Val;
 
                 if (s3) {
                     toggleEditSplitBatch3(true);
                     document.getElementById('edit-split-subj3').value = s3.subject || '';
                     document.getElementById('edit-split-teacher3').value = s3.teacherId || '';
+                    const h3Val = (s3.hours !== undefined && s3.hours !== null && s3.hours !== '') ? s3.hours : (item.hours || 3);
+                    document.getElementById('edit-split-hours3').value = h3Val;
                 } else {
                     toggleEditSplitBatch3(false);
                 }
-                document.getElementById('edit-split-hours').value = item.hours || 3;
+                document.getElementById('edit-split-hours').value = item.hours || Math.max(h1Val, h2Val);
+                updateEditSplitHoursSummary();
             } else if (item.allocationType === 'shared') {
                 switchEditAllotmentFormMode('shared');
                 document.getElementById('edit-shared-subject').value = item.subject || '';
@@ -8481,40 +8602,47 @@
             if (mode === 'split') {
                 const s1 = (document.getElementById('edit-split-subj1')?.value || '').trim();
                 const t1 = document.getElementById('edit-split-teacher1')?.value;
+                const h1 = parseInt(document.getElementById('edit-split-hours1')?.value);
                 const s2 = (document.getElementById('edit-split-subj2')?.value || '').trim();
                 const t2 = document.getElementById('edit-split-teacher2')?.value;
+                const h2 = parseInt(document.getElementById('edit-split-hours2')?.value);
                 const card3 = document.getElementById('edit-split-batch3-card');
                 const isBatch3Visible = card3 && !card3.classList.contains('hidden');
                 const s3 = (document.getElementById('edit-split-subj3')?.value || '').trim();
                 const t3 = document.getElementById('edit-split-teacher3')?.value;
+                const h3 = parseInt(document.getElementById('edit-split-hours3')?.value);
                 const hours = parseInt(document.getElementById('edit-split-hours')?.value);
 
                 if (!s1 || !s2) { showAlert("Required", "Please enter subject names for Batch 1 and Batch 2."); return; }
                 if (!t1 || !t2) { showAlert("Required", "Please select faculty for Batch 1 and Batch 2."); return; }
                 if (t1 === t2) { showAlert("Invalid", "Please select different faculty members for simultaneous split batches."); return; }
+                if (isNaN(h1) || h1 <= 0) { showAlert("Invalid", "Batch 1 hours must be greater than zero."); return; }
+                if (isNaN(h2) || h2 <= 0) { showAlert("Invalid", "Batch 2 hours must be greater than zero."); return; }
 
                 const hasBatch3 = isBatch3Visible && (s3 || t3);
                 if (hasBatch3) {
                     if (!s3) { showAlert("Required", "Please enter subject name for 3rd batch."); return; }
                     if (!t3) { showAlert("Required", "Please select faculty for 3rd batch."); return; }
                     if (t3 === t1 || t3 === t2) { showAlert("Invalid", "All split batches must have different faculty members assigned."); return; }
+                    if (isNaN(h3) || h3 <= 0) { showAlert("Invalid", "Batch 3 hours must be greater than zero."); return; }
                 }
-
-                if (isNaN(hours) || hours <= 0) { showAlert("Invalid", "Hours must be greater than zero."); return; }
 
                 const splitSlots = [
-                    { subject: s1, teacherId: t1, batchLabel: s1 + ' Batch' },
-                    { subject: s2, teacherId: t2, batchLabel: s2 + ' Batch' }
+                    { subject: s1, teacherId: t1, batchLabel: s1 + ' Batch', hours: h1 },
+                    { subject: s2, teacherId: t2, batchLabel: s2 + ' Batch', hours: h2 }
                 ];
                 if (hasBatch3) {
-                    splitSlots.push({ subject: s3, teacherId: t3, batchLabel: s3 + ' Batch' });
+                    splitSlots.push({ subject: s3, teacherId: t3, batchLabel: s3 + ' Batch', hours: h3 });
                 }
+
+                const maxHours = Math.max(...splitSlots.map(s => Number(s.hours) || 0));
+                const finalHours = !isNaN(hours) && hours >= maxHours ? hours : maxHours;
 
                 item.allocationType = 'split';
                 item.college = college;
                 item.className = batch;
-                item.subject = splitSlots.map(s => s.subject).join(' / ');
-                item.hours = hours;
+                item.subject = splitSlots.map(s => `${s.subject} (${s.hours}h)`).join(' / ');
+                item.hours = finalHours;
                 item.splitSlots = splitSlots;
                 delete item.teacherId;
                 delete item.secondaryTeacherId;
@@ -8609,8 +8737,10 @@
                 let assignedHours = 0;
                 appState.classes.forEach(c => {
                     if (c.allocationType === 'split') {
-                        if ((c.splitSlots || []).some(s => s.teacherId === t.id)) {
-                            assignedHours += Number(c.hours || 0);
+                        const sub = (c.splitSlots || []).find(s => s.teacherId === t.id);
+                        if (sub) {
+                            const subHrs = (sub.hours !== undefined && sub.hours !== null && sub.hours !== '') ? Number(sub.hours) : Number(c.hours || 0);
+                            assignedHours += subHrs;
                         }
                     } else if (c.allocationType === 'shared') {
                         if (c.teacherId === t.id) assignedHours += Number(c.hours || 0);
@@ -8762,29 +8892,42 @@
 
                 if (c.allocationType === 'split') {
                     const slots = (c.splitSlots && c.splitSlots.length) ? c.splitSlots : [];
+                    const hoursList = slots.map(s => (s.hours !== undefined && s.hours !== null && s.hours !== '') ? Number(s.hours) : Number(c.hours || 0));
+                    const allSame = hoursList.length > 0 && hoursList.every(h => h === hoursList[0]);
 
                     subjDisplay = `
                         <div class="space-y-1">
                             <span class="inline-flex items-center gap-1 bg-emerald-100 text-emerald-800 text-[10px] font-extrabold px-1.5 py-0.5 rounded shadow-2xs">
                                 <i class="fas fa-columns text-[8px]"></i> Split Batch (${slots.length} Batches)
                             </span>
-                            <div class="font-bold text-slate-800 text-xs flex flex-wrap items-center gap-1">
-                                ${slots.map((s, idx) => `
-                                    <span>${s.subject}</span> <span class="text-slate-400 font-normal">(${s.batchLabel || 'Batch ' + (idx + 1)})</span>
-                                    ${idx < slots.length - 1 ? '<span class="text-emerald-600 font-bold mx-0.5">&amp;</span>' : ''}
-                                `).join('')}
+                            <div class="font-bold text-slate-800 text-xs flex flex-wrap items-center gap-1.5">
+                                ${slots.map((s, idx) => {
+                                    const sHours = (s.hours !== undefined && s.hours !== null && s.hours !== '') ? s.hours : c.hours;
+                                    return `
+                                        <span class="inline-flex items-center gap-1 bg-slate-50 border border-slate-200 px-1.5 py-0.5 rounded shadow-2xs">
+                                            <span>${s.subject}</span>
+                                            <span class="bg-emerald-100 text-emerald-800 text-[9px] font-black px-1 rounded font-mono">${sHours}h</span>
+                                            <span class="text-slate-400 font-normal text-[10px]">(${s.batchLabel || 'Batch ' + (idx + 1)})</span>
+                                        </span>
+                                        ${idx < slots.length - 1 ? '<span class="text-emerald-600 font-bold">&amp;</span>' : ''}
+                                    `;
+                                }).join('')}
                             </div>
                         </div>
                     `;
 
                     facultyDisplay = `
-                        <div class="text-xs space-y-0.5">
+                        <div class="text-xs space-y-1">
                             ${slots.map(s => {
                                 const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                                const sHours = (s.hours !== undefined && s.hours !== null && s.hours !== '') ? s.hours : c.hours;
                                 return `
-                                    <div class="flex items-center gap-1 text-slate-700">
-                                        <span class="font-semibold">${t ? t.name : 'Unassigned'}</span>
-                                        <span class="font-mono text-[9px] bg-slate-100 px-1 rounded">${t ? t.shortName : ''}</span>
+                                    <div class="flex items-center justify-between gap-1 text-slate-700 bg-slate-50/70 border border-slate-100 px-1.5 py-0.5 rounded">
+                                        <div class="flex items-center gap-1 truncate">
+                                            <span class="font-semibold truncate">${t ? t.name : 'Unassigned'}</span>
+                                            <span class="font-mono text-[9px] bg-white border border-slate-200 px-1 rounded">${t ? t.shortName : ''}</span>
+                                        </div>
+                                        <span class="text-[9.5px] font-bold text-emerald-700 shrink-0 font-mono">${sHours}h</span>
                                     </div>
                                 `;
                             }).join('')}
@@ -8794,7 +8937,8 @@
                     hoursDisplay = `
                         <div class="text-center">
                             <span class="font-black text-xs text-slate-800">${c.hours}</span>
-                            <span class="text-[9px] text-emerald-700 block font-semibold">Parallel/Wk</span>
+                            <span class="text-[9px] text-emerald-700 block font-semibold">${allSame ? 'Parallel/Wk' : 'Max/Wk'}</span>
+                            ${!allSame ? `<span class="text-[9px] text-slate-400 block font-mono">(${hoursList.join('/')} hrs)</span>` : ''}
                         </div>
                     `;
                 } else if (c.allocationType === 'shared') {
@@ -8926,15 +9070,28 @@
             let rawSlots = [];
             classes.forEach(c => {
                 if (c.allocationType === 'split') {
-                    for (let i = 0; i < c.hours; i++) {
+                    const rawSubSlots = (c.splitSlots && c.splitSlots.length) ? c.splitSlots : [];
+                    const subSlotsWithHours = rawSubSlots.map(s => ({
+                        ...s,
+                        hours: (s.hours !== undefined && s.hours !== null && s.hours !== '') ? Number(s.hours) : Number(c.hours || 3)
+                    }));
+                    const totalSlotsCount = Math.max(
+                        ...subSlotsWithHours.map(s => s.hours),
+                        Number(c.hours || 0)
+                    );
+
+                    for (let i = 0; i < totalSlotsCount; i++) {
+                        const activeSubSlots = subSlotsWithHours.filter(s => i < s.hours);
+                        if (activeSubSlots.length === 0) continue;
+
                         rawSlots.push({
                             id: c.id,
                             allocationType: 'split',
                             college: c.college,
                             className: c.className,
-                            subject: c.subject,
-                            hours: c.hours,
-                            splitSlots: c.splitSlots || []
+                            subject: activeSubSlots.map(s => s.subject).join(' / '),
+                            hours: totalSlotsCount,
+                            splitSlots: activeSubSlots
                         });
                     }
                 } else if (c.allocationType === 'shared') {
