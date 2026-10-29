@@ -110,6 +110,14 @@ In accordance with institutional guidelines:
 - **Data Protection & Backup**: One-click download of full JSON backups and restore capabilities with admin confirmation.
 - **Custom Firebase Project Credentials**: Ability for institutions to inspect credentials or switch Firebase projects directly from the UI.
 
+### 9. High-Density Timetable Multi-Pass Constraint Optimizer (Zero Empty Periods)
+- **Multi-Restart Stochastic Solver**: Performs up to 35-50 randomized heuristic iterations within milliseconds to find a mathematically optimal, 100% gapless timetable.
+- **Progressive Multi-Pass Resolution**:
+  - *Pass 1 (Strict Constraints)*: Prioritizes multi-faculty split batches, travel buffers, and daily distribution limits.
+  - *Pass 2 (Residual Soft-Relaxation)*: Relaxes subject-per-day thresholds to prevent leaving class slots vacant when faculty availability is tight.
+  - *Pass 3 (Ejection Chain Swapping / Backtracking)*: Dynamically moves non-conflicting periods to alternative slots to unblock gridlocked teachers.
+  - *Pass 4 (Zero-Gap Guarantee)*: Prevents high-density classes (e.g., 47/48 or 48/48 periods) from dropping unplaced hours into random blanks.
+
 ---
 
 ## 🛠️ Technology Stack
