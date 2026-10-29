@@ -111,12 +111,14 @@ In accordance with institutional guidelines:
 - **Custom Firebase Project Credentials**: Ability for institutions to inspect credentials or switch Firebase projects directly from the UI.
 
 ### 9. High-Density Timetable Multi-Pass Constraint Optimizer (Zero Empty Periods)
-- **Multi-Restart Stochastic Solver**: Performs up to 35-50 randomized heuristic iterations within milliseconds to find a mathematically optimal, 100% gapless timetable.
+- **Multi-Restart Stochastic Solver**: Performs up to 50 randomized heuristic iterations within milliseconds to find a mathematically optimal, 100% gapless timetable.
 - **Progressive Multi-Pass Resolution**:
-  - *Pass 1 (Strict Constraints)*: Prioritizes multi-faculty split batches, travel buffers, and daily distribution limits.
-  - *Pass 2 (Residual Soft-Relaxation)*: Relaxes subject-per-day thresholds to prevent leaving class slots vacant when faculty availability is tight.
-  - *Pass 3 (Ejection Chain Swapping / Backtracking)*: Dynamically moves non-conflicting periods to alternative slots to unblock gridlocked teachers.
-  - *Pass 4 (Zero-Gap Guarantee)*: Prevents high-density classes (e.g., 47/48 or 48/48 periods) from dropping unplaced hours into random blanks.
+  - *Pass 1 (Strict Constraints)*: Prioritizes multi-faculty split batches, cross-campus travel buffers, and daily distribution limits (max 2 periods/day).
+  - *Pass 2 (Soft Subject Limit Relaxation)*: Relaxes subject-per-day thresholds (to 3, then 4) to prevent leaving class slots vacant when faculty availability is tight.
+  - *Pass 3 (Intra-Class Relocation / Self-Swap)*: Dynamically rearranges periods within the same class to resolve gridlocks with zero external disruption.
+  - *Pass 4 (Multi-Class Ejection Chain Swapping)*: Moves blocking periods in conflicting classes to alternate available slots (supporting standard, split, and shared batches).
+  - *Pass 5 (Soft Travel Buffer Fallback)*: Relaxes inter-campus travel buffers if travel distance is the sole reason a period remains vacant.
+  - *Pass 6 (Zero-Gap Guarantee)*: Exhaustive final placement ensuring dense schedules (e.g., 47/48 or 48/48 periods) achieve 100% gapless, zero-blank timetables.
 
 ---
 

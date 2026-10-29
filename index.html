@@ -8811,7 +8811,33 @@
                 if (!tId) return false;
                 const teacher = teachers.find(t => t.id === tId);
                 if (!teacher) return false;
-                return teacher.constraints.some(c => c.day === d && (c.period === 'all' || c.period === p));
+                return (teacher.constraints || []).some(c => c.day === d && (c.period === 'all' || c.period === p));
+            };
+
+            // Helper: get list of all assigned teacher IDs for a slot token
+            const getSlotTeachers = (slot) => {
+                if (!slot) return [];
+                if (slot.allocationType === 'split') {
+                    return (slot.splitSlots || []).map(s => s.teacherId).filter(Boolean);
+                }
+                if (slot.allocationType === 'shared') {
+                    const ids = slot.teacherIds || [slot.teacherId, slot.secondaryTeacherId];
+                    return ids.filter(Boolean);
+                }
+                return [slot.teacherId].filter(Boolean);
+            };
+
+            // Helper: check if a slot involves a specific teacher ID
+            const slotContainsTeacher = (slot, tId) => {
+                if (!slot || !tId) return false;
+                if (slot.allocationType === 'split') {
+                    return (slot.splitSlots || []).some(s => s.teacherId === tId);
+                }
+                if (slot.allocationType === 'shared') {
+                    return (slot.teacherIds && slot.teacherIds.includes(tId)) ||
+                           slot.teacherId === tId || slot.secondaryTeacherId === tId;
+                }
+                return slot.teacherId === tId;
             };
 
             // Helper: check if a teacher is already teaching ANY class in schedule at (d, p)
@@ -8822,14 +8848,7 @@
                     if (excludeClassName && cls === excludeClassName) continue;
                     const assigned = slotMap[cls];
                     if (!assigned) continue;
-                    if (assigned.allocationType === 'split') {
-                        if (assigned.splitSlots && assigned.splitSlots.some(s => s.teacherId === tId)) return true;
-                    } else if (assigned.allocationType === 'shared') {
-                        if (assigned.teacherIds && assigned.teacherIds.includes(tId)) return true;
-                        if (assigned.teacherId === tId || assigned.secondaryTeacherId === tId) return true;
-                    } else {
-                        if (assigned.teacherId === tId) return true;
-                    }
+                    if (slotContainsTeacher(assigned, tId)) return true;
                 }
                 return false;
             };
@@ -8843,66 +8862,45 @@
                         for (let cls in slotMap) {
                             const assigned = slotMap[cls];
                             if (!assigned) continue;
-                            let teacherCollege = null;
-                            if (assigned.allocationType === 'split') {
-                                const sub = (assigned.splitSlots || []).find(s => s.teacherId === tId);
-                                if (sub) teacherCollege = assigned.college;
-                            } else if (assigned.allocationType === 'shared') {
-                                if (assigned.teacherIds && assigned.teacherIds.includes(tId)) teacherCollege = assigned.college;
-                            } else {
-                                if (assigned.teacherId === tId) teacherCollege = assigned.college;
+                            if (slotContainsTeacher(assigned, tId)) {
+                                if (assigned.college && assigned.college !== targetCollege) return true;
                             }
-                            if (teacherCollege && teacherCollege !== targetCollege) return true;
                         }
                     }
                 }
                 return false;
             };
 
-            // Verify if a slot can be placed at (d, p) in currentSchedule
-            const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true) => {
+            // Verify if a slot can be placed at (d, p) in currentSchedule with configurable constraint relaxation
+            const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true, checkSubjectCount = true) => {
                 // Period must be empty for this class
                 if (currentSchedule[d][p][slot.className]) return false;
 
                 // Check subject count for this class on day d
-                let subjectDayCount = 0;
-                for (let chkP = 0; chkP < periods; chkP++) {
-                    const s = currentSchedule[d][chkP][slot.className];
-                    if (s && s.subject === slot.subject) subjectDayCount++;
+                if (checkSubjectCount && maxSubjectPerDay < periods) {
+                    let subjectDayCount = 0;
+                    for (let chkP = 0; chkP < periods; chkP++) {
+                        const s = currentSchedule[d][chkP][slot.className];
+                        if (s && s.subject === slot.subject) subjectDayCount++;
+                    }
+                    if (subjectDayCount >= maxSubjectPerDay) return false;
                 }
-                if (subjectDayCount >= maxSubjectPerDay) return false;
 
-                // Validate teacher clashes
-                if (slot.allocationType === 'split') {
-                    for (let sub of (slot.splitSlots || [])) {
-                        if (isTeacherUnavailable(sub.teacherId, d, p)) return false;
-                        if (isTeacherBusyInSchedule(sub.teacherId, d, p, currentSchedule)) return false;
-                        if (hasTeacherTravelClashInSchedule(sub.teacherId, slot.college, d, p, currentSchedule, enforceBuffer)) return false;
-                    }
-                    return true;
-                } else if (slot.allocationType === 'shared') {
-                    const tIds = slot.teacherIds || [slot.teacherId, slot.secondaryTeacherId];
-                    for (let tId of tIds) {
-                        if (tId) {
-                            if (isTeacherUnavailable(tId, d, p)) return false;
-                            if (isTeacherBusyInSchedule(tId, d, p, currentSchedule)) return false;
-                            if (hasTeacherTravelClashInSchedule(tId, slot.college, d, p, currentSchedule, enforceBuffer)) return false;
-                        }
-                    }
-                    return true;
-                } else {
-                    if (isTeacherUnavailable(slot.teacherId, d, p)) return false;
-                    if (isTeacherBusyInSchedule(slot.teacherId, d, p, currentSchedule)) return false;
-                    if (hasTeacherTravelClashInSchedule(slot.teacherId, slot.college, d, p, currentSchedule, enforceBuffer)) return false;
-                    return true;
+                // Check all teachers in slot for unavailable constraints, other class teaching, and campus travel clashes
+                const tIds = getSlotTeachers(slot);
+                for (let tId of tIds) {
+                    if (isTeacherUnavailable(tId, d, p)) return false;
+                    if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)) return false;
+                    if (hasTeacherTravelClashInSchedule(tId, slot.college, d, p, currentSchedule, enforceBuffer)) return false;
                 }
+                return true;
             };
 
-            // MULTI-RESTART STOCHASTIC CONSTRAINT OPTIMIZER (35 Attempts)
+            // MULTI-RESTART STOCHASTIC CONSTRAINT OPTIMIZER (Up to 50 Restarts)
             let bestSchedule = null;
             let minUnscheduledCount = 999999;
             let bestUnscheduledList = [];
-            const maxAttempts = 35;
+            const maxAttempts = 50;
 
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
                 let currentSchedule = Array(days).fill(null).map(() => 
@@ -8912,33 +8910,33 @@
                 // Clone slot tokens for this attempt
                 let slots = rawSlots.map(s => ({ ...s }));
 
-                // Heuristic ordering: prioritizes split electives & teachers with constraints, with randomized jitter
+                // Heuristic ordering: prioritizes split electives, shared teaching & constrained faculty with randomized jitter
                 const getTeacherScore = (tid) => {
                     const t = teachers.find(tch => tch.id === tid);
-                    return t ? t.constraints.length * 3 : 0;
+                    return t ? (t.constraints || []).length * 3 : 0;
                 };
 
                 slots.sort((a, b) => {
                     let scoreA = a.hours;
                     if (a.allocationType === 'split') {
-                        scoreA += 15 + (a.splitSlots || []).reduce((acc, s) => acc + getTeacherScore(s.teacherId), 0);
+                        scoreA += 18 + (a.splitSlots || []).reduce((acc, s) => acc + getTeacherScore(s.teacherId), 0);
                     } else if (a.allocationType === 'shared') {
-                        scoreA += 8 + getTeacherScore(a.teacherId) + getTeacherScore(a.secondaryTeacherId);
+                        scoreA += 10 + getTeacherScore(a.teacherId) + getTeacherScore(a.secondaryTeacherId);
                     } else {
                         scoreA += getTeacherScore(a.teacherId);
                     }
 
                     let scoreB = b.hours;
                     if (b.allocationType === 'split') {
-                        scoreB += 15 + (b.splitSlots || []).reduce((acc, s) => acc + getTeacherScore(s.teacherId), 0);
+                        scoreB += 18 + (b.splitSlots || []).reduce((acc, s) => acc + getTeacherScore(s.teacherId), 0);
                     } else if (b.allocationType === 'shared') {
-                        scoreB += 8 + getTeacherScore(b.teacherId) + getTeacherScore(b.secondaryTeacherId);
+                        scoreB += 10 + getTeacherScore(b.teacherId) + getTeacherScore(b.secondaryTeacherId);
                     } else {
                         scoreB += getTeacherScore(b.teacherId);
                     }
 
-                    // Add slight random perturbation per attempt so each restart explores new solution spaces
-                    return (scoreB + Math.random() * 3) - (scoreA + Math.random() * 3);
+                    // Randomized perturbation explores distinct branches of combinatorial search space
+                    return (scoreB + Math.random() * 4) - (scoreA + Math.random() * 4);
                 });
 
                 let unscheduled = [];
@@ -8952,7 +8950,7 @@
                         if (placed) break;
                         let periodOrder = Array.from({length: periods}, (_, i) => i).sort(() => Math.random() - 0.5);
                         for (let p of periodOrder) {
-                            if (canPlaceSlot(slot, d, p, currentSchedule, 2, true)) {
+                            if (canPlaceSlot(slot, d, p, currentSchedule, 2, true, true)) {
                                 currentSchedule[d][p][slot.className] = slot;
                                 placed = true;
                                 break;
@@ -8962,15 +8960,16 @@
                     if (!placed) unscheduled.push(slot);
                 }
 
-                // PASS 2: Soft Relaxation of subjectDayCount (allow up to 3 or 4 periods/day if class would otherwise be left empty)
-                if (unscheduled.length > 0) {
+                // PASS 2: Soft Subject Limit Relaxation (Max 3, then Max 4 periods/day if classroom would otherwise sit vacant)
+                for (let maxSubLimit of [3, 4]) {
+                    if (unscheduled.length === 0) break;
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
                         let placed = false;
                         for (let d = 0; d < days; d++) {
                             if (placed) break;
                             for (let p = 0; p < periods; p++) {
-                                if (canPlaceSlot(slot, d, p, currentSchedule, 3, true)) {
+                                if (canPlaceSlot(slot, d, p, currentSchedule, maxSubLimit, true, true)) {
                                     currentSchedule[d][p][slot.className] = slot;
                                     placed = true;
                                     break;
@@ -8982,9 +8981,10 @@
                     unscheduled = stillUnscheduled;
                 }
 
-                // PASS 3: Intelligent 1-Step Ejection Chain Swapping (Local Search Backtracking)
-                // If a slot S for Class A is blocked at an empty slot (d, p) because its teacher is busy in Class B,
-                // check if Class B's period at (d, p) can be safely relocated to an alternative empty period (d2, p2)!
+                // PASS 3: Intra-Class Relocation (Self-Swap)
+                // If Class A has an empty slot (d, p) but slot S is blocked there,
+                // check if an existing slot S2 of Class A at (d2, p2) can safely move to (d, p),
+                // freeing up (d2, p2) for slot S without disturbing any other class!
                 if (unscheduled.length > 0) {
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
@@ -8993,46 +8993,87 @@
                             if (placed) break;
                             for (let p = 0; p < periods; p++) {
                                 if (placed) break;
-                                // Class A must be free at (d, p)
                                 if (currentSchedule[d][p][slot.className]) continue;
-                                // Check teacher availability
-                                if (slot.allocationType === 'standard' && isTeacherUnavailable(slot.teacherId, d, p)) continue;
 
-                                // Find who is occupying this teacher in (d, p)
-                                let blockerClass = null;
-                                let blockerSlot = null;
-                                if (slot.allocationType === 'standard') {
+                                for (let d2 = 0; d2 < days; d2++) {
+                                    if (placed) break;
+                                    for (let p2 = 0; p2 < periods; p2++) {
+                                        if (d2 === d && p2 === p) continue;
+                                        const s2 = currentSchedule[d2][p2][slot.className];
+                                        if (!s2) continue;
+
+                                        // Temporarily lift s2 from (d2, p2)
+                                        delete currentSchedule[d2][p2][slot.className];
+
+                                        if (canPlaceSlot(s2, d, p, currentSchedule, 4, true, true) &&
+                                            canPlaceSlot(slot, d2, p2, currentSchedule, 4, true, true)) {
+                                            currentSchedule[d][p][slot.className] = s2;
+                                            currentSchedule[d2][p2][slot.className] = slot;
+                                            placed = true;
+                                            break;
+                                        } else {
+                                            // Rollback
+                                            currentSchedule[d2][p2][slot.className] = s2;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (!placed) stillUnscheduled.push(slot);
+                    }
+                    unscheduled = stillUnscheduled;
+                }
+
+                // PASS 4: Multi-Class Ejection Chain Swapping (External Backtracking)
+                // If slot S for Class A is blocked at an empty slot (d, p) because its teacher is teaching in Class B,
+                // check if Class B's period can safely relocate to another empty period (d2, p2) of Class B!
+                if (unscheduled.length > 0) {
+                    let stillUnscheduled = [];
+                    for (let slot of unscheduled) {
+                        let placed = false;
+                        for (let d = 0; d < days; d++) {
+                            if (placed) break;
+                            for (let p = 0; p < periods; p++) {
+                                if (placed) break;
+                                if (currentSchedule[d][p][slot.className]) continue;
+
+                                const sTeachers = getSlotTeachers(slot);
+                                if (sTeachers.some(tId => isTeacherUnavailable(tId, d, p))) continue;
+
+                                for (let tId of sTeachers) {
+                                    if (placed) break;
+                                    let blockerClass = null;
+                                    let blockerSlot = null;
                                     for (let cls in currentSchedule[d][p]) {
                                         const occ = currentSchedule[d][p][cls];
-                                        if (occ && occ.teacherId === slot.teacherId) {
+                                        if (occ && slotContainsTeacher(occ, tId)) {
                                             blockerClass = cls;
                                             blockerSlot = occ;
                                             break;
                                         }
                                     }
-                                }
 
-                                if (blockerSlot && blockerClass) {
-                                    // Try relocating blockerSlot to another day/period (d2, p2)
-                                    for (let d2 = 0; d2 < days; d2++) {
-                                        if (placed) break;
-                                        for (let p2 = 0; p2 < periods; p2++) {
-                                            if (d2 === d && p2 === p) continue;
-                                            // Check if blockerSlot can fit in (d2, p2)
-                                            if (canPlaceSlot(blockerSlot, d2, p2, currentSchedule, 3, true)) {
-                                                // Execute swap
-                                                currentSchedule[d2][p2][blockerClass] = blockerSlot;
+                                    if (blockerSlot && blockerClass) {
+                                        for (let d2 = 0; d2 < days; d2++) {
+                                            if (placed) break;
+                                            for (let p2 = 0; p2 < periods; p2++) {
+                                                if (d2 === d && p2 === p) continue;
+                                                if (currentSchedule[d2][p2][blockerClass]) continue;
+
                                                 delete currentSchedule[d][p][blockerClass];
 
-                                                // Now check if our unplaced slot can take (d, p)
-                                                if (canPlaceSlot(slot, d, p, currentSchedule, 3, true)) {
-                                                    currentSchedule[d][p][slot.className] = slot;
-                                                    placed = true;
-                                                    break;
+                                                if (canPlaceSlot(blockerSlot, d2, p2, currentSchedule, 4, true, true)) {
+                                                    currentSchedule[d2][p2][blockerClass] = blockerSlot;
+                                                    if (canPlaceSlot(slot, d, p, currentSchedule, 4, true, true)) {
+                                                        currentSchedule[d][p][slot.className] = slot;
+                                                        placed = true;
+                                                        break;
+                                                    } else {
+                                                        delete currentSchedule[d2][p2][blockerClass];
+                                                        currentSchedule[d][p][blockerClass] = blockerSlot;
+                                                    }
                                                 } else {
-                                                    // Rollback swap
                                                     currentSchedule[d][p][blockerClass] = blockerSlot;
-                                                    delete currentSchedule[d2][p2][blockerClass];
                                                 }
                                             }
                                         }
@@ -9045,7 +9086,7 @@
                     unscheduled = stillUnscheduled;
                 }
 
-                // PASS 4: Travel Buffer Soft Fallback (If travel buffer is the ONLY reason a period remains empty)
+                // PASS 5: Soft Travel Buffer Relaxation (with direct & intra-class placement)
                 if (unscheduled.length > 0) {
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
@@ -9053,7 +9094,7 @@
                         for (let d = 0; d < days; d++) {
                             if (placed) break;
                             for (let p = 0; p < periods; p++) {
-                                if (canPlaceSlot(slot, d, p, currentSchedule, 3, false)) {
+                                if (canPlaceSlot(slot, d, p, currentSchedule, 4, false, true)) {
                                     currentSchedule[d][p][slot.className] = slot;
                                     placed = true;
                                     break;
@@ -9065,7 +9106,36 @@
                     unscheduled = stillUnscheduled;
                 }
 
-                // Keep track of the best attempt found
+                // PASS 6: Zero-Gap Guarantee (Complete Elimination of Blank Periods for Dense Schedules)
+                // Ensures full-density classes (e.g., 47/48 or 48/48 periods) never leave random vacant gaps
+                if (unscheduled.length > 0) {
+                    let stillUnscheduled = [];
+                    for (let slot of unscheduled) {
+                        let placed = false;
+                        for (let d = 0; d < days; d++) {
+                            if (placed) break;
+                            for (let p = 0; p < periods; p++) {
+                                if (currentSchedule[d][p][slot.className]) continue;
+
+                                const sTeachers = getSlotTeachers(slot);
+                                const hardClash = sTeachers.some(tId => 
+                                    isTeacherUnavailable(tId, d, p) || 
+                                    isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)
+                                );
+
+                                if (!hardClash) {
+                                    currentSchedule[d][p][slot.className] = slot;
+                                    placed = true;
+                                    break;
+                                }
+                            }
+                        }
+                        if (!placed) stillUnscheduled.push(slot);
+                    }
+                    unscheduled = stillUnscheduled;
+                }
+
+                // Keep track of the mathematically best attempt found across all restarts
                 if (unscheduled.length < minUnscheduledCount) {
                     minUnscheduledCount = unscheduled.length;
                     bestSchedule = currentSchedule;
