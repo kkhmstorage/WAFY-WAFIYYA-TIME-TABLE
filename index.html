@@ -597,6 +597,7 @@
                         WAFY & WAFIYYA
                     </h1>
                     <span id="role-badge" class="text-[9px] sm:text-[10px] font-semibold px-2 py-0.5 rounded-full bg-slate-700 text-slate-300 border border-slate-600 whitespace-nowrap">Public View</span>
+                    <span class="text-[9px] sm:text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40 whitespace-nowrap flex items-center gap-1 shadow-inner"><i class="fas fa-dna text-[9px] text-pink-300"></i> v3.3 (T1/T2 Bio)</span>
                 </div>
                 <p class="text-[10px] sm:text-xs text-emerald-200/80 truncate">Academic Timetable & Daily Period Audit Portal</p>
             </div>
@@ -2926,7 +2927,7 @@
                         </div>
                         <div class="flex-1">
                             <div class="text-[11px] font-black text-indigo-950 uppercase tracking-wide flex items-center gap-1.5">
-                                <span>അഡീഷണൽ പിരീഡ് • വഫിയ്യ T1</span>
+                                <span>അഡീഷണൽ പിരീഡ് • വഫിയ്യ (T1 / T2)</span>
                                 <span class="bg-indigo-600 text-white text-[8px] px-1.5 py-0.2 rounded font-bold">Biology Only</span>
                             </div>
                             <div class="text-[10.5px] text-indigo-900 font-semibold mt-0.5 leading-snug">
@@ -3140,22 +3141,31 @@
         const dayNamesEn = dayNames; // Alias used across rendering functions
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
 
-        // Wafiyya T1 Additional Period Configuration: Monday (0), Wednesday (2), Friday (4) for Biology only
+        // Wafiyya T1 & T2 Additional Period Configuration: Monday (0), Wednesday (2), Friday (4) for Biology only
         const WAFIYYA_T1_ADDITIONAL_DAYS = [0, 2, 4];
 
         function isWafiyyaT1Class(className) {
             if (!className) return false;
             const s = String(className).toLowerCase().trim();
-            const isWafiyya = s.includes('wafiyya') || s.includes('al-gaith') || s.includes('gaith');
-            if (!isWafiyya) return false;
-            if (s.includes('t1') || s.includes('t-1') || s.includes('t 1') || s.includes('thanawiyya 1') || s.includes('thanaviyya 1') || s.includes('thanawia 1')) {
-                return true;
-            }
-            if ((s.includes('thanawiyya') || s.includes('thanaviyya') || s.includes('thanawia')) && !s.includes('2') && !s.includes('t2')) {
-                return true;
-            }
-            return false;
+            // Reject any explicit Wafy boys campus class
+            if (s.includes('wafy') && !s.includes('wafiyya')) return false;
+
+            // Check if matches T1, T2, Thanawiyya 1, Thanawiyya 2, or Thanawiyya
+            const isTargetThanawiyya = s.includes('t1') || s.includes('t-1') || s.includes('t 1') || 
+                                       s.includes('t2') || s.includes('t-2') || s.includes('t 2') ||
+                                       s.includes('thanawiyya') || s.includes('thanaviyya') || s.includes('thanawia');
+
+            if (!isTargetThanawiyya) return false;
+
+            // Check if belongs to Wafiyya:
+            const isWafiyya = s.includes('wafiyya') || s.includes('al-gaith') || s.includes('gaith') ||
+                              (appState.classes && appState.classes.some(c => c.className === className && c.college && (c.college.toLowerCase().includes('wafiyya') || c.college.toLowerCase().includes('al-gaith')))) ||
+                              (!s.includes('wafy'));
+
+            return isWafiyya;
         }
+
+        const isWafiyyaT1OrT2Class = isWafiyyaT1Class;
 
         function isBiologySubject(subjectName) {
             if (!subjectName) return false;
@@ -7795,7 +7805,9 @@
                     if (isWafy) {
                         return cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya');
                     } else {
-                        return cls.toLowerCase().includes('wafiyya');
+                        if (cls.toLowerCase().includes('wafiyya') || cls.toLowerCase().includes('al-gaith') || cls.toLowerCase().includes('gaith')) return true;
+                        if (appState.classes && appState.classes.some(c => c.className === cls && c.college && (c.college.toLowerCase().includes('wafiyya') || c.college.toLowerCase().includes('al-gaith')))) return true;
+                        return !cls.toLowerCase().includes('wafy');
                     }
                 });
 
@@ -7859,7 +7871,7 @@
                                         ${hasWafiyyaT1InCollege ? `
                                             <th class="px-2 py-2 border border-purple-800 bg-purple-950 min-w-[110px] text-white text-center align-middle shadow-inner">
                                                 <div class="font-black tracking-wide text-xs text-amber-300 flex items-center justify-center gap-1">
-                                                    <i class="fas fa-dna text-[11px] text-pink-400"></i> Additional (T1)
+                                                    <i class="fas fa-dna text-[11px] text-pink-400"></i> Additional (T1/T2)
                                                 </div>
                                                 <div class="text-[9px] text-purple-200 font-bold mt-0.5 tracking-tight">Biology Only • Mon, Wed, Fri</div>
                                             </th>
@@ -12002,23 +12014,23 @@
                         }
                     }
                 }
-            // Wafiyya T1 Additional Biology Periods (Mon, Wed, Fri) Automatic Placement Engine
+            // Wafiyya T1 & T2 Additional Biology Periods (Mon, Wed, Fri) Automatic Placement Engine
             if (bestSchedule) {
-                const wafiyyaT1Class = appState.classesList.find(c => isWafiyyaT1Class(c));
-                if (wafiyyaT1Class) {
-                    const bioAllotment = appState.classes.find(c => c.className === wafiyyaT1Class && isBiologySubject(c.subject));
+                const targetClasses = (appState.classesList || []).filter(c => isWafiyyaT1Class(c));
+                targetClasses.forEach(wafiyyaClass => {
+                    const bioAllotment = (appState.classes || []).find(c => c.className === wafiyyaClass && isBiologySubject(c.subject));
                     if (bioAllotment) {
                         for (let d of WAFIYYA_T1_ADDITIONAL_DAYS) {
-                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(wafiyyaT1Class, d)) continue;
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(wafiyyaClass, d)) continue;
                             if (!bestSchedule[d]) bestSchedule[d] = {};
                             if (!bestSchedule[d][periods]) bestSchedule[d][periods] = {};
 
-                            if (!bestSchedule[d][periods][wafiyyaT1Class]) {
-                                bestSchedule[d][periods][wafiyyaT1Class] = {
-                                    id: bioAllotment.id || ('bio_add_' + d),
+                            if (!bestSchedule[d][periods][wafiyyaClass]) {
+                                bestSchedule[d][periods][wafiyyaClass] = {
+                                    id: bioAllotment.id || ('bio_add_' + wafiyyaClass + '_' + d),
                                     allocationType: 'standard',
                                     college: bioAllotment.college || (appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)"),
-                                    className: wafiyyaT1Class,
+                                    className: wafiyyaClass,
                                     subject: bioAllotment.subject || 'Biology',
                                     teacherId: bioAllotment.teacherId,
                                     hours: bioAllotment.hours || 3,
@@ -12028,7 +12040,7 @@
                             }
                         }
                     }
-                }
+                });
             }
 
             appState.timetable = bestSchedule;
