@@ -493,6 +493,78 @@
             display: inline-block !important;
         }
 
+        /* A3 Specific Landscape Typography & Sizing */
+        .pdf-export-a3.timetable-print-card,
+        .pdf-export-a3 .timetable-print-card {
+            border: 2px solid #0f172a !important;
+            border-radius: 8px !important;
+        }
+        .pdf-export-a3 table {
+            font-size: 9.5px !important;
+        }
+        .pdf-export-a3 th {
+            padding: 4px 3px !important;
+            font-size: 9px !important;
+        }
+        .pdf-export-a3 th:first-child {
+            width: 85px !important;
+        }
+        .pdf-export-a3 th:nth-child(2) {
+            width: 80px !important;
+        }
+        .pdf-export-a3 th .text-xs {
+            font-size: 10px !important;
+        }
+        .pdf-export-a3 th .text-\[9px\] {
+            font-size: 8px !important;
+        }
+        .pdf-export-a3 td:first-child {
+            width: 85px !important;
+            font-size: 10px !important;
+        }
+        .pdf-export-a3 td:nth-child(2) {
+            width: 80px !important;
+            font-size: 9.5px !important;
+        }
+        .pdf-export-a3 .period-cell > div {
+            min-height: 33px !important;
+            padding: 1px 0 !important;
+            gap: 1px !important;
+        }
+        .pdf-export-a3 .period-cell .subject-title {
+            font-size: 9px !important;
+            margin-bottom: 1.5px !important;
+        }
+        .pdf-export-a3 .period-cell .subject-title.arabic-subject {
+            font-size: 11px !important;
+            line-height: 1.3 !important;
+            margin-bottom: 1.5px !important;
+        }
+        .pdf-export-a3 .period-cell .teacher-name {
+            font-size: 8px !important;
+            font-weight: 700 !important;
+        }
+        .pdf-export-a3 .period-cell .teacher-name.arabic-text {
+            font-size: 8.5px !important;
+        }
+        .pdf-export-a3 .period-cell span.font-mono {
+            font-size: 7.5px !important;
+            padding: 0.5px 3px !important;
+        }
+        .pdf-export-a3 .timetable-print-card > div:first-child h3,
+        .pdf-export-a3.timetable-print-card > div:first-child h3 {
+            font-size: 15px !important;
+        }
+        .pdf-export-a3 .timetable-print-card > div:first-child p,
+        .pdf-export-a3.timetable-print-card > div:first-child p {
+            font-size: 9.5px !important;
+        }
+        .pdf-export-a3 .timetable-print-card > div:last-child,
+        .pdf-export-a3.timetable-print-card > div:last-child {
+            padding: 5px 12px !important;
+            font-size: 9px !important;
+        }
+
         /* Password Modal Animations */
         @keyframes fadeIn {
             from { opacity: 0; } to { opacity: 1; }
@@ -771,8 +843,11 @@
                             <button onclick="window.exportToCSV()" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm font-semibold" title="Export CSV">
                                 <i class="fas fa-file-csv text-emerald-600"></i> CSV
                             </button>
-                            <button onclick="window.downloadTimetablePDF()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm font-semibold" title="Download Complete Timetable as PDF">
-                                <i class="fas fa-file-pdf"></i> Download PDF
+                            <button onclick="window.downloadTimetablePDF(null, 'a3')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm font-semibold" title="Download Complete Timetable as A3 Noticeboard PDF (Recommended - Zero Cutoffs)">
+                                <i class="fas fa-file-pdf"></i> Download PDF (A3)
+                            </button>
+                            <button onclick="window.downloadTimetablePDF(null, 'a4')" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm font-semibold" title="Download Compact A4 PDF">
+                                <i class="fas fa-file-alt text-slate-500"></i> A4 PDF
                             </button>
                             <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow font-semibold" title="Print Timetable Noticeboard">
                                 <i class="fas fa-print"></i> Print
@@ -7434,9 +7509,12 @@
                                     <p class="text-xs text-emerald-200/90 font-medium mt-0.5">Official Academic Master Timetable • Academic Session ${currentYear}</p>
                                 </div>
                             </div>
-                            <div class="flex items-center gap-2 self-end sm:self-auto no-print">
-                                <button onclick="window.downloadTimetablePDF('${collegeName}')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1.5" title="Download this campus schedule as PDF">
-                                    <i class="fas fa-file-pdf text-red-600"></i> Download PDF
+                            <div class="flex items-center gap-1.5 self-end sm:self-auto no-print">
+                                <button onclick="window.downloadTimetablePDF('${collegeName}', 'a3')" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 font-bold text-xs px-3 py-1.5 rounded-xl shadow transition flex items-center gap-1.5" title="Download Official A3 Noticeboard Schedule PDF (Recommended - Zero Cutoffs)">
+                                    <i class="fas fa-file-pdf text-red-600"></i> Download PDF (A3)
+                                </button>
+                                <button onclick="window.downloadTimetablePDF('${collegeName}', 'a4')" class="bg-white/20 hover:bg-white/30 text-white font-bold text-xs px-2.5 py-1.5 rounded-xl border border-white/25 shadow-sm transition flex items-center gap-1" title="Download Compact A4 PDF">
+                                    <i class="fas fa-file-alt text-emerald-300"></i> A4
                                 </button>
                                 <button onclick="window.print()" class="bg-white/15 hover:bg-white/25 text-white font-bold text-xs px-3 py-1.5 rounded-xl border border-white/30 shadow-sm transition flex items-center gap-1.5" title="Print this campus schedule">
                                     <i class="fas fa-print"></i> Print
@@ -7538,8 +7616,8 @@
             container.innerHTML = html;
         }
 
-        // PDF Download Engine (Ultra-HD 300+ DPI Lossless PDF with Perfect Arabic Shaping & Zero Letter Distortion)
-        async function downloadTimetablePDF(specificCollege = null) {
+        // PDF Download Engine (Ultra-HD A3 Master / A4 PDF with Zero Clipping & Perfect Arabic Typography)
+        async function downloadTimetablePDF(specificCollege = null, paperSize = 'a3') {
             if (!appState.timetable) {
                 showAlert("Notice", "Please click 'Generate Timetable' first before exporting.");
                 return;
@@ -7548,7 +7626,8 @@
             const container = document.getElementById('timetable-container');
             if (!container) return;
 
-            showToast("Generating PDF", "Compiling ultra-clarity timetable PDF with Arabic rendering...");
+            const isA3 = (paperSize || 'a3').toLowerCase() === 'a3';
+            showToast("Generating PDF", `Compiling ultra-clarity ${isA3 ? 'A3 Master Noticeboard' : 'A4 Compact'} timetable PDF...`);
 
             // Guarantee Google Web Fonts (Cairo, Noto Sans Arabic) are fully rendered before canvas capture
             if (document.fonts && document.fonts.ready) {
@@ -7557,7 +7636,7 @@
                 } catch(e) {}
             }
 
-            let filename = 'TIMETABLE_' + currentYear + '.pdf';
+            let filename = 'TIMETABLE_' + (isA3 ? 'A3_' : 'A4_') + currentYear + '.pdf';
             let targetEl = container;
             let hadPageBreak = false;
             let hiddenCards = [];
@@ -7566,7 +7645,7 @@
 
             if (specificCollege) {
                 const isWafy = specificCollege.toLowerCase().includes('wafy') && !specificCollege.toLowerCase().includes('wafiyya');
-                filename = (isWafy ? 'KKHM_WAFY' : 'AL_GAITH_WAFIYYA') + '_TIMETABLE_' + currentYear + '.pdf';
+                filename = (isWafy ? 'KKHM_WAFY' : 'AL_GAITH_WAFIYYA') + '_TIMETABLE_' + (isA3 ? 'A3_' : 'A4_') + currentYear + '.pdf';
 
                 for (let card of cards) {
                     if (card.textContent.includes(specificCollege)) {
@@ -7580,33 +7659,50 @@
                 }
             }
 
-            // Save user scroll position and scroll to top
+            // Save user scroll position for window and inner containers
             const origScrollX = window.scrollX || window.pageXOffset || 0;
             const origScrollY = window.scrollY || window.pageYOffset || 0;
+
+            const scrollContainer = document.querySelector('main > div.overflow-y-auto') || document.querySelector('main > div.flex-1');
+            const origContainerY = scrollContainer ? scrollContainer.scrollTop : 0;
+            const origContainerX = scrollContainer ? scrollContainer.scrollLeft : 0;
+
+            // Reset all scrollbars to 0 to prevent canvas cropping and edge shifting
             window.scrollTo(0, 0);
+            if (scrollContainer) {
+                scrollContainer.scrollTop = 0;
+                scrollContainer.scrollLeft = 0;
+            }
+            container.querySelectorAll('.overflow-x-auto').forEach(el => {
+                el.scrollLeft = 0;
+            });
 
             // Apply PDF printing temporary clean state to remove sidebar offset
             document.body.classList.add('pdf-printing-in-progress');
             targetEl.classList.add('pdf-export-mode');
+            if (isA3) {
+                targetEl.classList.add('pdf-export-a3');
+            } else {
+                targetEl.classList.add('pdf-export-a4');
+            }
 
             // Hide any no-print elements inside target
             const noPrintEls = targetEl.querySelectorAll('.no-print');
             noPrintEls.forEach(el => el.style.display = 'none');
 
             const opt = {
-                margin: [4, 4, 4, 4],
+                margin: isA3 ? [5, 5, 5, 5] : [4, 4, 4, 4],
                 filename: filename,
                 image: { type: 'png' }, // Lossless PNG for razor-sharp text clarity (No JPEG compression artifacts)
                 html2canvas: {
-                    scale: 2.2,         // High-res retina
+                    scale: isA3 ? 2.0 : 2.2, // Ultra-high resolution crispness
                     useCORS: true,
                     logging: false,
                     letterRendering: false, // CRITICAL: NEVER true! Fixes detached Arabic cursive letters
                     scrollX: 0,
-                    scrollY: 0,
-                    windowWidth: 1200
+                    scrollY: 0
                 },
-                jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
+                jsPDF: { unit: 'mm', format: isA3 ? 'a3' : 'a4', orientation: 'landscape' },
                 pagebreak: { 
                     mode: ['css', 'legacy'], 
                     before: ['.campus-page-break']
@@ -7616,18 +7712,24 @@
             const cleanup = () => {
                 document.body.classList.remove('pdf-printing-in-progress');
                 targetEl.classList.remove('pdf-export-mode');
+                targetEl.classList.remove('pdf-export-a3');
+                targetEl.classList.remove('pdf-export-a4');
                 hiddenCards.forEach(c => c.style.display = '');
                 noPrintEls.forEach(el => el.style.display = '');
                 if (hadPageBreak && targetEl) {
                     targetEl.classList.add('campus-page-break');
                 }
                 window.scrollTo(origScrollX, origScrollY);
+                if (scrollContainer) {
+                    scrollContainer.scrollTop = origContainerY;
+                    scrollContainer.scrollLeft = origContainerX;
+                }
             };
 
             if (typeof html2pdf !== 'undefined') {
                 html2pdf().set(opt).from(targetEl).save().then(() => {
                     cleanup();
-                    showToast("PDF Downloaded", "Academic timetable downloaded in ultra-high resolution.");
+                    showToast("PDF Downloaded", `Academic timetable downloaded successfully in high-definition ${isA3 ? 'A3' : 'A4'} format.`);
                 }).catch(err => {
                     console.error("PDF generation failed:", err);
                     cleanup();
