@@ -852,6 +852,10 @@
                             <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow font-semibold" title="Print Timetable Noticeboard">
                                 <i class="fas fa-print"></i> Print
                             </button>
+                            <button id="btn-toggle-period-audit" onclick="window.togglePeriodAuditSidebar()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm font-semibold" title="Toggle Class-wise Period Allocation Status">
+                                <i class="fas fa-tasks"></i> <span>പിരീഡ് സ്റ്റാറ്റസ് (Audit)</span>
+                                <span id="audit-shortage-badge" class="hidden bg-rose-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black"></span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -862,11 +866,21 @@
                     <p class="text-xs text-slate-600" id="print-header-details">Wafy & Wafiyya Academic Schedule</p>
                 </div>
 
-                <!-- Schedule Container -->
-                <div id="timetable-container" class="overflow-x-auto bg-white border border-slate-200 rounded-2xl shadow-sm print:border-none print:shadow-none p-3 sm:p-5">
-                    <div class="p-12 text-center text-slate-400">
-                        <i class="fas fa-circle-notch fa-spin text-4xl text-emerald-600 mb-3"></i>
-                        <h3 class="text-base font-medium text-slate-600">Loading Schedule...</h3>
+                <!-- Schedule & Reconciliation Side-by-Side Layout -->
+                <div class="flex flex-col xl:flex-row gap-5 items-start mt-2">
+                    <!-- Schedule Container Main Column -->
+                    <div id="timetable-main-column" class="flex-1 w-full min-w-0 transition-all duration-300 print:w-full">
+                        <div id="timetable-container" class="overflow-x-auto bg-white border border-slate-200 rounded-2xl shadow-sm print:border-none print:shadow-none p-3 sm:p-5">
+                            <div class="p-12 text-center text-slate-400">
+                                <i class="fas fa-circle-notch fa-spin text-4xl text-emerald-600 mb-3"></i>
+                                <h3 class="text-base font-medium text-slate-600">Loading Schedule...</h3>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Side Panel: Class-Based Period Allocation & Reconciliation Status -->
+                    <div id="timetable-audit-sidebar" class="w-full xl:w-96 shrink-0 space-y-4 no-print transition-all duration-300">
+                        <!-- Populated dynamically by renderPeriodReconciliationPanel() -->
                     </div>
                 </div>
 
@@ -5091,6 +5105,10 @@
             } else {
                 renderMasterMatrixTimetable(container, appState.days, appState.periods, appState.timetable);
             }
+
+            if (typeof renderPeriodReconciliationPanel === 'function') {
+                renderPeriodReconciliationPanel();
+            }
         }
 
         // 1. TODAY'S LIVE TIMETABLE (DEFAULT FIRST INTERFACE)
@@ -7766,6 +7784,377 @@
             });
 
             container.innerHTML = html;
+        }
+
+        // =============================================================
+        // CLASS PERIOD RECONCILIATION & AUDIT DASHBOARD CONTROLLER
+        // =============================================================
+        let isPeriodAuditSidebarOpen = true;
+        let periodAuditFilter = 'all'; // 'all' | 'shortages'
+
+        function getClassPeriodReconciliationData() {
+            const days = parseInt(appState.settings ? appState.settings.workingDays : appState.days) || 6;
+            const periods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
+            const timetable = appState.timetable;
+
+            let overallDemanded = 0;
+            let overallScheduled = 0;
+            let totalClassesWithShortage = 0;
+
+            const classReports = (appState.classesList || []).map(cls => {
+                const isWafy = cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya');
+                const allotments = (appState.classes || []).filter(c => c.className === cls);
+
+                let demandedBySubject = [];
+                let classDemandedTotal = 0;
+
+                allotments.forEach(c => {
+                    const hrs = Number(c.hours || 0);
+                    classDemandedTotal += hrs;
+                    const teacher = appState.teachers.find(t => t.id === c.teacherId);
+                    demandedBySubject.push({
+                        allotmentId: c.id,
+                        subject: c.subject,
+                        teacherId: c.teacherId,
+                        teacherName: teacher ? teacher.name : 'Unknown Faculty',
+                        teacherShort: teacher ? teacher.shortName : 'N/A',
+                        allocationType: c.allocationType,
+                        splitSlots: c.splitSlots || [],
+                        demandedHours: hrs,
+                        scheduledHours: 0
+                    });
+                });
+
+                let classScheduledTotal = 0;
+                let freeSlots = [];
+
+                if (timetable) {
+                    for (let d = 0; d < days; d++) {
+                        if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(cls, d)) continue;
+
+                        for (let p = 0; p < periods; p++) {
+                            const slot = (timetable[d] && timetable[d][p]) ? timetable[d][p][cls] : null;
+                            if (slot) {
+                                classScheduledTotal++;
+
+                                if (slot.allocationType === 'split') {
+                                    const subSlots = slot.splitSlots || [];
+                                    demandedBySubject.forEach(item => {
+                                        if (item.allocationType === 'split' && (item.subject === slot.subject || subSlots.some(ss => ss.subject === item.subject))) {
+                                            item.scheduledHours++;
+                                        }
+                                    });
+                                } else {
+                                    const matched = demandedBySubject.find(item => item.subject === slot.subject);
+                                    if (matched) {
+                                        matched.scheduledHours++;
+                                    }
+                                }
+                            } else {
+                                freeSlots.push({ day: d, period: p });
+                            }
+                        }
+                    }
+                }
+
+                const deficit = Math.max(0, classDemandedTotal - classScheduledTotal);
+                if (deficit > 0) totalClassesWithShortage++;
+
+                overallDemanded += classDemandedTotal;
+                overallScheduled += classScheduledTotal;
+
+                const rate = classDemandedTotal > 0 ? Math.round((classScheduledTotal / classDemandedTotal) * 100) : 100;
+
+                return {
+                    className: cls,
+                    isWafy: isWafy,
+                    demandedTotal: classDemandedTotal,
+                    scheduledTotal: classScheduledTotal,
+                    deficit: deficit,
+                    freeSlotsCount: freeSlots.length,
+                    freeSlots: freeSlots,
+                    fulfillmentRate: rate,
+                    subjects: demandedBySubject
+                };
+            });
+
+            const overallDeficit = Math.max(0, overallDemanded - overallScheduled);
+            const overallRate = overallDemanded > 0 ? Math.round((overallScheduled / overallDemanded) * 100) : 100;
+
+            return {
+                overallDemanded,
+                overallScheduled,
+                overallDeficit,
+                overallRate,
+                totalClassesWithShortage,
+                classReports
+            };
+        }
+
+        function togglePeriodAuditSidebar() {
+            isPeriodAuditSidebarOpen = !isPeriodAuditSidebarOpen;
+            const sidebar = document.getElementById('timetable-audit-sidebar');
+            const btn = document.getElementById('btn-toggle-period-audit');
+
+            if (sidebar) {
+                if (isPeriodAuditSidebarOpen) {
+                    sidebar.classList.remove('hidden');
+                    if (btn) btn.classList.add('ring-2', 'ring-indigo-300');
+                } else {
+                    sidebar.classList.add('hidden');
+                    if (btn) btn.classList.remove('ring-2', 'ring-indigo-300');
+                }
+            }
+            renderPeriodReconciliationPanel();
+        }
+
+        function setPeriodAuditFilter(filter) {
+            periodAuditFilter = filter;
+            renderPeriodReconciliationPanel();
+        }
+
+        function renderPeriodReconciliationPanel() {
+            const sidebar = document.getElementById('timetable-audit-sidebar');
+            const shortageBadge = document.getElementById('audit-shortage-badge');
+            if (!sidebar) return;
+
+            const data = getClassPeriodReconciliationData();
+
+            // Update top bar toggle button badge
+            if (shortageBadge) {
+                if (data.overallDeficit > 0) {
+                    shortageBadge.textContent = `${data.overallDeficit} Shortage`;
+                    shortageBadge.classList.remove('hidden');
+                } else {
+                    shortageBadge.classList.add('hidden');
+                }
+            }
+
+            if (!isPeriodAuditSidebarOpen) {
+                sidebar.classList.add('hidden');
+                return;
+            } else {
+                sidebar.classList.remove('hidden');
+            }
+
+            let filteredClasses = data.classReports;
+            if (periodAuditFilter === 'shortages') {
+                filteredClasses = filteredClasses.filter(c => c.deficit > 0 || c.subjects.some(s => s.scheduledHours < s.demandedHours));
+            }
+
+            let html = `
+                <div class="bg-white border border-slate-200 rounded-2xl shadow-sm p-4 space-y-4">
+                    <!-- Header -->
+                    <div class="flex items-center justify-between border-b border-slate-100 pb-3">
+                        <div>
+                            <div class="flex items-center gap-2">
+                                <span class="w-2.5 h-2.5 rounded-full ${data.overallDeficit > 0 ? 'bg-amber-500 animate-pulse' : 'bg-emerald-500'}"></span>
+                                <h3 class="font-black text-sm text-slate-800">പിരീഡ് ഓഡിറ്റ് & സ്റ്റാറ്റസ്</h3>
+                            </div>
+                            <p class="text-[10px] text-slate-500 mt-0.5">നൽകിയ പിരീഡുകളും ടൈംടേബിളും തമ്മിലുള്ള താരതമ്യം</p>
+                        </div>
+                        <button onclick="window.togglePeriodAuditSidebar()" class="text-slate-400 hover:text-slate-600 p-1 text-xs" title="Hide Audit Panel">
+                            <i class="fas fa-eye-slash"></i>
+                        </button>
+                    </div>
+
+                    <!-- Overall KPI Cards -->
+                    <div class="grid grid-cols-3 gap-2 text-center text-xs">
+                        <div class="bg-slate-50 border border-slate-200 p-2 rounded-xl">
+                            <div class="text-[9px] font-bold text-slate-500 uppercase">നൽകിയത്</div>
+                            <div class="text-base font-black text-slate-900 mt-0.5">${data.overallDemanded}</div>
+                            <div class="text-[8px] text-slate-400">Total Demanded</div>
+                        </div>
+                        <div class="bg-emerald-50/80 border border-emerald-200 p-2 rounded-xl">
+                            <div class="text-[9px] font-bold text-emerald-800 uppercase">ലഭിച്ചത്</div>
+                            <div class="text-base font-black text-emerald-900 mt-0.5">${data.overallScheduled}</div>
+                            <div class="text-[8px] text-emerald-700 font-bold">${data.overallRate}% Full</div>
+                        </div>
+                        <div class="${data.overallDeficit > 0 ? 'bg-rose-50 border border-rose-200 text-rose-950' : 'bg-slate-50 border border-slate-200 text-slate-600'} p-2 rounded-xl">
+                            <div class="text-[9px] font-bold ${data.overallDeficit > 0 ? 'text-rose-700' : 'text-slate-500'} uppercase">കുറവുള്ളവ</div>
+                            <div class="text-base font-black ${data.overallDeficit > 0 ? 'text-rose-600 animate-pulse' : 'text-slate-700'} mt-0.5">${data.overallDeficit}</div>
+                            <div class="text-[8px] ${data.overallDeficit > 0 ? 'text-rose-600 font-bold' : 'text-slate-400'}">${data.overallDeficit > 0 ? 'Shortage' : 'Nil'}</div>
+                        </div>
+                    </div>
+
+                    <!-- Filter Tabs -->
+                    <div class="flex items-center gap-1.5 p-1 bg-slate-100 rounded-xl text-[11px] font-bold text-center">
+                        <button onclick="window.setPeriodAuditFilter('all')" class="flex-1 py-1.5 rounded-lg ${periodAuditFilter === 'all' ? 'bg-white text-slate-900 shadow-xs' : 'text-slate-500 hover:text-slate-800'} transition">
+                            എല്ലാം (${data.classReports.length})
+                        </button>
+                        <button onclick="window.setPeriodAuditFilter('shortages')" class="flex-1 py-1.5 rounded-lg ${periodAuditFilter === 'shortages' ? 'bg-white text-rose-700 shadow-xs' : 'text-slate-500 hover:text-slate-800'} transition flex items-center justify-center gap-1">
+                            <span>കുറവുള്ളവ</span>
+                            <span class="px-1.5 py-0.2 rounded-full text-[9px] ${data.totalClassesWithShortage > 0 ? 'bg-rose-600 text-white' : 'bg-slate-200 text-slate-600'}">${data.totalClassesWithShortage}</span>
+                        </button>
+                    </div>
+
+                    <!-- Classes List -->
+                    <div class="space-y-3 max-h-[640px] overflow-y-auto pr-1">
+            `;
+
+            if (filteredClasses.length === 0) {
+                html += `
+                    <div class="p-6 text-center text-slate-400 bg-slate-50 rounded-xl border border-dashed border-slate-200 text-xs">
+                        <i class="fas fa-check-circle text-emerald-500 text-xl mb-1.5"></i>
+                        <p class="font-bold text-slate-700">എല്ലാ ക്ലാസുകളിലും പിരീഡുകൾ പൂർണ്ണമാണ്!</p>
+                        <p class="text-[10px] text-slate-400 mt-0.5">ഒരു ക്ലാസിലും പിരീഡുകളുടെ കുറവില്ല.</p>
+                    </div>
+                `;
+            } else {
+                filteredClasses.forEach(cReport => {
+                    const hasShortage = cReport.deficit > 0 || cReport.subjects.some(s => s.scheduledHours < s.demandedHours);
+                    const cardBorder = hasShortage ? 'border-rose-200 bg-white' : 'border-slate-200 bg-white';
+                    const campusBadge = cReport.isWafy 
+                        ? '<span class="bg-emerald-100 text-emerald-800 text-[8px] font-bold px-1.5 py-0.2 rounded">Wafy</span>' 
+                        : '<span class="bg-purple-100 text-purple-800 text-[8px] font-bold px-1.5 py-0.2 rounded">Wafiyya</span>';
+
+                    const statusPill = (cReport.scheduledTotal === cReport.demandedTotal)
+                        ? '<span class="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-check text-[7.5px] mr-0.5"></i> 100% പൂർണ്ണം</span>'
+                        : (cReport.scheduledTotal < cReport.demandedTotal
+                            ? `<span class="bg-rose-100 text-rose-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-exclamation-triangle text-[7.5px] mr-0.5"></i> ${cReport.deficit} കുറവ്</span>`
+                            : `<span class="bg-blue-100 text-blue-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full">+${cReport.scheduledTotal - cReport.demandedTotal} കൂടുതൽ</span>`
+                        );
+
+                    html += `
+                        <div class="border ${cardBorder} rounded-xl p-3 shadow-2xs space-y-2.5">
+                            <!-- Class Header -->
+                            <div class="flex items-center justify-between gap-1.5">
+                                <div class="flex items-center gap-1.5">
+                                    ${campusBadge}
+                                    <h4 class="font-extrabold text-xs text-slate-900">${cReport.className}</h4>
+                                </div>
+                                <div class="flex items-center gap-1.5">
+                                    <span class="text-[10px] font-mono font-bold text-slate-700">${cReport.scheduledTotal}/${cReport.demandedTotal}</span>
+                                    ${statusPill}
+                                </div>
+                            </div>
+
+                            <!-- Progress Bar -->
+                            <div class="w-full bg-slate-100 rounded-full h-1.5 overflow-hidden">
+                                <div class="h-1.5 rounded-full transition-all duration-300 ${cReport.fulfillmentRate === 100 ? 'bg-emerald-500' : 'bg-rose-500'}" style="width: ${cReport.fulfillmentRate}%"></div>
+                            </div>
+
+                            <!-- Shortage Notification Banner if any -->
+                            ${hasShortage ? `
+                                <div class="bg-rose-50 border border-rose-200 text-rose-900 rounded-lg p-2 text-[10.5px] flex items-center justify-between gap-2">
+                                    <div class="flex items-center gap-1.5 font-bold">
+                                        <i class="fas fa-exclamation-circle text-rose-600 text-xs"></i>
+                                        <span>${cReport.deficit > 0 ? cReport.deficit + ' പിരീഡ് ലഭിച്ചിട്ടില്ല' : 'വിഷയങ്ങളിൽ കുറവുണ്ട്'}</span>
+                                    </div>
+                                    <span class="text-[9.5px] text-slate-500 font-medium">ഒഴിഞ്ഞ പിരീഡുകൾ: <b>${cReport.freeSlotsCount}</b></span>
+                                </div>
+                            ` : ''}
+
+                            <!-- Subjects Breakdown Table -->
+                            <div class="overflow-x-auto">
+                                <table class="w-full text-[10px] text-slate-700">
+                                    <thead>
+                                        <tr class="border-b border-slate-100 text-slate-400 font-bold uppercase text-[8.5px]">
+                                            <th class="py-1 text-left">വിഷയം / അധ്യാപകൻ</th>
+                                            <th class="py-1 text-center w-14">നൽകിയത്</th>
+                                            <th class="py-1 text-center w-14">ടൈംടേബിൾ</th>
+                                            <th class="py-1 text-right">സ്റ്റാറ്റസ്</th>
+                                        </tr>
+                                    </thead>
+                                    <tbody class="divide-y divide-slate-50">
+                    `;
+
+                    cReport.subjects.forEach(sub => {
+                        const isSubArabic = /[\u0600-\u06FF]/.test(sub.subject);
+                        const isSubShortage = sub.scheduledHours < sub.demandedHours;
+                        const subDiff = sub.scheduledHours - sub.demandedHours;
+
+                        let subStatusHtml = '';
+                        if (subDiff === 0) {
+                            subStatusHtml = `<span class="text-emerald-700 font-bold inline-flex items-center gap-0.5"><i class="fas fa-check text-[7px]"></i> പൂർണ്ണം</span>`;
+                        } else if (subDiff < 0) {
+                            subStatusHtml = `
+                                <div class="flex items-center justify-end gap-1">
+                                    <span class="text-rose-700 font-extrabold inline-flex items-center gap-0.5"><i class="fas fa-times text-[7px]"></i> ${Math.abs(subDiff)} കുറവ്</span>
+                                    ${(isAdminLoggedIn && cReport.freeSlotsCount > 0) ? `
+                                        <button onclick="window.quickJumpToClassSlot('${cReport.className}', '${sub.subject}', '${sub.teacherId}')" class="bg-rose-600 hover:bg-rose-700 text-white font-black text-[8px] px-1.5 py-0.5 rounded shadow-2xs" title="ഈ ക്ലാസിലെ ഒഴിഞ്ഞ സ്ലോട്ടിലേക്ക് നൽകുക">
+                                            നൽകുക
+                                        </button>
+                                    ` : ''}
+                                </div>
+                            `;
+                        } else {
+                            subStatusHtml = `<span class="text-blue-700 font-bold">+${subDiff} കൂടുതൽ</span>`;
+                        }
+
+                        html += `
+                            <tr class="${isSubShortage ? 'bg-rose-50/50' : ''}">
+                                <td class="py-1.5 pr-1">
+                                    <div class="font-extrabold text-slate-900 leading-tight ${isSubArabic ? 'arabic-subject text-[11px]' : ''}" ${isSubArabic ? 'dir="rtl"' : ''}>
+                                        ${sub.subject}
+                                    </div>
+                                    <div class="text-[9px] text-slate-500 font-medium leading-none mt-0.5">
+                                        ${sub.teacherShort}
+                                    </div>
+                                </td>
+                                <td class="py-1.5 text-center font-bold text-slate-700">${sub.demandedHours}</td>
+                                <td class="py-1.5 text-center font-black ${isSubShortage ? 'text-rose-600' : 'text-slate-900'}">${sub.scheduledHours}</td>
+                                <td class="py-1.5 text-right font-medium">${subStatusHtml}</td>
+                            </tr>
+                        `;
+                    });
+
+                    html += `
+                                    </tbody>
+                                </table>
+                            </div>
+                        </div>
+                    `;
+                });
+            }
+
+            html += `
+                    </div>
+                </div>
+            `;
+
+            sidebar.innerHTML = html;
+        }
+
+        function quickJumpToClassSlot(className, subjectName, teacherId) {
+            if (!isAdminLoggedIn) {
+                showAlert("പ്രവേശനം തടഞ്ഞു", "സ്ലോട്ട് നൽകാൻ അഡ്മിൻ ലോഗിൻ ആവശ്യമാണ്.");
+                return;
+            }
+
+            const data = getClassPeriodReconciliationData();
+            const cReport = data.classReports.find(c => c.className === className);
+
+            if (!cReport || !cReport.freeSlots || cReport.freeSlots.length === 0) {
+                showAlert(
+                    "ഒഴിഞ്ഞ സ്ലോട്ടുകളില്ല (No Free Periods)", 
+                    `<b>${className}</b> ക്ലാസിൽ നിലവിൽ ഒഴിഞ്ഞ പിരീഡുകൾ (Free periods) ലഭ്യമല്ല. ടൈംടേബിളിലെ ഏതെങ്കിലും പിരീഡ് സ്വാപ്പ് ചെയ്യുകയോ ഒഴിച്ചിടുകയോ ചെയ്യാം.`
+                );
+                return;
+            }
+
+            const targetFreeSlot = cReport.freeSlots[0];
+
+            const classFilter = document.getElementById('class-view-filter');
+            if (classFilter) classFilter.value = className;
+            setTimetableViewMode('class');
+
+            openManualSlotEditor(targetFreeSlot.day, targetFreeSlot.period, className);
+
+            setTimeout(() => {
+                const subSelect = document.getElementById('slot-select-subject');
+                if (subSelect) {
+                    subSelect.value = subjectName;
+                    onManualSlotSubjectChanged();
+                }
+                const tchSelect = document.getElementById('slot-select-teacher');
+                if (tchSelect && teacherId) {
+                    tchSelect.value = teacherId;
+                    onManualSlotTeacherChanged();
+                }
+            }, 50);
+
+            showToast("സ്ലോട്ട് എഡിറ്റർ", `${className} ലെ ${dayNamesEn[targetFreeSlot.day]} Period ${targetFreeSlot.period + 1}-ലേക്ക് '${subjectName}' നൽകാനുള്ള വിൻഡോ തുറന്നിരിക്കുന്നു.`);
         }
 
         // =============================================================
@@ -11310,6 +11699,14 @@
         window.onManualSlotTeacherChanged = onManualSlotTeacherChanged;
         window.onManualSlotSwapTargetChanged = onManualSlotSwapTargetChanged;
         window.applyManualSlotEdit = applyManualSlotEdit;
+
+        // Timetable Period Reconciliation Audit Window Handlers
+        window.isPeriodAuditSidebarOpen = isPeriodAuditSidebarOpen;
+        window.togglePeriodAuditSidebar = togglePeriodAuditSidebar;
+        window.setPeriodAuditFilter = setPeriodAuditFilter;
+        window.renderPeriodReconciliationPanel = renderPeriodReconciliationPanel;
+        window.quickJumpToClassSlot = quickJumpToClassSlot;
+        window.getClassPeriodReconciliationData = getClassPeriodReconciliationData;
 
         // Cloud Database & Sync Window Handlers
         window.openDatabaseSyncModal = openDatabaseSyncModal;
