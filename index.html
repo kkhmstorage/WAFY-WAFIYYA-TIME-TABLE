@@ -7839,13 +7839,41 @@
 
                                 if (slot.allocationType === 'split') {
                                     const subSlots = slot.splitSlots || [];
-                                    demandedBySubject.forEach(item => {
-                                        if (item.allocationType === 'split' && (item.subject === slot.subject || subSlots.some(ss => ss.subject === item.subject))) {
-                                            item.scheduledHours++;
-                                        }
-                                    });
+                                    let matched = demandedBySubject.find(item => item.allotmentId === slot.id);
+                                    if (!matched) {
+                                        matched = demandedBySubject.find(item => item.allocationType === 'split' && item.subject === slot.subject && item.scheduledHours < item.demandedHours);
+                                    }
+                                    if (!matched) {
+                                        matched = demandedBySubject.find(item => item.allocationType === 'split' && item.scheduledHours < item.demandedHours);
+                                    }
+                                    if (!matched) {
+                                        matched = demandedBySubject.find(item => item.allocationType === 'split');
+                                    }
+                                    if (matched) {
+                                        matched.scheduledHours++;
+                                    }
                                 } else {
-                                    const matched = demandedBySubject.find(item => item.subject === slot.subject);
+                                    // 1. Match by exact allotment ID if available and not yet full
+                                    let matched = slot.id ? demandedBySubject.find(item => item.allotmentId === slot.id && item.scheduledHours < item.demandedHours) : null;
+                                    // 2. Match by exact allotment ID even if full
+                                    if (!matched && slot.id) {
+                                        matched = demandedBySubject.find(item => item.allotmentId === slot.id);
+                                    }
+                                    // 3. Match by subject AND teacher ID (preferring not yet full)
+                                    if (!matched) {
+                                        matched = demandedBySubject.find(item => item.subject === slot.subject && item.teacherId === slot.teacherId && item.scheduledHours < item.demandedHours);
+                                    }
+                                    if (!matched) {
+                                        matched = demandedBySubject.find(item => item.subject === slot.subject && item.teacherId === slot.teacherId);
+                                    }
+                                    // 4. Match by subject only (preferring not yet full)
+                                    if (!matched) {
+                                        matched = demandedBySubject.find(item => item.subject === slot.subject && item.scheduledHours < item.demandedHours);
+                                    }
+                                    // 5. Fallback
+                                    if (!matched) {
+                                        matched = demandedBySubject.find(item => item.subject === slot.subject);
+                                    }
                                     if (matched) {
                                         matched.scheduledHours++;
                                     }
@@ -8012,7 +8040,7 @@
                         ? '<span class="bg-emerald-100 text-emerald-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-check text-[7.5px] mr-0.5"></i> 100% പൂർണ്ണം</span>'
                         : (cReport.scheduledTotal < cReport.demandedTotal
                             ? `<span class="bg-rose-100 text-rose-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-exclamation-triangle text-[7.5px] mr-0.5"></i> ${cReport.deficit} കുറവ്</span>`
-                            : `<span class="bg-blue-100 text-blue-800 text-[9px] font-extrabold px-2 py-0.5 rounded-full">+${cReport.scheduledTotal - cReport.demandedTotal} കൂടുതൽ</span>`
+                            : `<span class="bg-amber-100 text-amber-900 text-[9px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-exclamation-triangle text-[7.5px] mr-0.5"></i> +${cReport.scheduledTotal - cReport.demandedTotal} അധികം (Exceeds Quota)</span>`
                         );
 
                     html += `
@@ -8079,7 +8107,7 @@
                                 </div>
                             `;
                         } else {
-                            subStatusHtml = `<span class="text-blue-700 font-bold">+${subDiff} കൂടുതൽ</span>`;
+                            subStatusHtml = `<span class="text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-200 font-extrabold inline-flex items-center gap-0.5"><i class="fas fa-exclamation-triangle text-[7px]"></i> +${subDiff} അധികം</span>`;
                         }
 
                         html += `
@@ -8697,6 +8725,31 @@
                 if (!sub || !tch) {
                     showAlert("ശ്രദ്ധിക്കുക", "ദയവായി സബ്ജക്റ്റും അധ്യാപകനെയും തിരഞ്ഞെടുക്കുക.");
                     return;
+                }
+
+                // Strict Quota Verification: Ensure subject does not exceed allotted hours
+                const allotment = (appState.classes || []).find(c => c.className === className && c.subject === sub);
+                const maxAllotted = allotment ? Number(allotment.hours || 0) : 0;
+                if (maxAllotted > 0 && !isOverride) {
+                    let currentScheduledCount = 0;
+                    const totalDays = parseInt(appState.settings ? appState.settings.workingDays : appState.days) || 6;
+                    const totalPeriods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
+                    for (let d = 0; d < totalDays; d++) {
+                        for (let p = 0; p < totalPeriods; p++) {
+                            if (d === day && p === period) continue;
+                            const s = (currentTimetable[d] && currentTimetable[d][p]) ? currentTimetable[d][p][className] : null;
+                            if (s && s.subject === sub) {
+                                currentScheduledCount++;
+                            }
+                        }
+                    }
+                    if (currentScheduledCount >= maxAllotted) {
+                        showAlert(
+                            "അനുവദിച്ച പരിധി കഴിഞ്ഞു (Quota Exceeded)", 
+                            `${className} ന് <b>${sub}</b> എന്ന വിഷയത്തിന് നിശ്ചയിച്ചിട്ടുള്ളത് <b>${maxAllotted}</b> പിരീഡുകൾ മാത്രമാണ്. നിലവിൽ അത്രയും പിരീഡുകൾ ടൈംടേബിളിൽ ഉണ്ട്. നിശ്ചയിച്ചതിനേക്കാൾ കൂടുതൽ പിരീഡുകൾ നൽകാൻ സാധിക്കില്ല.`
+                        );
+                        return;
+                    }
                 }
 
                 const isWafy = (className.toLowerCase().includes('wafy') && !className.toLowerCase().includes('wafiyya'));
@@ -10975,13 +11028,10 @@
                         ...s,
                         hours: (s.hours !== undefined && s.hours !== null && s.hours !== '') ? Number(s.hours) : Number(c.hours || 3)
                     }));
-                    const totalSlotsCount = Math.max(
-                        ...subSlotsWithHours.map(s => s.hours),
-                        Number(c.hours || 0)
-                    );
+                    const totalSlotsCount = Number(c.hours || 0);
 
                     for (let i = 0; i < totalSlotsCount; i++) {
-                        const activeSubSlots = subSlotsWithHours.filter(s => i < s.hours);
+                        const activeSubSlots = subSlotsWithHours.filter(s => i < (Number(s.hours) || totalSlotsCount));
                         if (activeSubSlots.length === 0) continue;
 
                         rawSlots.push({
@@ -11663,6 +11713,29 @@
                 // If zero unscheduled (100% complete) and good clustering, early stop after at least 20 attempts
                 if (minUnscheduledCount === 0 && attempt >= 20) {
                     break;
+                }
+            }
+
+            // Absolute Quota Verification & Guarantee: Under NO circumstance should any subject or class exceed its allotted hours
+            if (bestSchedule) {
+                const classAllotmentCounters = {};
+                for (let d = 0; d < days; d++) {
+                    for (let p = 0; p < periods; p++) {
+                        for (let cls in bestSchedule[d][p]) {
+                            const slot = bestSchedule[d][p][cls];
+                            if (!slot) continue;
+
+                            const key = `${cls}:::${slot.id || slot.subject}`;
+                            const matchingAllotment = classes.find(c => c.className === cls && (c.id === slot.id || c.subject === slot.subject));
+                            const maxAllowed = matchingAllotment ? Number(matchingAllotment.hours || 0) : 999;
+
+                            classAllotmentCounters[key] = (classAllotmentCounters[key] || 0) + 1;
+                            if (classAllotmentCounters[key] > maxAllowed) {
+                                // Strictly delete any excess period beyond what was officially allotted
+                                delete bestSchedule[d][p][cls];
+                            }
+                        }
+                    }
                 }
             }
 
