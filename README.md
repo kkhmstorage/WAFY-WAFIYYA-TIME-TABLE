@@ -127,8 +127,6 @@ In accordance with institutional guidelines:
   - *Pass 4B (2-Hop Deep Multi-Class Kempe Chain Backtracking)*: Resolves 3-way circular teacher conflicts where moving a blocker in Class B requires moving a secondary blocker in Class C to an available slot.
   - *Pass 5 (Soft Travel Buffer Fallback)*: Relaxes inter-campus travel buffers if travel distance is the sole reason a period remains vacant.
   - *Pass 6 (Zero-Gap Guarantee & Deep Intra-Class Shuffling)*: Exhaustive final placement and bilateral internal swapping ensuring full-density schedules (e.g., 47/48 or 48/48 periods) achieve 100% gapless fulfillment.
-- **Shared Faculty Flexibility ('Either/Or' Co-Teaching)**:
-  - For shared allotments (`shareMode: 'either_or'`), if either primary or secondary teacher is available, the period is scheduled immediately, leaving the second teacher free to take classes in other classrooms.
 - **Deep Stochastic Constraint Engine**:
   - Scales up to 100 stochastic restarts with early convergence, evaluating tens of thousands of schedule permutations to ensure zero unscheduled periods.
 

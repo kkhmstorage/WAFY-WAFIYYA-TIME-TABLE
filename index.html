@@ -10955,7 +10955,7 @@
                 <div class="p-12 text-center">
                     <i class="fas fa-circle-notch fa-spin text-4xl text-emerald-600 mb-3"></i>
                     <p class="text-sm font-semibold text-slate-700">Computing optimal timetable with Multi-Hop Kempe Chain Engine...</p>
-                    <p class="text-xs text-slate-400 mt-1">Analyzing cross-campus teacher clashes, flexible shared co-teachers & zero-gap distribution for ${currentYear}</p>
+                    <p class="text-xs text-slate-400 mt-1">Analyzing cross-campus teacher clashes & zero-gap distribution for ${currentYear}</p>
                 </div>
             `;
             document.getElementById('generation-messages').classList.add('hidden');
@@ -11086,9 +11086,6 @@
                     return (slot.splitSlots || []).some(s => s.teacherId === tId);
                 }
                 if (slot.allocationType === 'shared') {
-                    if (slot.effectiveTeacherId) {
-                        return slot.effectiveTeacherId === tId;
-                    }
                     return (slot.teacherIds && slot.teacherIds.includes(tId)) ||
                            slot.teacherId === tId || slot.secondaryTeacherId === tId;
                 }
@@ -11126,15 +11123,6 @@
                 return false;
             };
 
-            // Helper: check if an individual teacher is completely available at (d, p)
-            const isTeacherFreeForSlot = (tId, college, d, p, currentSchedule, enforceBuffer = true, excludeClassName = null) => {
-                if (!tId) return false;
-                if (isTeacherUnavailable(tId, d, p)) return false;
-                if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, excludeClassName)) return false;
-                if (hasTeacherTravelClashInSchedule(tId, college, d, p, currentSchedule, enforceBuffer)) return false;
-                return true;
-            };
-
             // Verify if a slot can be placed at (d, p) in currentSchedule with configurable constraint relaxation
             const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true, checkSubjectCount = true) => {
                 // Must be an active working day for this class
@@ -11153,36 +11141,20 @@
                     if (subjectDayCount >= maxSubjectPerDay) return false;
                 }
 
-                // Shared Subject either_or flexibility: if either Teacher 1 OR Teacher 2 is free, allow placement!
-                if (slot.allocationType === 'shared' && (slot.shareMode === 'either_or' || !slot.shareMode || slot.shareMode === 'flexible')) {
-                    const t1Free = isTeacherFreeForSlot(slot.teacherId, slot.college, d, p, currentSchedule, enforceBuffer, slot.className);
-                    const t2Free = isTeacherFreeForSlot(slot.secondaryTeacherId, slot.college, d, p, currentSchedule, enforceBuffer, slot.className);
-                    if (!t1Free && !t2Free) return false;
-                    return true;
-                }
-
-                // Standard / Split / both_together check
+                // Check all teachers in slot for unavailable constraints, other class teaching, and campus travel clashes
                 const tIds = getSlotTeachers(slot);
                 for (let tId of tIds) {
-                    if (!isTeacherFreeForSlot(tId, slot.college, d, p, currentSchedule, enforceBuffer, slot.className)) return false;
+                    if (isTeacherUnavailable(tId, d, p)) return false;
+                    if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)) return false;
+                    if (hasTeacherTravelClashInSchedule(tId, slot.college, d, p, currentSchedule, enforceBuffer)) return false;
                 }
                 return true;
             };
 
-            // Helper: assign a slot token to schedule with either_or effective teacher resolution
+            // Helper: assign a slot token to schedule
             const assignSlotToSchedule = (currentSchedule, d, p, slot, enforceBuffer = true) => {
-                const placedSlot = { ...slot };
-                if (placedSlot.allocationType === 'shared' && (placedSlot.shareMode === 'either_or' || !placedSlot.shareMode || placedSlot.shareMode === 'flexible')) {
-                    const t1Free = isTeacherFreeForSlot(placedSlot.teacherId, placedSlot.college, d, p, currentSchedule, enforceBuffer, placedSlot.className);
-                    const t2Free = isTeacherFreeForSlot(placedSlot.secondaryTeacherId, placedSlot.college, d, p, currentSchedule, enforceBuffer, placedSlot.className);
-                    if (t1Free) {
-                        placedSlot.effectiveTeacherId = placedSlot.teacherId;
-                    } else if (t2Free) {
-                        placedSlot.effectiveTeacherId = placedSlot.secondaryTeacherId;
-                    }
-                }
-                currentSchedule[d][p][placedSlot.className] = placedSlot;
-                return placedSlot;
+                currentSchedule[d][p][slot.className] = slot;
+                return slot;
             };
 
             // Helper: Proximity & Clustering Scoring for candidate placement
