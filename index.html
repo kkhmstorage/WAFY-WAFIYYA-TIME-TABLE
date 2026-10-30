@@ -250,6 +250,41 @@
             text-rendering: optimizeLegibility;
         }
 
+        /* PDF printing temporary clean state - removes sidebar offset and eliminates blank/shifted PDF issues */
+        body.pdf-printing-in-progress aside,
+        body.pdf-printing-in-progress header,
+        body.pdf-printing-in-progress nav,
+        body.pdf-printing-in-progress .no-print {
+            display: none !important;
+        }
+        body.pdf-printing-in-progress main {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+        }
+        body.pdf-printing-in-progress main > div.flex-1 {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: visible !important;
+        }
+        body.pdf-printing-in-progress #timetable-section,
+        body.pdf-printing-in-progress #timetable-container {
+            display: block !important;
+            margin: 0 !important;
+            padding: 0 !important;
+            border: none !important;
+            box-shadow: none !important;
+            width: 100% !important;
+            max-width: 100% !important;
+            overflow: visible !important;
+            background: white !important;
+        }
+
         /* High-fidelity PDF export & single A4 landscape page fit rules */
         .day-block {
             break-inside: avoid !important;
@@ -257,8 +292,8 @@
         }
         .pdf-export-mode {
             background: white !important;
-            width: 1120px !important;
-            max-width: 1120px !important;
+            width: 100% !important;
+            max-width: 100% !important;
             margin: 0 !important;
             padding: 0 !important;
             box-sizing: border-box !important;
@@ -273,8 +308,12 @@
             border: 1.5px solid #334155 !important;
             width: 100% !important;
             box-sizing: border-box !important;
-            overflow: hidden !important;
+            overflow: visible !important;
             background: white !important;
+        }
+        .pdf-export-mode .overflow-x-auto {
+            overflow: visible !important;
+            width: 100% !important;
         }
         .pdf-export-mode .campus-page-break {
             page-break-before: always !important;
@@ -369,88 +408,88 @@
             font-size: 8px !important;
         }
         .pdf-export-mode .period-cell {
-            padding: 1.5px 1px !important;
+            padding: 1px !important;
             min-height: unset !important;
             height: auto !important;
             text-align: center !important;
             vertical-align: middle !important;
         }
         .pdf-export-mode .period-cell > div {
-            min-height: 38px !important;
+            min-height: 28px !important;
             display: flex !important;
             flex-direction: column !important;
             justify-content: center !important;
             align-items: center !important;
-            gap: 1px !important;
-            padding: 1px 0 !important;
+            gap: 0.5px !important;
+            padding: 0.5px 0 !important;
         }
         .pdf-export-mode .period-cell .subject-title {
-            font-size: 8.5px !important;
+            font-size: 8px !important;
             font-weight: 800 !important;
-            line-height: 1.25 !important;
-            margin-bottom: 1.5px !important;
+            line-height: 1.15 !important;
+            margin-bottom: 1px !important;
             text-align: center !important;
             color: #0f172a !important;
             display: block !important;
         }
         .pdf-export-mode .period-cell .subject-title.arabic-subject {
             font-family: 'Cairo', 'Noto Sans Arabic', 'Amiri', 'Traditional Arabic', sans-serif !important;
-            font-size: 10.5px !important;
+            font-size: 9.5px !important;
             font-weight: 800 !important;
             letter-spacing: 0 !important;
-            line-height: 1.35 !important;
-            margin-bottom: 2.5px !important;
+            line-height: 1.25 !important;
+            margin-bottom: 1px !important;
             direction: rtl !important;
             display: block !important;
         }
         .pdf-export-mode .period-cell .teacher-name {
-            font-size: 7.5px !important;
-            line-height: 1.2 !important;
+            font-size: 7px !important;
+            line-height: 1.1 !important;
             text-align: center !important;
             color: #334155 !important;
-            margin-top: 1px !important;
+            margin-top: 0 !important;
             display: block !important;
             font-weight: 700 !important;
         }
         .pdf-export-mode .period-cell .teacher-name.arabic-text {
             font-family: 'Cairo', 'Noto Sans Arabic', 'Amiri', sans-serif !important;
-            font-size: 8px !important;
+            font-size: 7.5px !important;
             letter-spacing: 0 !important;
             direction: rtl !important;
-            line-height: 1.2 !important;
+            line-height: 1.1 !important;
         }
         /* Split Batch Sub-boxes in PDF */
         .pdf-export-mode .period-cell .bg-white\/95 {
-            padding: 1px 2px !important;
-            margin-bottom: 1px !important;
-            border-radius: 3px !important;
+            padding: 0.5px 2px !important;
+            margin-bottom: 0.5px !important;
+            border-radius: 2px !important;
         }
         .pdf-export-mode .period-cell .bg-white\/95 .text-\[7\.5px\] {
-            font-size: 6.5px !important;
+            font-size: 6px !important;
             line-height: 1 !important;
         }
         .pdf-export-mode .period-cell .bg-white\/95 .text-\[11px\] {
-            font-size: 8px !important;
-            line-height: 1.15 !important;
+            font-size: 7px !important;
+            line-height: 1.1 !important;
         }
         .pdf-export-mode .period-cell .bg-white\/95 .text-\[8\.5px\] {
-            font-size: 7px !important;
+            font-size: 6px !important;
             line-height: 1 !important;
         }
         /* Teacher short name code badge */
         .pdf-export-mode .period-cell span.font-mono {
-            font-size: 7px !important;
-            padding: 0.5px 3px !important;
+            font-size: 6.5px !important;
+            padding: 0.5px 2.5px !important;
             line-height: 1 !important;
-            margin-top: 1px !important;
+            margin-top: 0.5px !important;
             display: inline-block !important;
         }
         /* Shared slot badge */
         .pdf-export-mode .period-cell span.bg-amber-100 {
-            font-size: 6.5px !important;
-            padding: 0.5px 4px !important;
+            font-size: 6px !important;
+            padding: 0.5px 3px !important;
             line-height: 1 !important;
-            margin-bottom: 1.5px !important;
+            margin-bottom: 0.5px !important;
             display: inline-block !important;
         }
 
@@ -7519,127 +7558,74 @@
             }
 
             let filename = 'TIMETABLE_' + currentYear + '.pdf';
-            let cardsToExport = [];
+            let targetEl = container;
+            let hadPageBreak = false;
+            let hiddenCards = [];
+
+            const cards = Array.from(container.querySelectorAll('.timetable-print-card'));
 
             if (specificCollege) {
                 const isWafy = specificCollege.toLowerCase().includes('wafy') && !specificCollege.toLowerCase().includes('wafiyya');
                 filename = (isWafy ? 'KKHM_WAFY' : 'AL_GAITH_WAFIYYA') + '_TIMETABLE_' + currentYear + '.pdf';
 
-                const cards = container.querySelectorAll('.timetable-print-card');
                 for (let card of cards) {
                     if (card.textContent.includes(specificCollege)) {
-                        cardsToExport.push(card);
-                        break;
+                        targetEl = card;
+                        hadPageBreak = card.classList.contains('campus-page-break');
+                        if (hadPageBreak) card.classList.remove('campus-page-break');
+                    } else {
+                        card.style.display = 'none';
+                        hiddenCards.push(card);
                     }
-                }
-            } else {
-                const cards = container.querySelectorAll('.timetable-print-card');
-                if (cards.length > 0) {
-                    cards.forEach(c => cardsToExport.push(c));
-                } else {
-                    cardsToExport.push(container);
                 }
             }
 
-            if (cardsToExport.length === 0) {
-                cardsToExport.push(container);
-            }
+            // Save user scroll position and scroll to top
+            const origScrollX = window.scrollX || window.pageXOffset || 0;
+            const origScrollY = window.scrollY || window.pageYOffset || 0;
+            window.scrollTo(0, 0);
 
-            // Create an isolated export container at document root (0, 0) to avoid any sidebar offsets or horizontal scrolls
-            const exportContainer = document.createElement('div');
-            exportContainer.id = 'pdf-isolated-export-root';
-            exportContainer.style.position = 'fixed';
-            exportContainer.style.left = '0px';
-            exportContainer.style.top = '0px';
-            exportContainer.style.width = '1120px';
-            exportContainer.style.background = '#ffffff';
-            exportContainer.style.zIndex = '999999';
-            exportContainer.style.margin = '0';
-            exportContainer.style.padding = '0';
-            exportContainer.style.boxSizing = 'border-box';
-            exportContainer.style.overflow = 'visible';
+            // Apply PDF printing temporary clean state to remove sidebar offset
+            document.body.classList.add('pdf-printing-in-progress');
+            targetEl.classList.add('pdf-export-mode');
 
-            // Clone each card into the isolated export container
-            cardsToExport.forEach((origCard, idx) => {
-                const pageWrapper = document.createElement('div');
-                pageWrapper.className = 'pdf-page-wrapper';
-                pageWrapper.style.width = '1120px';
-                pageWrapper.style.boxSizing = 'border-box';
-                pageWrapper.style.margin = '0';
-                pageWrapper.style.padding = '0';
-                pageWrapper.style.background = '#ffffff';
-                if (idx > 0) {
-                    pageWrapper.style.pageBreakBefore = 'always';
-                    pageWrapper.style.breakBefore = 'page';
-                }
-
-                const clone = origCard.cloneNode(true);
-                clone.classList.add('pdf-export-mode');
-                clone.classList.remove('campus-page-break');
-                clone.style.width = '1120px';
-                clone.style.margin = '0';
-                clone.style.boxSizing = 'border-box';
-                
-                // Remove no-print buttons
-                clone.querySelectorAll('.no-print').forEach(el => el.remove());
-
-                pageWrapper.appendChild(clone);
-                exportContainer.appendChild(pageWrapper);
-            });
-
-            document.body.appendChild(exportContainer);
-
-            // Auto-fit each card so it strictly fits 1 A4 landscape page without spillover
-            // A4 landscape printable height is ~730px at 1120px width
-            const maxPageHeight = 730;
-            const pageWrappers = exportContainer.querySelectorAll('.pdf-page-wrapper');
-            pageWrappers.forEach(pw => {
-                const card = pw.querySelector('.timetable-print-card') || pw.firstElementChild;
-                if (card) {
-                    const cardHeight = card.offsetHeight;
-                    if (cardHeight > maxPageHeight) {
-                        const scale = maxPageHeight / cardHeight;
-                        card.style.transform = `scale(${scale})`;
-                        card.style.transformOrigin = 'top left';
-                        card.style.width = `${Math.round(1120 / scale)}px`;
-                        pw.style.height = `${maxPageHeight}px`;
-                        pw.style.overflow = 'hidden';
-                    }
-                }
-            });
+            // Hide any no-print elements inside target
+            const noPrintEls = targetEl.querySelectorAll('.no-print');
+            noPrintEls.forEach(el => el.style.display = 'none');
 
             const opt = {
                 margin: [4, 4, 4, 4],
                 filename: filename,
                 image: { type: 'png' }, // Lossless PNG for razor-sharp text clarity (No JPEG compression artifacts)
                 html2canvas: {
-                    scale: 2.5,         // High-res retina
+                    scale: 2.2,         // High-res retina
                     useCORS: true,
                     logging: false,
                     letterRendering: false, // CRITICAL: NEVER true! Fixes detached Arabic cursive letters
                     scrollX: 0,
                     scrollY: 0,
-                    x: 0,
-                    y: 0,
-                    width: 1120,
-                    windowWidth: 1120
+                    windowWidth: 1200
                 },
                 jsPDF: { unit: 'mm', format: 'a4', orientation: 'landscape' },
                 pagebreak: { 
                     mode: ['css', 'legacy'], 
-                    before: ['.pdf-page-wrapper:not(:first-child)'],
-                    avoid: ['tr', 'tbody', '.day-block'] 
+                    before: ['.campus-page-break']
                 }
             };
 
             const cleanup = () => {
-                if (exportContainer && exportContainer.parentNode) {
-                    exportContainer.parentNode.removeChild(exportContainer);
+                document.body.classList.remove('pdf-printing-in-progress');
+                targetEl.classList.remove('pdf-export-mode');
+                hiddenCards.forEach(c => c.style.display = '');
+                noPrintEls.forEach(el => el.style.display = '');
+                if (hadPageBreak && targetEl) {
+                    targetEl.classList.add('campus-page-break');
                 }
+                window.scrollTo(origScrollX, origScrollY);
             };
 
             if (typeof html2pdf !== 'undefined') {
-                html2pdf().set(opt).from(exportContainer).save().then(() => {
+                html2pdf().set(opt).from(targetEl).save().then(() => {
                     cleanup();
                     showToast("PDF Downloaded", "Academic timetable downloaded in ultra-high resolution.");
                 }).catch(err => {
