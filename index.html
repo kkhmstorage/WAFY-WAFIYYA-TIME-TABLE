@@ -2918,6 +2918,24 @@
                     </div>
                 </div>
 
+                <!-- Wafiyya T1 Additional Period Notice Banner -->
+                <div id="slot-modal-additional-banner" class="hidden bg-gradient-to-r from-purple-50 via-indigo-50 to-pink-50 border-2 border-indigo-300 rounded-xl p-3 text-indigo-950 text-xs shadow-xs">
+                    <div class="flex items-center gap-2.5">
+                        <div class="w-8 h-8 rounded-lg bg-indigo-600 text-white flex items-center justify-center text-xs shrink-0 shadow-sm animate-pulse">
+                            <i class="fas fa-dna"></i>
+                        </div>
+                        <div class="flex-1">
+                            <div class="text-[11px] font-black text-indigo-950 uppercase tracking-wide flex items-center gap-1.5">
+                                <span>അഡീഷണൽ പിരീഡ് • വഫിയ്യ T1</span>
+                                <span class="bg-indigo-600 text-white text-[8px] px-1.5 py-0.2 rounded font-bold">Biology Only</span>
+                            </div>
+                            <div class="text-[10.5px] text-indigo-900 font-semibold mt-0.5 leading-snug">
+                                തിങ്കൾ, ബുധൻ, വെള്ളി ദിവസങ്ങളിൽ ഈ അഡീഷണൽ സ്ലോട്ടിൽ <b>ബയോളജി (Biology)</b> വിഷയങ്ങൾ മാത്രമേ അനുവദിക്കൂ.
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- Current Allocation State -->
                 <div class="border border-slate-200 rounded-xl p-3 bg-white">
                     <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">നിലവിലെ അവസ്ഥ (Current Status)</div>
@@ -3121,6 +3139,29 @@
         const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         const dayNamesEn = dayNames; // Alias used across rendering functions
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+
+        // Wafiyya T1 Additional Period Configuration: Monday (0), Wednesday (2), Friday (4) for Biology only
+        const WAFIYYA_T1_ADDITIONAL_DAYS = [0, 2, 4];
+
+        function isWafiyyaT1Class(className) {
+            if (!className) return false;
+            const s = String(className).toLowerCase().trim();
+            const isWafiyya = s.includes('wafiyya') || s.includes('al-gaith') || s.includes('gaith');
+            if (!isWafiyya) return false;
+            if (s.includes('t1') || s.includes('t-1') || s.includes('t 1') || s.includes('thanawiyya 1') || s.includes('thanaviyya 1') || s.includes('thanawia 1')) {
+                return true;
+            }
+            if ((s.includes('thanawiyya') || s.includes('thanaviyya') || s.includes('thanawia')) && !s.includes('2') && !s.includes('t2')) {
+                return true;
+            }
+            return false;
+        }
+
+        function isBiologySubject(subjectName) {
+            if (!subjectName) return false;
+            const s = String(subjectName).toLowerCase().trim();
+            return s.includes('bio') || s.includes('ബയോളജി') || s.includes('ജീവശാസ്ത്രം') || s.includes('احياء') || s.includes('أحياء');
+        }
 
         function getStorageKey(year) {
             return 'wafy_wafiyya_tt_' + year;
@@ -7312,6 +7353,33 @@
                 `;
             }
 
+            if (slot.isAdditional || slot.isBiologyAdditional) {
+                const teacher = appState.teachers.find(t => t.id === slot.teacherId);
+                const isArabic = /[\u0600-\u06FF]/.test(slot.subject);
+                const isTeacherArabic = teacher ? /[\u0600-\u06FF]/.test(teacher.name) : false;
+                const manualBadge = slot.isManualOverride 
+                    ? '<span class="inline-block bg-amber-400 text-slate-950 font-black text-[7px] px-1 py-0.2 rounded shadow-2xs mb-0.5 tracking-tight"><i class="fas fa-edit text-[6px]"></i> Manual</span>' 
+                    : '';
+
+                return `
+                    <div class="flex flex-col items-center justify-center text-center w-full h-full min-h-[48px] gap-0.5 py-0.5 rounded-lg border-2 border-indigo-400 bg-gradient-to-b from-indigo-50/95 via-purple-50/90 to-white shadow-xs">
+                        <span class="inline-flex items-center gap-1 bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 text-white font-black text-[7.5px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs mb-0.5">
+                            <i class="fas fa-dna text-[7px] text-pink-300"></i> അഡീഷണൽ • BIOLOGY
+                        </span>
+                        ${manualBadge}
+                        <div class="subject-title font-black text-indigo-950 text-center leading-snug ${isArabic ? 'text-[12.5px] arabic-subject' : 'text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
+                            ${slot.subject}
+                        </div>
+                        <div class="teacher-name font-bold text-indigo-900 text-center leading-tight ${isTeacherArabic ? 'text-[10px] arabic-text' : 'text-[9.5px]'}" ${isTeacherArabic ? 'dir="rtl"' : ''}>
+                            ${teacher ? teacher.name : ''}
+                        </div>
+                        <div class="flex items-center justify-center text-center mt-0.5">
+                            <span class="inline-block bg-indigo-100 text-indigo-900 border border-indigo-300 font-mono font-black text-[8.5px] px-1.5 py-0.5 rounded shadow-2xs uppercase tracking-wider">${teacher ? teacher.shortName : ''}</span>
+                        </div>
+                    </div>
+                `;
+            }
+
             // Standard Slot
             const teacher = appState.teachers.find(t => t.id === slot.teacherId);
             const teacherBadgeColor = isWafy ? 'bg-white border border-emerald-300 text-emerald-950' : 'bg-white border border-purple-300 text-purple-950';
@@ -7363,6 +7431,15 @@
 
             let html = mobileHint;
             teachersToRender.forEach(teacher => {
+                const teacherHasAdditionalSlot = WAFIYYA_T1_ADDITIONAL_DAYS.some(d => {
+                    if (!timetable || !timetable[d] || !timetable[d][periods]) return false;
+                    for (let c in timetable[d][periods]) {
+                        const s = timetable[d][periods][c];
+                        if (s && (s.teacherId === teacher.id || s.secondaryTeacherId === teacher.id || (s.splitSlots && s.splitSlots.some(ss => ss.teacherId === teacher.id)))) return true;
+                    }
+                    return false;
+                });
+
                 html += `
                     <div class="mb-8 border border-slate-200 rounded-2xl overflow-hidden shadow-sm page-break-inside-avoid bg-white">
                         <div class="bg-slate-100 p-3.5 flex justify-between items-center border-b border-slate-200">
@@ -7387,6 +7464,12 @@
                                                 <div class="text-[9px] text-slate-400 font-medium mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                             </th>
                                         `).join('')}
+                                        ${teacherHasAdditionalSlot ? `
+                                            <th class="px-2 py-2 border border-purple-300 bg-purple-50 min-w-[95px] text-center align-middle font-black text-xs text-purple-950">
+                                                <div class="flex items-center justify-center gap-1"><i class="fas fa-dna text-purple-600"></i> Additional</div>
+                                                <div class="text-[8.5px] text-purple-700 font-bold">T1 Biology</div>
+                                            </th>
+                                        ` : ''}
                                     </tr>
                                 </thead>
                                 <tbody class="divide-y divide-slate-200 text-xs bg-white">
@@ -7463,6 +7546,38 @@
                             html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle">-</td>`;
                         }
                     }
+
+                    if (teacherHasAdditionalSlot) {
+                        let addSlotForTeacher = null;
+                        if (WAFIYYA_T1_ADDITIONAL_DAYS.includes(d) && timetable && timetable[d] && timetable[d][periods]) {
+                            for (let cls in timetable[d][periods]) {
+                                const s = timetable[d][periods][cls];
+                                if (s && (s.teacherId === teacher.id || s.secondaryTeacherId === teacher.id)) {
+                                    addSlotForTeacher = { ...s, className: cls };
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (addSlotForTeacher) {
+                            html += `
+                                <td class="border border-purple-300 p-1.5 period-cell bg-indigo-50/90 text-center align-middle">
+                                    <div class="flex flex-col items-center justify-center text-center w-full min-h-[46px] gap-0.5">
+                                        <span class="inline-flex items-center gap-1 bg-gradient-to-r from-indigo-700 to-purple-800 text-white font-black text-[7px] px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5">
+                                            <i class="fas fa-dna text-[6px]"></i> Additional
+                                        </span>
+                                        <div class="font-black leading-snug text-indigo-950 text-xs">${addSlotForTeacher.subject}</div>
+                                        <div class="text-[10px] text-indigo-900 font-bold leading-tight mt-0.5">${addSlotForTeacher.className}</div>
+                                        <span class="inline-block text-[8px] px-1.5 py-0.2 rounded font-semibold mt-0.5 bg-indigo-200 text-indigo-900">Wafiyya Campus</span>
+                                    </div>
+                                </td>
+                            `;
+                        } else if (WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
+                            html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle">-</td>`;
+                        } else {
+                            html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle bg-slate-50/50">—</td>`;
+                        }
+                    }
                     html += `</tr>`;
                 }
 
@@ -7482,6 +7597,8 @@
                 container.innerHTML = '<div class="p-8 text-center text-slate-400">No class selected.</div>';
                 return;
             }
+
+            const isT1 = isWafiyyaT1Class(targetClass);
 
             const mobileHint = `
                 <div class="md:hidden flex items-center justify-between text-[11px] text-emerald-800 bg-emerald-50 border border-emerald-200 px-3 py-1.5 rounded-lg mb-3 no-print">
@@ -7524,6 +7641,14 @@
                                             <div class="text-[9px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                         </th>
                                     `).join('')}
+                                    ${isT1 ? `
+                                        <th class="px-3 py-2.5 border border-purple-300 bg-purple-100 text-purple-950 min-w-[110px] text-center align-middle shadow-2xs">
+                                            <div class="font-black text-xs flex items-center justify-center gap-1 text-purple-950">
+                                                <i class="fas fa-dna text-purple-700"></i> അഡീഷണൽ പിരീഡ്
+                                            </div>
+                                            <div class="text-[9px] text-purple-700 font-bold mt-0.5 tracking-tight">Biology Only • Mon, Wed, Fri</div>
+                                        </th>
+                                    ` : ''}
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200 text-xs bg-white">
@@ -7536,7 +7661,7 @@
 
                 if (!isActiveDay) {
                     html += `
-                        <td colspan="${periods}" class="border border-slate-200 p-2.5 text-center align-middle bg-slate-50/60 text-slate-400">
+                        <td colspan="${periods + (isT1 ? 1 : 0)}" class="border border-slate-200 p-2.5 text-center align-middle bg-slate-50/60 text-slate-400">
                             <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200">
                                 <i class="fas fa-bed text-[11px] text-slate-400"></i>
                                 <span>ക്ലാസുകളില്ല (Off Day / No Classes Scheduled)</span>
@@ -7569,6 +7694,37 @@
                         html += `<td class="border border-slate-200 p-1.5 text-slate-400 italic text-[10px] text-center align-middle ${adminFreeInteractive}">${getTimetableCellHtml(null, isWafy)}</td>`;
                     }
                 }
+
+                if (isT1) {
+                    if (WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
+                        const addSlot = (timetable && timetable[d] && timetable[d][periods]) ? timetable[d][periods][targetClass] : null;
+                        const adminInteractiveAttr = isAdminLoggedIn 
+                            ? `cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:shadow-md transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അഡീഷണൽ പിരീഡിൽ മാറ്റം വരുത്തുക (Admin Slot Edit)` 
+                            : '';
+                        if (addSlot) {
+                            html += `
+                                <td class="border border-purple-300 p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
+                                    ${getTimetableCellHtml(addSlot, false)}
+                                </td>
+                            `;
+                        } else {
+                            const adminFreeInteractive = isAdminLoggedIn 
+                                ? `cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അസൈൻ ചെയ്യുക (Admin Slot Edit)` 
+                                : '';
+                            html += `
+                                <td class="border border-purple-200 p-1.5 text-center align-middle bg-purple-50/30 ${adminFreeInteractive}">
+                                    <div class="flex flex-col items-center justify-center text-center py-1 opacity-70">
+                                        <i class="fas fa-dna text-[9px] mb-0.5 text-purple-400"></i>
+                                        <span class="text-[8px] font-bold uppercase tracking-wider text-purple-700">Biology Slot</span>
+                                    </div>
+                                </td>
+                            `;
+                        }
+                    } else {
+                        html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle bg-slate-50/50">—</td>`;
+                    }
+                }
+
                 html += `</tr>`;
             }
 
@@ -7647,6 +7803,8 @@
                     collegeClasses = appState.classesList;
                 }
 
+                const hasWafiyyaT1InCollege = !isWafy && collegeClasses.some(c => isWafiyyaT1Class(c));
+
                 html += `
                     <div class="mb-8 border ${headerBorder} rounded-2xl bg-white timetable-print-card shadow-sm ${pageBreakClass}">
                         <!-- Institutional Card Header -->
@@ -7698,6 +7856,14 @@
                                                 <div class="text-[9px] text-emerald-300 font-medium mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                             </th>
                                         `).join('')}
+                                        ${hasWafiyyaT1InCollege ? `
+                                            <th class="px-2 py-2 border border-purple-800 bg-purple-950 min-w-[110px] text-white text-center align-middle shadow-inner">
+                                                <div class="font-black tracking-wide text-xs text-amber-300 flex items-center justify-center gap-1">
+                                                    <i class="fas fa-dna text-[11px] text-pink-400"></i> Additional (T1)
+                                                </div>
+                                                <div class="text-[9px] text-purple-200 font-bold mt-0.5 tracking-tight">Biology Only • Mon, Wed, Fri</div>
+                                            </th>
+                                        ` : ''}
                                     </tr>
                                 </thead>
                 `;
@@ -7715,7 +7881,7 @@
 
                         if (!isActiveDay) {
                             html += `
-                                <td colspan="${periods}" class="border border-slate-300 p-2 text-center align-middle bg-slate-50/80 text-slate-400">
+                                <td colspan="${periods + (hasWafiyyaT1InCollege ? 1 : 0)}" class="border border-slate-300 p-2 text-center align-middle bg-slate-50/80 text-slate-400">
                                     <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
                                         <i class="fas fa-bed text-[10px] text-slate-400"></i> ക്ലാസുകളില്ല (Off Day)
                                     </span>
@@ -7752,6 +7918,37 @@
                                 `;
                             }
                         }
+
+                        if (hasWafiyyaT1InCollege) {
+                            if (isWafiyyaT1Class(cls) && WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
+                                const addSlot = (timetable && timetable[d] && timetable[d][periods]) ? timetable[d][periods][cls] : null;
+                                const adminInteractiveAttr = isAdminLoggedIn 
+                                    ? `cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:shadow-md transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അഡീഷണൽ പിരീഡിൽ മാറ്റം വരുത്തുക (Admin Slot Edit)` 
+                                    : '';
+                                if (addSlot) {
+                                    html += `
+                                        <td class="border border-purple-300 p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
+                                            ${getTimetableCellHtml(addSlot, false)}
+                                        </td>
+                                    `;
+                                } else {
+                                    const adminFreeInteractive = isAdminLoggedIn 
+                                        ? `cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അസൈൻ ചെയ്യുക (Admin Slot Edit)` 
+                                        : '';
+                                    html += `
+                                        <td class="border border-purple-200 p-1.5 text-center align-middle bg-purple-50/30 ${adminFreeInteractive}">
+                                            <div class="flex flex-col items-center justify-center text-center py-1 opacity-70">
+                                                <i class="fas fa-dna text-[9px] mb-0.5 text-purple-400"></i>
+                                                <span class="text-[8px] font-bold uppercase tracking-wider text-purple-700">Biology Slot</span>
+                                            </div>
+                                        </td>
+                                    `;
+                                }
+                            } else {
+                                html += `<td class="border border-slate-200 p-1.5 text-slate-300 text-[11px] text-center align-middle bg-slate-50/50 font-mono select-none">—</td>`;
+                            }
+                        }
+
                         html += `</tr>`;
                     });
                     html += `</tbody>`;
@@ -7880,6 +8077,21 @@
                                 }
                             } else {
                                 freeSlots.push({ day: d, period: p });
+                            }
+                        }
+
+                        // Wafiyya T1 Additional Biology Period (Mon, Wed, Fri) Audit Inclusion
+                        if (isWafiyyaT1Class(cls) && WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
+                            const addSlot = (timetable[d] && timetable[d][periods]) ? timetable[d][periods][cls] : null;
+                            if (addSlot) {
+                                classScheduledTotal++;
+                                let matched = demandedBySubject.find(item => isBiologySubject(item.subject) && item.scheduledHours < item.demandedHours);
+                                if (!matched) {
+                                    matched = demandedBySubject.find(item => isBiologySubject(item.subject));
+                                }
+                                if (matched) {
+                                    matched.scheduledHours++;
+                                }
                             }
                         }
                     }
@@ -8220,10 +8432,32 @@
             const timingEl = document.getElementById('slot-modal-timing');
             const currentDisplay = document.getElementById('slot-modal-current-display');
 
+            const isAdditionalSlot = periodIndex >= appState.periods;
             if (dayBadge) dayBadge.textContent = dayNamesEn[dayIndex] || `Day ${dayIndex + 1}`;
-            if (periodBadge) periodBadge.textContent = `Period ${periodIndex + 1}`;
+            if (periodBadge) {
+                periodBadge.textContent = isAdditionalSlot ? 'അഡീഷണൽ പിരീഡ് (Additional)' : `Period ${periodIndex + 1}`;
+                if (isAdditionalSlot) {
+                    periodBadge.className = 'bg-purple-100 text-purple-900 border border-purple-300 px-2 py-0.5 rounded-lg text-xs font-black uppercase tracking-wider';
+                } else {
+                    periodBadge.className = 'bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded-lg text-xs';
+                }
+            }
             if (classNameEl) classNameEl.textContent = className;
-            if (timingEl) timingEl.textContent = (appState.periodTimings && appState.periodTimings[periodIndex]) ? appState.periodTimings[periodIndex] : '';
+            if (timingEl) {
+                timingEl.textContent = isAdditionalSlot 
+                    ? 'Special Additional Hour (ബയോളജി)' 
+                    : ((appState.periodTimings && appState.periodTimings[periodIndex]) ? appState.periodTimings[periodIndex] : '');
+            }
+
+            // Toggle Wafiyya T1 Additional Notice Banner
+            const addBanner = document.getElementById('slot-modal-additional-banner');
+            if (addBanner) {
+                if (isAdditionalSlot && isWafiyyaT1Class(className)) {
+                    addBanner.classList.remove('hidden');
+                } else {
+                    addBanner.classList.add('hidden');
+                }
+            }
 
             // 2. Populate Current Status Display
             if (currentDisplay) {
@@ -8247,7 +8481,7 @@
                     currentDisplay.innerHTML = `
                         <div class="flex items-center gap-2 text-slate-400 italic">
                             <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
-                            <span>ഒഴിഞ്ഞ പിരീഡ് (Free Period - No Subject Assigned)</span>
+                            <span>ഒഴിഞ്ഞ പിരീഡ് (${isAdditionalSlot ? 'Free Additional Slot' : 'Free Period - No Subject Assigned'})</span>
                         </div>
                         <div class="text-[10px] text-slate-400 font-medium">സ്ലോട്ട് ഫ്രീയാണ്</div>
                     `;
@@ -8276,6 +8510,21 @@
 
                 if (currentSlot && currentSlot.subject && !uniqueSubjects.find(s => s.subject === currentSlot.subject)) {
                     uniqueSubjects.unshift({ subject: currentSlot.subject, teacherId: currentSlot.teacherId, hours: 0 });
+                }
+
+                // If editing an additional period in Wafiyya T1, restrict strictly to Biology subjects!
+                if (isAdditionalSlot && isWafiyyaT1Class(className)) {
+                    let bioSubjects = uniqueSubjects.filter(s => isBiologySubject(s.subject));
+                    if (bioSubjects.length === 0) {
+                        // Find any biology faculty in the system
+                        const bioAllotmentAny = appState.classes.find(c => isBiologySubject(c.subject));
+                        bioSubjects = [{ 
+                            subject: 'Biology', 
+                            teacherId: bioAllotmentAny ? bioAllotmentAny.teacherId : '', 
+                            hours: 3 
+                        }];
+                    }
+                    uniqueSubjects = bioSubjects;
                 }
 
                 uniqueSubjects.forEach(s => {
@@ -8727,10 +8976,23 @@
                     return;
                 }
 
-                // Strict Quota Verification: Ensure subject does not exceed allotted hours
+                // Additional Period Verification for Wafiyya T1
+                const isAdditionalSlot = period >= appState.periods;
+                if (isAdditionalSlot && isWafiyyaT1Class(className)) {
+                    if (!WAFIYYA_T1_ADDITIONAL_DAYS.includes(day)) {
+                        showAlert("അനുവദനീയമല്ല", "തിങ്കൾ, ബുധൻ, വെള്ളി ദിവസങ്ങളിൽ മാത്രമേ അഡീഷണൽ പിരീഡ് അനുവദിക്കപ്പെട്ടിട്ടുള്ളൂ.");
+                        return;
+                    }
+                    if (!isBiologySubject(sub)) {
+                        showAlert("ബയോളജി മാത്രം", "ഈ അഡീഷണൽ പിരീഡിൽ ബയോളജി (Biology) വിഷയങ്ങൾ മാത്രമേ അനുവദിക്കാവൂ! മറ്റ് വിഷയങ്ങൾ അനുവദനീയമല്ല.");
+                        return;
+                    }
+                }
+
+                // Strict Quota Verification: Ensure subject does not exceed allotted hours (except explicitly designated additional slots)
                 const allotment = (appState.classes || []).find(c => c.className === className && c.subject === sub);
                 const maxAllotted = allotment ? Number(allotment.hours || 0) : 0;
-                if (maxAllotted > 0 && !isOverride) {
+                if (maxAllotted > 0 && !isOverride && !isAdditionalSlot) {
                     let currentScheduledCount = 0;
                     const totalDays = parseInt(appState.settings ? appState.settings.workingDays : appState.days) || 6;
                     const totalPeriods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
@@ -8765,6 +9027,8 @@
                     subject: sub,
                     teacherId: tch,
                     isManualOverride: true,
+                    isAdditional: isAdditionalSlot,
+                    isBiologyAdditional: (isAdditionalSlot && isBiologySubject(sub)),
                     modifiedAt: new Date().toISOString()
                 };
 
@@ -8772,9 +9036,10 @@
                 if (!currentTimetable[day][period]) currentTimetable[day][period] = {};
                 currentTimetable[day][period][className] = newSlot;
 
+                const periodTitle = isAdditionalSlot ? 'അഡീഷണൽ പിരീഡ്' : `Period ${period + 1}`;
                 showAlert(
                     isOverride ? "ഓവർറൈഡ് ചെയ്തു" : "വിജയകരം", 
-                    `${className} ന് ${dayNamesEn[day]} Period ${period + 1}-ൽ <b>${sub}</b> വിജയകരമായി സെറ്റ് ചെയ്തു.${isOverride ? ' (Admin Force Override)' : ''}`
+                    `${className} ന് ${dayNamesEn[day]} ${periodTitle}-ൽ <b>${sub}</b> വിജയകരമായി സെറ്റ് ചെയ്തു.${isOverride ? ' (Admin Force Override)' : ''}`
                 );
             } else if (actionTab === 'swap') {
                 if (!activeManualSlotState.swapTarget) return;
@@ -11733,6 +11998,33 @@
                             if (classAllotmentCounters[key] > maxAllowed) {
                                 // Strictly delete any excess period beyond what was officially allotted
                                 delete bestSchedule[d][p][cls];
+                            }
+                        }
+                    }
+                }
+            // Wafiyya T1 Additional Biology Periods (Mon, Wed, Fri) Automatic Placement Engine
+            if (bestSchedule) {
+                const wafiyyaT1Class = appState.classesList.find(c => isWafiyyaT1Class(c));
+                if (wafiyyaT1Class) {
+                    const bioAllotment = appState.classes.find(c => c.className === wafiyyaT1Class && isBiologySubject(c.subject));
+                    if (bioAllotment) {
+                        for (let d of WAFIYYA_T1_ADDITIONAL_DAYS) {
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(wafiyyaT1Class, d)) continue;
+                            if (!bestSchedule[d]) bestSchedule[d] = {};
+                            if (!bestSchedule[d][periods]) bestSchedule[d][periods] = {};
+
+                            if (!bestSchedule[d][periods][wafiyyaT1Class]) {
+                                bestSchedule[d][periods][wafiyyaT1Class] = {
+                                    id: bioAllotment.id || ('bio_add_' + d),
+                                    allocationType: 'standard',
+                                    college: bioAllotment.college || (appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)"),
+                                    className: wafiyyaT1Class,
+                                    subject: bioAllotment.subject || 'Biology',
+                                    teacherId: bioAllotment.teacherId,
+                                    hours: bioAllotment.hours || 3,
+                                    isAdditional: true,
+                                    isBiologyAdditional: true
+                                };
                             }
                         }
                     }

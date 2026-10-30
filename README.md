@@ -143,6 +143,11 @@ In accordance with institutional guidelines:
   - **3:30 PM Daily Audit Grid**: Shows an `Off Day` status pill for inactive classes, preventing false "Pending" warnings on non-working days.
   - **Accurate Capacity & Workload Audit**: Dynamically calculates weekly capacity (`Active Working Days × Periods/Day`), recognizing 24 hours as 100% balanced for PG batches and eliminating false deficit alerts.
   - **Cloud Synchronization**: Class-wise working days persist in Firebase Firestore under `classWorkingDays` for seamless multi-device collaboration.
+- **Wafiyya T1 Additional Biology Periods (Mon, Wed, Fri)**:
+  - **Dedicated 3-Day Allocation**: Automatically grants 1 additional period exclusively for Wafiyya T1 on Monday, Wednesday, and Friday.
+  - **Strict Subject Enforcement**: Restricts additional period slots solely to Biology (`ബയോളജി / Biology`); non-biology subjects are hard-blocked from assignment.
+  - **Prominent Visual Badging**: Displays a distinct `അഡീഷണൽ • BIOLOGY` badge with purple/indigo gradient cards, DNA iconography, and high-contrast typography across College Timetables, Class Schedules, and Teacher Views.
+  - **Slot Editor & Audit Harmonization**: The Manual Slot Editor presents dedicated notices and biology-only subject filters for additional slots, and the period reconciliation engine accounts for these hours without discrepancy.
 
 ---
 
