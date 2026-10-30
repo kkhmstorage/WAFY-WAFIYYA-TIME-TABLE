@@ -2868,6 +2868,128 @@
         </div>
     </div>
 
+    <!-- Manual Slot Editor & Algorithm Conflict Validator Modal -->
+    <div id="manual-slot-edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl shadow-2xl max-w-xl w-full max-h-[92vh] flex flex-col overflow-hidden animate-[slideUp_0.25s_ease-out]">
+            <!-- Modal Header -->
+            <div class="bg-gradient-to-r from-slate-900 via-slate-800 to-emerald-950 text-white p-4 flex items-center justify-between shrink-0 border-b border-slate-700">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-400 font-bold shadow-inner text-base">
+                        <i class="fas fa-edit"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm tracking-tight flex items-center gap-2">
+                            <span>മാന്വൽ സ്ലോട്ട് എഡിറ്റർ (Slot Editor)</span>
+                            <span id="slot-modal-type-badge" class="bg-emerald-500/20 text-emerald-300 text-[10px] px-2 py-0.5 rounded-full border border-emerald-400/30 font-mono">Live Check</span>
+                        </h3>
+                        <p class="text-[11px] text-slate-300" id="slot-modal-subtitle">Configure period with real-time algorithm conflict checks</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.closeManualSlotEditor()" class="text-slate-400 hover:text-white transition p-1 text-lg">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+
+            <!-- Modal Body (Scrollable) -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4 text-xs">
+                <!-- Slot Target Info Banner -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 flex flex-wrap items-center justify-between gap-2">
+                    <div class="flex items-center gap-2">
+                        <span class="bg-slate-900 text-white font-extrabold px-2.5 py-1 rounded-lg text-xs" id="slot-modal-day-badge">Saturday</span>
+                        <span class="bg-emerald-100 text-emerald-800 font-bold px-2 py-1 rounded-lg text-xs" id="slot-modal-period-badge">Period 1</span>
+                    </div>
+                    <div class="text-right">
+                        <span class="font-extrabold text-slate-900 block text-xs" id="slot-modal-class-name">Wafy Thanawiyya</span>
+                        <span class="text-[10px] text-slate-500 block" id="slot-modal-timing">08:30 - 09:15</span>
+                    </div>
+                </div>
+
+                <!-- Current Allocation State -->
+                <div class="border border-slate-200 rounded-xl p-3 bg-white">
+                    <div class="text-[10px] font-bold text-slate-400 uppercase tracking-wider mb-1">നിലവിലെ അവസ്ഥ (Current Status)</div>
+                    <div id="slot-modal-current-display" class="flex items-center justify-between text-xs font-semibold text-slate-700">
+                        <!-- Populated dynamically -->
+                    </div>
+                </div>
+
+                <!-- Action Mode Selection -->
+                <div class="grid grid-cols-3 gap-1.5 p-1 bg-slate-100 rounded-xl border border-slate-200 font-bold text-center">
+                    <button type="button" id="slot-action-btn-assign" onclick="window.setSlotActionTab('assign')" class="py-2 px-2 rounded-lg bg-white text-emerald-800 shadow-sm transition">
+                        <i class="fas fa-book-reader mr-1 text-emerald-600"></i> സബ്ജക്റ്റ് നൽകുക
+                    </button>
+                    <button type="button" id="slot-action-btn-swap" onclick="window.setSlotActionTab('swap')" class="py-2 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition">
+                        <i class="fas fa-exchange-alt mr-1 text-blue-600"></i> പരസ്പരം മാറ്റുക
+                    </button>
+                    <button type="button" id="slot-action-btn-clear" onclick="window.setSlotActionTab('clear')" class="py-2 px-2 rounded-lg text-slate-600 hover:text-rose-700 transition">
+                        <i class="fas fa-trash-alt mr-1 text-rose-500"></i> ഒഴിച്ചിടുക
+                    </button>
+                </div>
+
+                <!-- TAB 1: ASSIGN / CHANGE SUBJECT -->
+                <div id="slot-tab-assign-pane" class="space-y-3">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">നൽകേണ്ട വിഷയം തിരഞ്ഞെടുക്കുക (Select Allotted Subject):</label>
+                        <select id="slot-select-subject" onchange="window.onManualSlotSubjectChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <!-- Populated with allotted subjects of this class -->
+                        </select>
+                    </div>
+
+                    <!-- Teacher Override (Optional) -->
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="font-bold text-slate-700">അധ്യാപകൻ (Assigned Faculty):</label>
+                            <span class="text-[10px] text-slate-500">ആവശ്യമെങ്കിൽ അധ്യാപകനെ മാറ്റാം</span>
+                        </div>
+                        <select id="slot-select-teacher" onchange="window.onManualSlotTeacherChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                            <!-- Populated dynamically -->
+                        </select>
+                    </div>
+                </div>
+
+                <!-- TAB 2: SWAP WITH ANOTHER PERIOD -->
+                <div id="slot-tab-swap-pane" class="space-y-3 hidden">
+                    <div>
+                        <label class="block font-bold text-slate-700 mb-1">മാറ്റേണ്ട മറ്റൊരു പിരീഡ് തിരഞ്ഞെടുക്കുക (Select Period to Swap with):</label>
+                        <select id="slot-select-swap-target" onchange="window.onManualSlotSwapTargetChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
+                            <!-- Populated with all other periods of this class -->
+                        </select>
+                    </div>
+                    <div id="slot-swap-preview-card" class="bg-blue-50/70 border border-blue-200 rounded-xl p-3 text-xs text-blue-950">
+                        <!-- Shows what is currently at target and how the swap will work -->
+                    </div>
+                </div>
+
+                <!-- TAB 3: CLEAR / MAKE FREE -->
+                <div id="slot-tab-clear-pane" class="space-y-3 hidden">
+                    <div class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-amber-900">
+                        <p class="font-bold mb-1"><i class="fas fa-info-circle text-amber-600 mr-1"></i> സ്ലോട്ട് ഒഴിച്ചിടൽ (Make Slot Free)</p>
+                        <p class="text-[11px] leading-relaxed">ഈ പിരീഡിലെ നിലവിലെ സബ്ജക്റ്റ് ഒഴിവാക്കി പൂർണ്ണമായും ഒഴിച്ചിടാൻ (Free Period) താഴെയുള്ള 'Confirm Clear' ബട്ടൺ അമർത്തുക.</p>
+                    </div>
+                </div>
+
+                <!-- REAL-TIME CONFLICTS & WARNING BOX -->
+                <div id="slot-conflicts-container" class="transition-all duration-200">
+                    <!-- Populated dynamically with green success or amber/red conflicts -->
+                </div>
+            </div>
+
+            <!-- Modal Footer -->
+            <div class="p-3 sm:p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-between gap-2 shrink-0">
+                <button type="button" onclick="window.closeManualSlotEditor()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold text-xs px-4 py-2.5 rounded-xl transition">
+                    Cancel
+                </button>
+                <div class="flex items-center gap-2">
+                    <button type="button" id="btn-slot-force-override" onclick="window.applyManualSlotEdit(true)" class="hidden bg-amber-600 hover:bg-amber-700 text-white font-bold text-xs px-4 py-2.5 rounded-xl shadow transition items-center gap-1.5">
+                        <i class="fas fa-exclamation-triangle"></i> Force Override & Apply
+                    </button>
+                    <button type="button" id="btn-slot-apply-clean" onclick="window.applyManualSlotEdit(false)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fas fa-check"></i> Save Slot
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- FIREBASE MODULE SCRIPT -->
     <script type="module">
         import { initializeApp } from "https://www.gstatic.com/firebasejs/11.6.1/firebase-app.js";
@@ -7177,9 +7299,13 @@
             const teacherBadgeColor = isWafy ? 'bg-white border border-emerald-300 text-emerald-950' : 'bg-white border border-purple-300 text-purple-950';
             const isArabic = /[\u0600-\u06FF]/.test(slot.subject);
             const isTeacherArabic = teacher ? /[\u0600-\u06FF]/.test(teacher.name) : false;
+            const manualBadge = slot.isManualOverride 
+                ? '<span class="inline-block bg-amber-400 text-slate-950 font-black text-[7px] px-1 py-0.2 rounded shadow-2xs mb-0.5 tracking-tight"><i class="fas fa-edit text-[6px]"></i> Manual</span>' 
+                : '';
 
             return `
                 <div class="flex flex-col items-center justify-center text-center w-full h-full min-h-[46px] gap-0.5">
+                    ${manualBadge}
                     <div class="subject-title font-black text-slate-950 text-center leading-snug ${isArabic ? 'text-[12.5px] arabic-subject' : 'text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
                         ${slot.subject}
                     </div>
@@ -7403,12 +7529,12 @@
 
                     if (slot) {
                         html += `
-                            <td class="border border-slate-200 p-1.5 period-cell ${bg} text-center align-middle">
+                            <td class="border border-slate-200 p-1.5 period-cell ${bg} text-center align-middle cursor-pointer hover:ring-2 hover:ring-emerald-500 hover:shadow-md transition" onclick="window.openManualSlotEditor(${d}, ${p}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് ഈ പിരീഡിൽ മാറ്റം വരുത്തുക (Edit / Swap Slot)">
                                 ${getTimetableCellHtml(slot, isWafy)}
                             </td>
                         `;
                     } else {
-                        html += `<td class="border border-slate-200 p-1.5 text-slate-400 italic text-[10px] text-center align-middle">${getTimetableCellHtml(null, isWafy)}</td>`;
+                        html += `<td class="border border-slate-200 p-1.5 text-slate-400 italic text-[10px] text-center align-middle cursor-pointer hover:bg-emerald-50/80 hover:ring-2 hover:ring-emerald-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${p}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് പുതിയ വിഷയം നൽകുക (Assign Subject to Free Period)">${getTimetableCellHtml(null, isWafy)}</td>`;
                     }
                 }
                 html += `</tr>`;
@@ -7570,13 +7696,13 @@
 
                             if (slot) {
                                 html += `
-                                    <td class="border border-slate-300 p-1.5 period-cell ${cellBg} text-center align-middle">
+                                    <td class="border border-slate-300 p-1.5 period-cell ${cellBg} text-center align-middle cursor-pointer hover:ring-2 hover:ring-emerald-500 hover:shadow-md transition" onclick="window.openManualSlotEditor(${d}, ${p}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് ഈ പിരീഡിൽ മാറ്റം വരുത്തുക (Edit / Swap Slot)">
                                         ${getTimetableCellHtml(slot, isWafy)}
                                     </td>
                                 `;
                             } else {
                                 html += `
-                                    <td class="border border-slate-300 p-1.5 text-slate-400 text-[10px] text-center align-middle bg-slate-50/30">
+                                    <td class="border border-slate-300 p-1.5 text-slate-400 text-[10px] text-center align-middle bg-slate-50/30 cursor-pointer hover:bg-emerald-50/80 hover:ring-2 hover:ring-emerald-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${p}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് പുതിയ വിഷയം നൽകുക (Assign Subject to Free Period)">
                                         ${getTimetableCellHtml(null, isWafy)}
                                     </td>
                                 `;
@@ -7614,6 +7740,596 @@
             });
 
             container.innerHTML = html;
+        }
+
+        // =============================================================
+        // MANUAL TIMETABLE SLOT EDITOR & REAL-TIME ALGORITHM VALIDATOR
+        // =============================================================
+        let activeManualSlotState = null;
+
+        function openManualSlotEditor(dayIndex, periodIndex, className) {
+            if (!appState.timetable || !appState.timetable[dayIndex] || !appState.timetable[dayIndex][periodIndex]) {
+                showAlert("ശ്രദ്ധിക്കുക", "ടൈം ടേബിൾ ഇതുവരെ ജനറേറ്റ് ചെയ്തിട്ടില്ല. ആദ്യം 'Generate Timetable' ചെയ്യുക.");
+                return;
+            }
+
+            const currentSlot = appState.timetable[dayIndex][periodIndex][className] || null;
+            activeManualSlotState = {
+                day: dayIndex,
+                period: periodIndex,
+                className: className,
+                currentSlot: currentSlot,
+                actionTab: 'assign',
+                targetSubject: '',
+                targetTeacherId: '',
+                swapTarget: null
+            };
+
+            // 1. Populate Target Info Banner
+            const dayBadge = document.getElementById('slot-modal-day-badge');
+            const periodBadge = document.getElementById('slot-modal-period-badge');
+            const classNameEl = document.getElementById('slot-modal-class-name');
+            const timingEl = document.getElementById('slot-modal-timing');
+            const currentDisplay = document.getElementById('slot-modal-current-display');
+
+            if (dayBadge) dayBadge.textContent = dayNamesEn[dayIndex] || `Day ${dayIndex + 1}`;
+            if (periodBadge) periodBadge.textContent = `Period ${periodIndex + 1}`;
+            if (classNameEl) classNameEl.textContent = className;
+            if (timingEl) timingEl.textContent = (appState.periodTimings && appState.periodTimings[periodIndex]) ? appState.periodTimings[periodIndex] : '';
+
+            // 2. Populate Current Status Display
+            if (currentDisplay) {
+                if (currentSlot) {
+                    const t = appState.teachers.find(tch => tch.id === currentSlot.teacherId);
+                    const manualBadge = currentSlot.isManualOverride 
+                        ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded border border-amber-300 ml-1.5"><i class="fas fa-edit mr-0.5"></i> Manual</span>` 
+                        : '';
+                    currentDisplay.innerHTML = `
+                        <div class="flex items-center gap-2">
+                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                            <span class="font-black text-slate-900">${currentSlot.subject}</span>
+                            ${manualBadge}
+                        </div>
+                        <div class="text-right">
+                            <span class="font-bold text-slate-700">${t ? t.name : 'Unknown Faculty'}</span>
+                            <span class="text-[10px] text-slate-500 font-mono ml-1">(${t ? t.shortName : ''})</span>
+                        </div>
+                    `;
+                } else {
+                    currentDisplay.innerHTML = `
+                        <div class="flex items-center gap-2 text-slate-400 italic">
+                            <span class="w-2.5 h-2.5 rounded-full bg-slate-300"></span>
+                            <span>ഒഴിഞ്ഞ പിരീഡ് (Free Period - No Subject Assigned)</span>
+                        </div>
+                        <div class="text-[10px] text-slate-400 font-medium">സ്ലോട്ട് ഫ്രീയാണ്</div>
+                    `;
+                }
+            }
+
+            // 3. Populate Allotted Subjects for this class
+            const subjectSelect = document.getElementById('slot-select-subject');
+            if (subjectSelect) {
+                subjectSelect.innerHTML = '';
+                const classAllotments = appState.classes.filter(c => c.className === className);
+                let uniqueSubjects = [];
+                classAllotments.forEach(c => {
+                    if (!uniqueSubjects.find(s => s.subject === c.subject)) {
+                        uniqueSubjects.push({ subject: c.subject, teacherId: c.teacherId, hours: c.hours });
+                    }
+                });
+
+                if (uniqueSubjects.length === 0) {
+                    const allUnique = [...new Set(appState.classes.map(c => c.subject))];
+                    uniqueSubjects = allUnique.map(sb => {
+                        const found = appState.classes.find(c => c.subject === sb);
+                        return { subject: sb, teacherId: found ? found.teacherId : '', hours: found ? found.hours : 0 };
+                    });
+                }
+
+                if (currentSlot && currentSlot.subject && !uniqueSubjects.find(s => s.subject === currentSlot.subject)) {
+                    uniqueSubjects.unshift({ subject: currentSlot.subject, teacherId: currentSlot.teacherId, hours: 0 });
+                }
+
+                uniqueSubjects.forEach(s => {
+                    const opt = document.createElement('option');
+                    opt.value = s.subject;
+                    const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                    opt.textContent = `${s.subject} (${s.hours || 0} hrs/wk) — ${t ? t.shortName : ''}`;
+                    subjectSelect.appendChild(opt);
+                });
+
+                if (currentSlot && currentSlot.subject) {
+                    subjectSelect.value = currentSlot.subject;
+                }
+                activeManualSlotState.targetSubject = subjectSelect.value;
+            }
+
+            // 4. Populate Teachers
+            populateManualSlotTeacherSelect();
+
+            // 5. Populate Swap Target Options
+            populateManualSlotSwapTargets();
+
+            // 6. Set initial Tab to 'assign'
+            setSlotActionTab('assign');
+
+            // 7. Show Modal
+            const modal = document.getElementById('manual-slot-edit-modal');
+            if (modal) modal.classList.remove('hidden');
+        }
+
+        function populateManualSlotTeacherSelect() {
+            const teacherSelect = document.getElementById('slot-select-teacher');
+            if (!teacherSelect || !activeManualSlotState) return;
+
+            teacherSelect.innerHTML = '';
+            const matchedAllotment = appState.classes.find(c => 
+                c.className === activeManualSlotState.className && 
+                c.subject === activeManualSlotState.targetSubject
+            );
+
+            const defaultTeacherId = (activeManualSlotState.currentSlot && activeManualSlotState.currentSlot.subject === activeManualSlotState.targetSubject) 
+                ? activeManualSlotState.currentSlot.teacherId 
+                : (matchedAllotment ? matchedAllotment.teacherId : '');
+
+            appState.teachers.forEach(t => {
+                const opt = document.createElement('option');
+                opt.value = t.id;
+                opt.textContent = `${t.name} (${t.shortName}) [${t.college || 'Both'}]`;
+                if (t.id === defaultTeacherId) {
+                    opt.selected = true;
+                }
+                teacherSelect.appendChild(opt);
+            });
+
+            activeManualSlotState.targetTeacherId = teacherSelect.value;
+        }
+
+        function populateManualSlotSwapTargets() {
+            const swapSelect = document.getElementById('slot-select-swap-target');
+            if (!swapSelect || !activeManualSlotState) return;
+
+            swapSelect.innerHTML = '';
+            const days = parseInt(appState.settings ? appState.settings.workingDays : appState.days) || 6;
+            const periods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
+            const cls = activeManualSlotState.className;
+            let firstTarget = null;
+
+            for (let d = 0; d < days; d++) {
+                if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(cls, d)) continue;
+
+                for (let p = 0; p < periods; p++) {
+                    if (d === activeManualSlotState.day && p === activeManualSlotState.period) continue;
+
+                    const targetSlot = (appState.timetable[d] && appState.timetable[d][p]) ? appState.timetable[d][p][cls] : null;
+                    const opt = document.createElement('option');
+                    opt.value = `${d}_${p}`;
+                    
+                    if (targetSlot) {
+                        const t = appState.teachers.find(tch => tch.id === targetSlot.teacherId);
+                        opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: ${targetSlot.subject} (${t ? t.shortName : 'N/A'})`;
+                    } else {
+                        opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: [ഒഴിഞ്ഞ പിരീഡ് / Free Period]`;
+                    }
+
+                    if (!firstTarget) firstTarget = { day: d, period: p };
+                    swapSelect.appendChild(opt);
+                }
+            }
+
+            activeManualSlotState.swapTarget = firstTarget;
+            updateSwapPreviewCard();
+        }
+
+        function updateSwapPreviewCard() {
+            const previewCard = document.getElementById('slot-swap-preview-card');
+            const swapSelect = document.getElementById('slot-select-swap-target');
+            if (!previewCard || !swapSelect || !activeManualSlotState) return;
+
+            const val = swapSelect.value;
+            if (!val) return;
+            const [tDay, tPeriod] = val.split('_').map(Number);
+            activeManualSlotState.swapTarget = { day: tDay, period: tPeriod };
+
+            const cls = activeManualSlotState.className;
+            const currentSlot = activeManualSlotState.currentSlot;
+            const targetSlot = (appState.timetable[tDay] && appState.timetable[tDay][tPeriod]) ? appState.timetable[tDay][tPeriod][cls] : null;
+
+            const currentSubText = currentSlot ? currentSlot.subject : 'Free Period';
+            const targetSubText = targetSlot ? targetSlot.subject : 'Free Period';
+
+            previewCard.innerHTML = `
+                <div class="font-extrabold text-blue-900 mb-1 flex items-center gap-1.5">
+                    <i class="fas fa-random text-blue-600"></i> സ്വാപ്പ് ചെയ്യുമ്പോൾ സംഭവിക്കുന്നത് (Swap Outcome):
+                </div>
+                <div class="grid grid-cols-2 gap-2 mt-1.5 text-[11px]">
+                    <div class="bg-white p-2 rounded-lg border border-blue-200 shadow-2xs">
+                        <span class="text-[9px] font-bold text-slate-400 block uppercase">${dayNamesEn[activeManualSlotState.day]} P${activeManualSlotState.period + 1} ലേക്ക്:</span>
+                        <span class="font-bold text-slate-900">${targetSubText}</span>
+                    </div>
+                    <div class="bg-white p-2 rounded-lg border border-blue-200 shadow-2xs">
+                        <span class="text-[9px] font-bold text-slate-400 block uppercase">${dayNamesEn[tDay]} P${tPeriod + 1} ലേക്ക്:</span>
+                        <span class="font-bold text-slate-900">${currentSubText}</span>
+                    </div>
+                </div>
+            `;
+        }
+
+        function closeManualSlotEditor() {
+            const modal = document.getElementById('manual-slot-edit-modal');
+            if (modal) modal.classList.add('hidden');
+            activeManualSlotState = null;
+        }
+
+        function setSlotActionTab(tab) {
+            if (!activeManualSlotState) return;
+            activeManualSlotState.actionTab = tab;
+
+            const btnAssign = document.getElementById('slot-action-btn-assign');
+            const btnSwap = document.getElementById('slot-action-btn-swap');
+            const btnClear = document.getElementById('slot-action-btn-clear');
+
+            const paneAssign = document.getElementById('slot-tab-assign-pane');
+            const paneSwap = document.getElementById('slot-tab-swap-pane');
+            const paneClear = document.getElementById('slot-tab-clear-pane');
+
+            [btnAssign, btnSwap, btnClear].forEach(b => {
+                if (b) {
+                    b.className = 'py-2 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition';
+                }
+            });
+
+            if (paneAssign) paneAssign.classList.add('hidden');
+            if (paneSwap) paneSwap.classList.add('hidden');
+            if (paneClear) paneClear.classList.add('hidden');
+
+            if (tab === 'assign') {
+                if (btnAssign) btnAssign.className = 'py-2 px-2 rounded-lg bg-white text-emerald-800 shadow-sm transition';
+                if (paneAssign) paneAssign.classList.remove('hidden');
+            } else if (tab === 'swap') {
+                if (btnSwap) btnSwap.className = 'py-2 px-2 rounded-lg bg-white text-blue-800 shadow-sm transition';
+                if (paneSwap) paneSwap.classList.remove('hidden');
+                updateSwapPreviewCard();
+            } else if (tab === 'clear') {
+                if (btnClear) btnClear.className = 'py-2 px-2 rounded-lg bg-white text-rose-800 shadow-sm transition';
+                if (paneClear) paneClear.classList.remove('hidden');
+            }
+
+            validateAndRenderSlotConflicts();
+        }
+
+        function onManualSlotSubjectChanged() {
+            const subjectSelect = document.getElementById('slot-select-subject');
+            if (!subjectSelect || !activeManualSlotState) return;
+            activeManualSlotState.targetSubject = subjectSelect.value;
+            populateManualSlotTeacherSelect();
+            validateAndRenderSlotConflicts();
+        }
+
+        function onManualSlotTeacherChanged() {
+            const teacherSelect = document.getElementById('slot-select-teacher');
+            if (!teacherSelect || !activeManualSlotState) return;
+            activeManualSlotState.targetTeacherId = teacherSelect.value;
+            validateAndRenderSlotConflicts();
+        }
+
+        function onManualSlotSwapTargetChanged() {
+            updateSwapPreviewCard();
+            validateAndRenderSlotConflicts();
+        }
+
+        // -------------------------------------------------------------
+        // CONSTRAINT CHECKER: Checks proposed placement against all rules
+        // -------------------------------------------------------------
+        function checkSlotPlacementConflicts(day, period, className, proposedSubject, proposedTeacherId, excludeCoords = []) {
+            const conflicts = [];
+            if (!proposedSubject || !proposedTeacherId) return conflicts;
+
+            const teacher = appState.teachers.find(t => t.id === proposedTeacherId);
+            const teacherName = teacher ? teacher.name : 'Unknown Faculty';
+            const teacherShort = teacher ? teacher.shortName : '';
+            const dayName = dayNamesEn[day] || `Day ${day + 1}`;
+
+            // Rule 1: Teacher Clash (Faculty Double Booking in another class)
+            if (appState.timetable && appState.timetable[day] && appState.timetable[day][period]) {
+                const currentPeriodClasses = appState.timetable[day][period];
+                Object.keys(currentPeriodClasses).forEach(otherClass => {
+                    const isExcluded = (otherClass === className) || excludeCoords.some(c => c.day === day && c.period === period && c.className === otherClass);
+                    if (isExcluded) return;
+
+                    const otherSlot = currentPeriodClasses[otherClass];
+                    if (!otherSlot) return;
+
+                    let hasClash = false;
+                    if (otherSlot.teacherId === proposedTeacherId || otherSlot.secondaryTeacherId === proposedTeacherId) {
+                        hasClash = true;
+                    } else if (otherSlot.splitSlots && otherSlot.splitSlots.some(s => s.teacherId === proposedTeacherId)) {
+                        hasClash = true;
+                    }
+
+                    if (hasClash) {
+                        conflicts.push({
+                            type: 'danger',
+                            icon: 'fa-user-times',
+                            title: `അധ്യാപക ക്ലാഷ് (Faculty Conflict): ${teacherShort || teacherName}`,
+                            description: `<b>${teacherName}</b> ഈ സമയത്ത് (Day: ${dayName}, Period ${period + 1}) <b>${otherClass}</b> ക്ലാസിൽ <i>'${otherSlot.subject}'</i> പഠിപ്പിക്കുന്നുണ്ട്!`
+                        });
+                    }
+                });
+            }
+
+            // Rule 2: Faculty Leave / Unavailability on this Day & Period
+            if (teacher && teacher.unavailable && Array.isArray(teacher.unavailable)) {
+                const isLeave = teacher.unavailable.some(un => un.day === day && un.period === period);
+                if (isLeave) {
+                    conflicts.push({
+                        type: 'danger',
+                        icon: 'fa-calendar-times',
+                        title: `അധ്യാപകൻ അവധിയിലാണ് (Faculty Unavailable): ${teacherShort || teacherName}`,
+                        description: `<b>${teacherName}</b> ${dayName} Period ${period + 1}-ൽ അവധി / ലഭ്യമല്ല (Marked Unavailable) എന്ന് രേഖപ്പെടുത്തിയിരിക്കുന്നു.`
+                    });
+                }
+            }
+
+            // Rule 3: Dual-Campus Travel Buffer (Wafy Boys Campus vs Wafiyya Girls Campus)
+            const isWafyClass = (className.toLowerCase().includes('wafy') && !className.toLowerCase().includes('wafiyya'));
+            const maxPeriods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
+            const adjacentPeriods = [period - 1, period + 1];
+
+            adjacentPeriods.forEach(adjP => {
+                if (adjP < 0 || adjP >= maxPeriods) return;
+                if (!appState.timetable || !appState.timetable[day] || !appState.timetable[day][adjP]) return;
+
+                const adjClasses = appState.timetable[day][adjP];
+                Object.keys(adjClasses).forEach(otherClass => {
+                    const otherSlot = adjClasses[otherClass];
+                    if (!otherSlot) return;
+
+                    let teachesAdj = (otherSlot.teacherId === proposedTeacherId || otherSlot.secondaryTeacherId === proposedTeacherId);
+                    if (!teachesAdj && otherSlot.splitSlots) {
+                        teachesAdj = otherSlot.splitSlots.some(s => s.teacherId === proposedTeacherId);
+                    }
+
+                    if (teachesAdj) {
+                        const isOtherWafy = (otherClass.toLowerCase().includes('wafy') && !otherClass.toLowerCase().includes('wafiyya'));
+                        if (isWafyClass !== isOtherWafy) {
+                            const campus1 = isWafyClass ? 'KKHM Wafy' : 'Al-Gaith Wafiyya';
+                            const campus2 = isOtherWafy ? 'KKHM Wafy' : 'Al-Gaith Wafiyya';
+                            conflicts.push({
+                                type: 'warning',
+                                icon: 'fa-shuttle-van',
+                                title: `ക്യാമ്പസ് യാത്ര സമയം (Travel Buffer Conflict): ${teacherShort || teacherName}`,
+                                description: `അധ്യാപകൻ അടുത്തടുത്ത പിരീഡുകളിൽ രണ്ട് വ്യത്യസ്ത ക്യാമ്പസുകളിലായി വരുന്നു (Period ${adjP + 1}: <b>${otherClass}</b> [${campus2}] & Period ${period + 1}: <b>${className}</b> [${campus1}]). യാത്ര ചെയ്യാൻ ഇടവേള മതിയാവില്ല.`
+                            });
+                        }
+                    }
+                });
+            });
+
+            // Rule 4: Daily Subject Limit for Class
+            let dailySubjectCount = 0;
+            for (let p = 0; p < maxPeriods; p++) {
+                if (p === period) continue;
+                const s = (appState.timetable && appState.timetable[day] && appState.timetable[day][p]) ? appState.timetable[day][p][className] : null;
+                if (s && s.subject === proposedSubject) {
+                    dailySubjectCount++;
+                }
+            }
+            if (dailySubjectCount >= 2) {
+                conflicts.push({
+                    type: 'warning',
+                    icon: 'fa-layer-group',
+                    title: `ദിവസേനയുള്ള സബ്ജക്റ്റ് പരിധി (Daily Subject Frequency Limit)`,
+                    description: `<b>${className}</b> ന് ${dayName} ൽ <i>'${proposedSubject}'</i> ഇതിനകം ${dailySubjectCount} തവണ ഷെഡ്യൂൾ ചെയ്തിട്ടുണ്ട്. സാധാരണയായി ഒരു ദിവസം 1 അല്ലെങ്കിൽ 2 പിരീഡാണ് അനുവദനീയം.`
+                });
+            }
+
+            return conflicts;
+        }
+
+        // -------------------------------------------------------------
+        // VALIDATE AND RENDER CONFLICTS IN MODAL
+        // -------------------------------------------------------------
+        function validateAndRenderSlotConflicts() {
+            const container = document.getElementById('slot-conflicts-container');
+            const btnOverride = document.getElementById('btn-slot-force-override');
+            const btnClean = document.getElementById('btn-slot-apply-clean');
+            if (!container || !activeManualSlotState) return;
+
+            let allConflicts = [];
+
+            if (activeManualSlotState.actionTab === 'clear') {
+                container.innerHTML = `
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 text-slate-700 flex items-center gap-2.5">
+                        <i class="fas fa-info-circle text-slate-500 text-base shrink-0"></i>
+                        <div>
+                            <div class="font-bold text-xs">സ്ലോട്ട് ഒഴിവാക്കൽ (Clear Action)</div>
+                            <div class="text-[11px] text-slate-500">ഈ പിരീഡ് ഒഴിഞ്ഞ സ്ലോട്ട് (Free Period) ആക്കി മാറ്റപ്പെടും. മറ്റു ക്ലാസുകളെ ഇത് ബാധിക്കില്ല.</div>
+                        </div>
+                    </div>
+                `;
+                if (btnOverride) btnOverride.classList.add('hidden');
+                if (btnClean) {
+                    btnClean.classList.remove('hidden');
+                    btnClean.className = 'bg-rose-600 hover:bg-rose-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5';
+                    btnClean.innerHTML = `<i class="fas fa-trash-alt"></i> Confirm Clear`;
+                }
+                return;
+            }
+
+            if (activeManualSlotState.actionTab === 'assign') {
+                const sub = activeManualSlotState.targetSubject;
+                const tch = activeManualSlotState.targetTeacherId;
+                allConflicts = checkSlotPlacementConflicts(
+                    activeManualSlotState.day, 
+                    activeManualSlotState.period, 
+                    activeManualSlotState.className, 
+                    sub, 
+                    tch
+                );
+            } else if (activeManualSlotState.actionTab === 'swap') {
+                if (activeManualSlotState.swapTarget) {
+                    const { day: tDay, period: tPeriod } = activeManualSlotState.swapTarget;
+                    const cls = activeManualSlotState.className;
+                    const currentSlot = activeManualSlotState.currentSlot;
+                    const targetSlot = (appState.timetable[tDay] && appState.timetable[tDay][tPeriod]) ? appState.timetable[tDay][tPeriod][cls] : null;
+
+                    const excludeList = [
+                        { day: activeManualSlotState.day, period: activeManualSlotState.period, className: cls },
+                        { day: tDay, period: tPeriod, className: cls }
+                    ];
+
+                    if (currentSlot) {
+                        const cConflicts = checkSlotPlacementConflicts(tDay, tPeriod, cls, currentSlot.subject, currentSlot.teacherId, excludeList);
+                        cConflicts.forEach(c => {
+                            c.title = `[Swap -> P${tPeriod + 1}] ` + c.title;
+                            allConflicts.push(c);
+                        });
+                    }
+
+                    if (targetSlot) {
+                        const tConflicts = checkSlotPlacementConflicts(activeManualSlotState.day, activeManualSlotState.period, cls, targetSlot.subject, targetSlot.teacherId, excludeList);
+                        tConflicts.forEach(c => {
+                            c.title = `[Swap -> P${activeManualSlotState.period + 1}] ` + c.title;
+                            allConflicts.push(c);
+                        });
+                    }
+                }
+            }
+
+            if (allConflicts.length === 0) {
+                container.innerHTML = `
+                    <div class="bg-emerald-50 border border-emerald-300 rounded-xl p-3 text-emerald-900 flex items-center gap-2.5">
+                        <i class="fas fa-check-circle text-emerald-600 text-lg shrink-0"></i>
+                        <div>
+                            <div class="font-black text-xs">നിയമ ലംഘനങ്ങളില്ല (Algorithm Compliant)</div>
+                            <div class="text-[11px] text-emerald-700 leading-snug">അധ്യാപക ക്ലാഷുകളോ ലീവോ ഇല്ലാതെ ഈ മാറ്റം അൽഗോരിതത്തോട് പൂർണ്ണമായും പൊരുത്തപ്പെടുന്നു. സുരക്ഷിതമായി സേവ് ചെയ്യാം.</div>
+                        </div>
+                    </div>
+                `;
+                if (btnOverride) btnOverride.classList.add('hidden');
+                if (btnClean) {
+                    btnClean.classList.remove('hidden');
+                    btnClean.className = 'bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5';
+                    btnClean.innerHTML = `<i class="fas fa-check"></i> Save Slot`;
+                }
+            } else {
+                const hasDanger = allConflicts.some(c => c.type === 'danger');
+                const boxBorder = hasDanger ? 'border-rose-300 bg-rose-50/80 text-rose-950' : 'border-amber-300 bg-amber-50/80 text-amber-950';
+                const headerColor = hasDanger ? 'text-rose-700' : 'text-amber-700';
+
+                let listHtml = allConflicts.map(c => `
+                    <div class="p-2 rounded-lg bg-white/90 border ${c.type === 'danger' ? 'border-rose-200' : 'border-amber-200'} shadow-2xs">
+                        <div class="flex items-center gap-1.5 font-black text-[11px] ${c.type === 'danger' ? 'text-rose-800' : 'text-amber-800'}">
+                            <i class="fas ${c.icon} text-xs"></i>
+                            <span>${c.title}</span>
+                        </div>
+                        <div class="text-[10.5px] mt-0.5 leading-snug text-slate-700">${c.description}</div>
+                    </div>
+                `).join('');
+
+                container.innerHTML = `
+                    <div class="border ${boxBorder} rounded-xl p-3 space-y-2">
+                        <div class="flex items-center gap-2">
+                            <i class="fas fa-exclamation-triangle ${headerColor} text-base shrink-0 animate-bounce"></i>
+                            <div>
+                                <div class="font-extrabold text-xs ${headerColor}">അൽഗോരിതം വാണിംഗ് (${allConflicts.length} വൈരുദ്ധ്യങ്ങൾ കണ്ടെത്തി)</div>
+                                <div class="text-[10px] text-slate-600">ഈ മാറ്റം ടൈം ടേബിൾ നിയമങ്ങൾക്ക് വിരുദ്ധമാണ്. എന്നിരുന്നാലും നിർബന്ധമാണെങ്കിൽ Override ചെയ്യാം:</div>
+                            </div>
+                        </div>
+                        <div class="space-y-1.5 max-h-36 overflow-y-auto pr-1">
+                            ${listHtml}
+                        </div>
+                    </div>
+                `;
+
+                if (btnOverride) {
+                    btnOverride.classList.remove('hidden');
+                    btnOverride.classList.add('flex');
+                }
+                if (btnClean) {
+                    btnClean.classList.add('hidden');
+                }
+            }
+        }
+
+        // -------------------------------------------------------------
+        // APPLY MANUAL SLOT EDIT (SAVE / SWAP / CLEAR)
+        // -------------------------------------------------------------
+        function applyManualSlotEdit(isOverride = false) {
+            if (!activeManualSlotState || !appState.timetable) return;
+
+            const { day, period, className, actionTab } = activeManualSlotState;
+            const currentTimetable = appState.timetable;
+
+            if (actionTab === 'clear') {
+                if (currentTimetable[day] && currentTimetable[day][period]) {
+                    currentTimetable[day][period][className] = null;
+                }
+                showAlert("വിജയകരം", `${dayNamesEn[day]} Period ${period + 1} (${className}) ഒഴിഞ്ഞ സ്ലോട്ട് (Free Period) ആക്കി മാറ്റി.`);
+            } else if (actionTab === 'assign') {
+                const sub = activeManualSlotState.targetSubject;
+                const tch = activeManualSlotState.targetTeacherId;
+                if (!sub || !tch) {
+                    showAlert("ശ്രദ്ധിക്കുക", "ദയവായി സബ്ജക്റ്റും അധ്യാപകനെയും തിരഞ്ഞെടുക്കുക.");
+                    return;
+                }
+
+                const isWafy = (className.toLowerCase().includes('wafy') && !className.toLowerCase().includes('wafiyya'));
+                const collegeName = isWafy 
+                    ? (appState.institutions[0] || "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )")
+                    : (appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)");
+
+                const newSlot = {
+                    id: 'manual_' + Date.now(),
+                    allocationType: 'standard',
+                    college: collegeName,
+                    className: className,
+                    subject: sub,
+                    teacherId: tch,
+                    isManualOverride: true,
+                    modifiedAt: new Date().toISOString()
+                };
+
+                if (!currentTimetable[day]) currentTimetable[day] = {};
+                if (!currentTimetable[day][period]) currentTimetable[day][period] = {};
+                currentTimetable[day][period][className] = newSlot;
+
+                showAlert(
+                    isOverride ? "ഓവർറൈഡ് ചെയ്തു" : "വിജയകരം", 
+                    `${className} ന് ${dayNamesEn[day]} Period ${period + 1}-ൽ <b>${sub}</b> വിജയകരമായി സെറ്റ് ചെയ്തു.${isOverride ? ' (Admin Force Override)' : ''}`
+                );
+            } else if (actionTab === 'swap') {
+                if (!activeManualSlotState.swapTarget) return;
+                const { day: tDay, period: tPeriod } = activeManualSlotState.swapTarget;
+
+                const slotA = (currentTimetable[day] && currentTimetable[day][period]) ? currentTimetable[day][period][className] : null;
+                const slotB = (currentTimetable[tDay] && currentTimetable[tDay][tPeriod]) ? currentTimetable[tDay][tPeriod][className] : null;
+
+                if (slotA) slotA.isManualOverride = true;
+                if (slotB) slotB.isManualOverride = true;
+
+                if (!currentTimetable[day]) currentTimetable[day] = {};
+                if (!currentTimetable[day][period]) currentTimetable[day][period] = {};
+                currentTimetable[day][period][className] = slotB;
+
+                if (!currentTimetable[tDay]) currentTimetable[tDay] = {};
+                if (!currentTimetable[tDay][tPeriod]) currentTimetable[tDay][tPeriod] = {};
+                currentTimetable[tDay][tPeriod][className] = slotA;
+
+                showAlert(
+                    "സ്വാപ്പ് വിജയകരം", 
+                    `${className} ലെ ${dayNamesEn[day]} P${period + 1} ഉം ${dayNamesEn[tDay]} P${tPeriod + 1} ഉം പരസ്പരം വിജയകരമായി മാറ്റി.`
+                );
+            }
+
+            saveStateToLocal();
+            if (typeof syncAppStateToCloud === 'function') {
+                syncAppStateToCloud().catch(e => console.warn("Cloud sync error after manual edit:", e));
+            }
+            closeManualSlotEditor();
+            renderTimetable();
+            showToast("Timetable Updated", "ടൈം ടേബിളിൽ മാറ്റം വിജയകരമായി സേവ് ചെയ്തിരിക്കുന്നു.");
         }
 
         // PDF Download Engine (Ultra-HD A3 Master / A4 PDF with Zero Clipping & Perfect Arabic Typography)
@@ -10550,6 +11266,15 @@
         window.saveToCloud = saveToCloud;
         window.resetYearData = resetYearData;
         window.closeAlert = closeAlert;
+
+        // Manual Timetable Slot Editor Window Handlers
+        window.openManualSlotEditor = openManualSlotEditor;
+        window.closeManualSlotEditor = closeManualSlotEditor;
+        window.setSlotActionTab = setSlotActionTab;
+        window.onManualSlotSubjectChanged = onManualSlotSubjectChanged;
+        window.onManualSlotTeacherChanged = onManualSlotTeacherChanged;
+        window.onManualSlotSwapTargetChanged = onManualSlotSwapTargetChanged;
+        window.applyManualSlotEdit = applyManualSlotEdit;
 
         // Cloud Database & Sync Window Handlers
         window.openDatabaseSyncModal = openDatabaseSyncModal;
