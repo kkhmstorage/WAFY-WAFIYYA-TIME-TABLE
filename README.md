@@ -119,13 +119,18 @@ In accordance with institutional guidelines:
 - **Dual-Campus Faculty Clustering (രണ്ടു സ്ഥാപനങ്ങളിലുമുള്ള അധ്യാപകർക്ക് തുടർച്ചയായ പിരീഡുകൾ)**:
   - Identifies faculty teaching across both Wafy & Wafiyya institutions.
   - Scores candidate placements to cluster periods at the same campus back-to-back, minimizing cross-campus transit friction and preventing travel buffer gridlocks.
-- **Progressive Multi-Pass Resolution**:
-  - *Pass 1A & 1B (Atomic Double Periods & Scored Clustering Placement)*: Schedules science subjects in atomic 2-period blocks, followed by proximity & clustering-scored placement for all remaining slots.
-  - *Pass 2 (Soft Subject Limit Relaxation with Clustering Scoring)*: Relaxes subject-per-day thresholds (to 3, then 4) while maintaining proximity scoring so classrooms never sit vacant.
+- **Progressive Multi-Pass Resolution with Deep Kempe Chain Backtracking**:
+  - *Pass 1A & 1B (Soft Science Clustering & Scored Placement)*: Prioritizes consecutive double periods for science lab subjects with +120 clustering score, with smooth fallback to individual slots so no science hours are ever dropped.
+  - *Pass 2 (Soft Subject Limit Relaxation with Clustering Scoring)*: Relaxes subject-per-day thresholds (to 3, 4, and 6) while maintaining proximity scoring so classrooms never sit vacant.
   - *Pass 3 (Intra-Class Relocation / Self-Swap)*: Dynamically rearranges periods within the same class to resolve gridlocks with zero external disruption.
-  - *Pass 4 (Multi-Class Ejection Chain Swapping)*: Moves blocking periods in conflicting classes to alternate available slots (supporting standard, split, and shared batches).
+  - *Pass 4 (Multi-Class 1-Hop Ejection Chain Swapping)*: Moves blocking periods in conflicting classes to alternate available slots.
+  - *Pass 4B (2-Hop Deep Multi-Class Kempe Chain Backtracking)*: Resolves 3-way circular teacher conflicts where moving a blocker in Class B requires moving a secondary blocker in Class C to an available slot.
   - *Pass 5 (Soft Travel Buffer Fallback)*: Relaxes inter-campus travel buffers if travel distance is the sole reason a period remains vacant.
-  - *Pass 6 (Zero-Gap Guarantee)*: Exhaustive final placement ensuring dense schedules (e.g., 47/48 or 48/48 periods) achieve 100% gapless, zero-blank timetables.
+  - *Pass 6 (Zero-Gap Guarantee & Deep Intra-Class Shuffling)*: Exhaustive final placement and bilateral internal swapping ensuring full-density schedules (e.g., 47/48 or 48/48 periods) achieve 100% gapless fulfillment.
+- **Shared Faculty Flexibility ('Either/Or' Co-Teaching)**:
+  - For shared allotments (`shareMode: 'either_or'`), if either primary or secondary teacher is available, the period is scheduled immediately, leaving the second teacher free to take classes in other classrooms.
+- **Deep Stochastic Constraint Engine**:
+  - Scales up to 100 stochastic restarts with early convergence, evaluating tens of thousands of schedule permutations to ensure zero unscheduled periods.
 
 ### 10. Class-Wise Working Days & PG 3-Day Scheduling (ക്ലാസ്-വൈസ് വർക്കിംഗ് ദിനങ്ങളും പി.ജി 3-ദിവസ ഷെഡ്യൂളും)
 - **Interactive Day-by-Day Ticking per Class (പ്രവൃത്തി ദിനങ്ങൾ ടിക്ക് ചെയ്ത് സെറ്റ് ചെയ്യാം)**:

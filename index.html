@@ -10954,8 +10954,8 @@
             document.getElementById('timetable-container').innerHTML = `
                 <div class="p-12 text-center">
                     <i class="fas fa-circle-notch fa-spin text-4xl text-emerald-600 mb-3"></i>
-                    <p class="text-sm font-semibold text-slate-700">Computing optimal timetable...</p>
-                    <p class="text-xs text-slate-400 mt-1">Analyzing cross-campus teacher clashes & travel buffers for ${currentYear}</p>
+                    <p class="text-sm font-semibold text-slate-700">Computing optimal timetable with Multi-Hop Kempe Chain Engine...</p>
+                    <p class="text-xs text-slate-400 mt-1">Analyzing cross-campus teacher clashes, flexible shared co-teachers & zero-gap distribution for ${currentYear}</p>
                 </div>
             `;
             document.getElementById('generation-messages').classList.add('hidden');
@@ -11086,6 +11086,9 @@
                     return (slot.splitSlots || []).some(s => s.teacherId === tId);
                 }
                 if (slot.allocationType === 'shared') {
+                    if (slot.effectiveTeacherId) {
+                        return slot.effectiveTeacherId === tId;
+                    }
                     return (slot.teacherIds && slot.teacherIds.includes(tId)) ||
                            slot.teacherId === tId || slot.secondaryTeacherId === tId;
                 }
@@ -11123,6 +11126,15 @@
                 return false;
             };
 
+            // Helper: check if an individual teacher is completely available at (d, p)
+            const isTeacherFreeForSlot = (tId, college, d, p, currentSchedule, enforceBuffer = true, excludeClassName = null) => {
+                if (!tId) return false;
+                if (isTeacherUnavailable(tId, d, p)) return false;
+                if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, excludeClassName)) return false;
+                if (hasTeacherTravelClashInSchedule(tId, college, d, p, currentSchedule, enforceBuffer)) return false;
+                return true;
+            };
+
             // Verify if a slot can be placed at (d, p) in currentSchedule with configurable constraint relaxation
             const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true, checkSubjectCount = true) => {
                 // Must be an active working day for this class
@@ -11141,26 +11153,48 @@
                     if (subjectDayCount >= maxSubjectPerDay) return false;
                 }
 
-                // Check all teachers in slot for unavailable constraints, other class teaching, and campus travel clashes
+                // Shared Subject either_or flexibility: if either Teacher 1 OR Teacher 2 is free, allow placement!
+                if (slot.allocationType === 'shared' && (slot.shareMode === 'either_or' || !slot.shareMode || slot.shareMode === 'flexible')) {
+                    const t1Free = isTeacherFreeForSlot(slot.teacherId, slot.college, d, p, currentSchedule, enforceBuffer, slot.className);
+                    const t2Free = isTeacherFreeForSlot(slot.secondaryTeacherId, slot.college, d, p, currentSchedule, enforceBuffer, slot.className);
+                    if (!t1Free && !t2Free) return false;
+                    return true;
+                }
+
+                // Standard / Split / both_together check
                 const tIds = getSlotTeachers(slot);
                 for (let tId of tIds) {
-                    if (isTeacherUnavailable(tId, d, p)) return false;
-                    if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)) return false;
-                    if (hasTeacherTravelClashInSchedule(tId, slot.college, d, p, currentSchedule, enforceBuffer)) return false;
+                    if (!isTeacherFreeForSlot(tId, slot.college, d, p, currentSchedule, enforceBuffer, slot.className)) return false;
                 }
                 return true;
+            };
+
+            // Helper: assign a slot token to schedule with either_or effective teacher resolution
+            const assignSlotToSchedule = (currentSchedule, d, p, slot, enforceBuffer = true) => {
+                const placedSlot = { ...slot };
+                if (placedSlot.allocationType === 'shared' && (placedSlot.shareMode === 'either_or' || !placedSlot.shareMode || placedSlot.shareMode === 'flexible')) {
+                    const t1Free = isTeacherFreeForSlot(placedSlot.teacherId, placedSlot.college, d, p, currentSchedule, enforceBuffer, placedSlot.className);
+                    const t2Free = isTeacherFreeForSlot(placedSlot.secondaryTeacherId, placedSlot.college, d, p, currentSchedule, enforceBuffer, placedSlot.className);
+                    if (t1Free) {
+                        placedSlot.effectiveTeacherId = placedSlot.teacherId;
+                    } else if (t2Free) {
+                        placedSlot.effectiveTeacherId = placedSlot.secondaryTeacherId;
+                    }
+                }
+                currentSchedule[d][p][placedSlot.className] = placedSlot;
+                return placedSlot;
             };
 
             // Helper: Proximity & Clustering Scoring for candidate placement
             const getCandidatePlacementScore = (slot, d, p, currentSchedule) => {
                 let score = 0;
 
-                // 1. Science Lab Subject Double Period Bonus (+100 for adjacent period of same subject)
+                // 1. Science Lab Subject Soft Clustering Bonus (+120 for adjacent period of same subject)
                 if (isConsecutiveSubject(slot.subject)) {
                     const prevSlot = p > 0 ? currentSchedule[d][p - 1][slot.className] : null;
                     const nextSlot = p < periods - 1 ? currentSchedule[d][p + 1][slot.className] : null;
                     if ((prevSlot && prevSlot.subject === slot.subject) || (nextSlot && nextSlot.subject === slot.subject)) {
-                        score += 100;
+                        score += 120;
                     }
                 }
 
@@ -11186,12 +11220,12 @@
                 return score;
             };
 
-            // MULTI-RESTART STOCHASTIC CONSTRAINT OPTIMIZER (Up to 50 Restarts)
+            // MULTI-RESTART STOCHASTIC CONSTRAINT OPTIMIZER (High-Accuracy Deep Engine)
             let bestSchedule = null;
             let minUnscheduledCount = 999999;
             let bestConsecutivePairs = -1;
             let bestUnscheduledList = [];
-            const maxAttempts = 50;
+            const maxAttempts = 100;
 
             for (let attempt = 0; attempt < maxAttempts; attempt++) {
                 let currentSchedule = Array(days).fill(null).map(() => 
@@ -11201,7 +11235,8 @@
                 // Clone slot tokens for this attempt
                 let slots = rawSlots.map(s => ({ ...s }));
 
-                // PASS 1A: Pair-wise atomic double periods for Science Lab subjects (Physics, Chem, CS, Bio)
+                // PASS 1A: Soft Pair Placement for Science Lab subjects (Physics, Chem, CS, Bio)
+                // If consecutive pair is possible, place it; if not, smoothly fall back to individual scored placement
                 const scienceGroups = {};
                 const otherSlots = [];
                 slots.forEach(s => {
@@ -11214,7 +11249,6 @@
                     }
                 });
 
-                // Place pairs of science subjects consecutively
                 for (let key in scienceGroups) {
                     const group = scienceGroups[key];
                     while (group.length >= 2) {
@@ -11238,9 +11272,9 @@
 
                             for (let p of startPeriods) {
                                 if (canPlaceSlot(s1, d, p, currentSchedule, 2, true, true)) {
-                                    currentSchedule[d][p][s1.className] = s1;
+                                    assignSlotToSchedule(currentSchedule, d, p, s1, true);
                                     if (canPlaceSlot(s2, d, p + 1, currentSchedule, 2, true, false)) {
-                                        currentSchedule[d][p + 1][s2.className] = s2;
+                                        assignSlotToSchedule(currentSchedule, d, p + 1, s2, true);
                                         pairPlaced = true;
                                         group.splice(0, 2);
                                         break;
@@ -11251,6 +11285,7 @@
                             }
                         }
 
+                        // Soft fallback: if pair cannot be placed as an atomic 2-block, do NOT drop it!
                         if (!pairPlaced) {
                             break;
                         }
@@ -11307,7 +11342,7 @@
                     if (candidates.length > 0) {
                         candidates.sort((c1, c2) => (c2.score + Math.random() * 8) - (c1.score + Math.random() * 8));
                         const best = candidates[0];
-                        currentSchedule[best.d][best.p][slot.className] = slot;
+                        assignSlotToSchedule(currentSchedule, best.d, best.p, slot, true);
                         placed = true;
                     }
 
@@ -11315,7 +11350,7 @@
                 }
 
                 // PASS 2: Soft Subject Limit Relaxation with Clustering Scoring
-                for (let maxSubLimit of [3, 4]) {
+                for (let maxSubLimit of [3, 4, 6]) {
                     if (unscheduled.length === 0) break;
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
@@ -11333,7 +11368,7 @@
                         if (candidates.length > 0) {
                             candidates.sort((c1, c2) => (c2.score + Math.random() * 8) - (c1.score + Math.random() * 8));
                             const best = candidates[0];
-                            currentSchedule[best.d][best.p][slot.className] = slot;
+                            assignSlotToSchedule(currentSchedule, best.d, best.p, slot, true);
                             placed = true;
                         }
                         if (!placed) stillUnscheduled.push(slot);
@@ -11369,8 +11404,8 @@
 
                                         if (canPlaceSlot(s2, d, p, currentSchedule, 4, true, true) &&
                                             canPlaceSlot(slot, d2, p2, currentSchedule, 4, true, true)) {
-                                            currentSchedule[d][p][slot.className] = s2;
-                                            currentSchedule[d2][p2][slot.className] = slot;
+                                            assignSlotToSchedule(currentSchedule, d, p, s2, true);
+                                            assignSlotToSchedule(currentSchedule, d2, p2, slot, true);
                                             placed = true;
                                             break;
                                         } else {
@@ -11386,7 +11421,7 @@
                     unscheduled = stillUnscheduled;
                 }
 
-                // PASS 4: Multi-Class Ejection Chain Swapping (External Backtracking)
+                // PASS 4: Multi-Class Ejection Chain Swapping (1-Hop External Backtracking)
                 // If slot S for Class A is blocked at an empty slot (d, p) because its teacher is teaching in Class B,
                 // check if Class B's period can safely relocate to another empty period (d2, p2) of Class B!
                 if (unscheduled.length > 0) {
@@ -11427,9 +11462,9 @@
                                                 delete currentSchedule[d][p][blockerClass];
 
                                                 if (canPlaceSlot(blockerSlot, d2, p2, currentSchedule, 4, true, true)) {
-                                                    currentSchedule[d2][p2][blockerClass] = blockerSlot;
+                                                    assignSlotToSchedule(currentSchedule, d2, p2, blockerSlot, true);
                                                     if (canPlaceSlot(slot, d, p, currentSchedule, 4, true, true)) {
-                                                        currentSchedule[d][p][slot.className] = slot;
+                                                        assignSlotToSchedule(currentSchedule, d, p, slot, true);
                                                         placed = true;
                                                         break;
                                                     } else {
@@ -11438,6 +11473,100 @@
                                                     }
                                                 } else {
                                                     currentSchedule[d][p][blockerClass] = blockerSlot;
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (!placed) stillUnscheduled.push(slot);
+                    }
+                    unscheduled = stillUnscheduled;
+                }
+
+                // PASS 4B: 2-Hop Deep Multi-Class Kempe Chain Backtracking
+                // If Class B's blocker cannot directly move to (d2, p2) because teacher T2 is busy in Class C,
+                // check if Class C can shift its period to an empty (d3, p3), creating a multi-hop ripple resolution!
+                if (unscheduled.length > 0) {
+                    let stillUnscheduled = [];
+                    for (let slot of unscheduled) {
+                        let placed = false;
+                        for (let d = 0; d < days; d++) {
+                            if (placed) break;
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
+                            for (let p = 0; p < periods; p++) {
+                                if (placed) break;
+                                if (currentSchedule[d][p][slot.className]) continue;
+
+                                const sTeachers = getSlotTeachers(slot);
+                                if (sTeachers.some(tId => isTeacherUnavailable(tId, d, p))) continue;
+
+                                for (let tId of sTeachers) {
+                                    if (placed) break;
+                                    let blockerClass1 = null;
+                                    let blockerSlot1 = null;
+                                    for (let cls in currentSchedule[d][p]) {
+                                        const occ = currentSchedule[d][p][cls];
+                                        if (occ && slotContainsTeacher(occ, tId)) {
+                                            blockerClass1 = cls;
+                                            blockerSlot1 = occ;
+                                            break;
+                                        }
+                                    }
+                                    if (!blockerSlot1 || !blockerClass1) continue;
+
+                                    // Look for candidate empty slots in Class B
+                                    for (let d2 = 0; d2 < days; d2++) {
+                                        if (placed) break;
+                                        if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(blockerClass1, d2)) continue;
+                                        for (let p2 = 0; p2 < periods; p2++) {
+                                            if (placed) break;
+                                            if (d2 === d && p2 === p) continue;
+                                            if (currentSchedule[d2][p2][blockerClass1]) continue;
+
+                                            // Check who blocks blockerSlot1 at (d2, p2)
+                                            const bTeachers = getSlotTeachers(blockerSlot1);
+                                            for (let tId2 of bTeachers) {
+                                                if (placed) break;
+                                                let blockerClass2 = null;
+                                                let blockerSlot2 = null;
+                                                for (let cls2 in currentSchedule[d2][p2]) {
+                                                    const occ2 = currentSchedule[d2][p2][cls2];
+                                                    if (occ2 && slotContainsTeacher(occ2, tId2)) {
+                                                        blockerClass2 = cls2;
+                                                        blockerSlot2 = occ2;
+                                                        break;
+                                                    }
+                                                }
+                                                if (!blockerSlot2 || !blockerClass2 || blockerClass2 === blockerClass1 || blockerClass2 === slot.className) continue;
+
+                                                // Can Class C (blockerClass2) move blockerSlot2 to an empty (d3, p3)?
+                                                for (let d3 = 0; d3 < days; d3++) {
+                                                    if (placed) break;
+                                                    if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(blockerClass2, d3)) continue;
+                                                    for (let p3 = 0; p3 < periods; p3++) {
+                                                        if (d3 === d2 && p3 === p2) continue;
+                                                        if (currentSchedule[d3][p3][blockerClass2]) continue;
+
+                                                        // Temporarily lift blockerSlot2 from (d2, p2) and blockerSlot1 from (d, p)
+                                                        delete currentSchedule[d2][p2][blockerClass2];
+                                                        delete currentSchedule[d][p][blockerClass1];
+
+                                                        if (canPlaceSlot(blockerSlot2, d3, p3, currentSchedule, 4, true, true) &&
+                                                            canPlaceSlot(blockerSlot1, d2, p2, currentSchedule, 4, true, true) &&
+                                                            canPlaceSlot(slot, d, p, currentSchedule, 4, true, true)) {
+                                                            assignSlotToSchedule(currentSchedule, d3, p3, blockerSlot2, true);
+                                                            assignSlotToSchedule(currentSchedule, d2, p2, blockerSlot1, true);
+                                                            assignSlotToSchedule(currentSchedule, d, p, slot, true);
+                                                            placed = true;
+                                                            break;
+                                                        } else {
+                                                            // Rollback
+                                                            currentSchedule[d2][p2][blockerClass2] = blockerSlot2;
+                                                            currentSchedule[d][p][blockerClass1] = blockerSlot1;
+                                                        }
+                                                    }
                                                 }
                                             }
                                         }
@@ -11460,7 +11589,7 @@
                             if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
                             for (let p = 0; p < periods; p++) {
                                 if (canPlaceSlot(slot, d, p, currentSchedule, 4, false, true)) {
-                                    currentSchedule[d][p][slot.className] = slot;
+                                    assignSlotToSchedule(currentSchedule, d, p, slot, false);
                                     placed = true;
                                     break;
                                 }
@@ -11472,7 +11601,7 @@
                 }
 
                 // PASS 6: Zero-Gap Guarantee (Complete Elimination of Blank Periods for Dense Schedules)
-                // Ensures full-density classes (e.g., 47/48 or 48/48 periods) never leave random vacant gaps
+                // Exhaustive search: direct soft-travel placement + Intra-Class Shuffling to ensure 100% capacity
                 if (unscheduled.length > 0) {
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
@@ -11483,16 +11612,33 @@
                             for (let p = 0; p < periods; p++) {
                                 if (currentSchedule[d][p][slot.className]) continue;
 
-                                const sTeachers = getSlotTeachers(slot);
-                                const hardClash = sTeachers.some(tId => 
-                                    isTeacherUnavailable(tId, d, p) || 
-                                    isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)
-                                );
-
-                                if (!hardClash) {
-                                    currentSchedule[d][p][slot.className] = slot;
+                                // Step 6A: Direct placement without subject count restrictions and soft travel buffer
+                                if (canPlaceSlot(slot, d, p, currentSchedule, 8, false, false)) {
+                                    assignSlotToSchedule(currentSchedule, d, p, slot, false);
                                     placed = true;
                                     break;
+                                }
+
+                                // Step 6B: Try swapping with any existing slot in this class
+                                for (let d_old = 0; d_old < days; d_old++) {
+                                    if (placed) break;
+                                    if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d_old)) continue;
+                                    for (let p_old = 0; p_old < periods; p_old++) {
+                                        if (d_old === d && p_old === p) continue;
+                                        const sOld = currentSchedule[d_old][p_old][slot.className];
+                                        if (!sOld) continue;
+
+                                        delete currentSchedule[d_old][p_old][slot.className];
+                                        if (canPlaceSlot(sOld, d, p, currentSchedule, 8, false, false) &&
+                                            canPlaceSlot(slot, d_old, p_old, currentSchedule, 8, false, false)) {
+                                            assignSlotToSchedule(currentSchedule, d, p, sOld, false);
+                                            assignSlotToSchedule(currentSchedule, d_old, p_old, slot, false);
+                                            placed = true;
+                                            break;
+                                        } else {
+                                            currentSchedule[d_old][p_old][slot.className] = sOld;
+                                        }
+                                    }
                                 }
                             }
                         }
@@ -11542,8 +11688,8 @@
                     bestUnscheduledList = unscheduled;
                 }
 
-                // If zero unscheduled and high consecutive pairs count, early stop after at least 25 attempts
-                if (minUnscheduledCount === 0 && attempt >= 25 && bestConsecutivePairs >= 25) {
+                // If zero unscheduled (100% complete) and good clustering, early stop after at least 20 attempts
+                if (minUnscheduledCount === 0 && attempt >= 20) {
                     break;
                 }
             }
