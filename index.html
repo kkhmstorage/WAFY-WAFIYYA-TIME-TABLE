@@ -1626,11 +1626,24 @@
 
                         <!-- Period Timings Customization -->
                         <div class="pt-2">
-                            <h4 class="text-xs font-bold text-slate-700 mb-2 flex items-center gap-1.5">
-                                <i class="fas fa-stopwatch text-emerald-600"></i> Period Timings (Start - End Time)
-                            </h4>
+                            <div class="flex items-center justify-between mb-2">
+                                <h4 class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                    <i class="fas fa-stopwatch text-emerald-600"></i> Period Timings (Start - End Time)
+                                </h4>
+                                <span id="timing-mode-badge" class="text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold">General Default</span>
+                            </div>
+
+                            <!-- Day Tabs for Timings -->
+                            <div id="period-timing-day-tabs" class="flex flex-wrap gap-1 mb-2.5">
+                                <!-- Populated dynamically: Default, Mon, Tue, Wed, Thu, Fri, Sat, Sun -->
+                            </div>
+
                             <div id="period-timings-container" class="grid grid-cols-2 gap-2 text-xs">
                                 <!-- Populated dynamically based on period count -->
+                            </div>
+
+                            <div class="flex justify-end gap-2 mt-2 pt-2 border-t border-slate-100" id="day-timing-actions-row">
+                                <!-- Reset / Copy buttons when a specific day is selected -->
                             </div>
                         </div>
 
@@ -3060,6 +3073,64 @@
                         <i class="fas fa-check"></i> Save Slot
                     </button>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- DAY-WISE PERIOD TIMINGS CUSTOMIZATION MODAL -->
+    <div id="day-timing-edit-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl max-w-lg w-full shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]">
+            <!-- Header -->
+            <div class="p-4 sm:p-5 bg-gradient-to-r from-emerald-900 via-teal-900 to-slate-900 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <div class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-lg shadow-inner">
+                        <i class="fas fa-clock"></i>
+                    </div>
+                    <div>
+                        <h3 id="day-timing-modal-title" class="text-base sm:text-lg font-black tracking-tight text-white">Day Timings Customization</h3>
+                        <p id="day-timing-modal-subtitle" class="text-xs text-emerald-200/80">ഓരോ ദിവസത്തെയും പിരീഡ് സമയക്രമം മാറ്റുക</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.closeDayTimingModal()" class="text-slate-400 hover:text-white transition w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10">
+                    <i class="fas fa-times text-base"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4">
+                <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-3 text-xs text-emerald-900 flex items-start gap-2">
+                    <i class="fas fa-info-circle text-emerald-600 mt-0.5 shrink-0"></i>
+                    <div>
+                        തിരഞ്ഞെടുത്ത ദിവസത്തെ പിരീഡ് സമയങ്ങൾ (Start - End Time) ഇവിടെ തിരുത്താം. വെള്ളിയാഴ്ച (Friday) ജുമുഅ നിസ്കാരത്തിനായോ മറ്റ് ദിവസങ്ങളിലോ ഉള്ള സമയമാറ്റങ്ങൾ ഇവിടെ നൽകാം.
+                    </div>
+                </div>
+
+                <div class="flex justify-between items-center pb-2 border-b border-slate-200">
+                    <span id="day-timing-status-label" class="text-xs font-bold text-slate-700">Period Timings</span>
+                    <div class="flex gap-2">
+                        <button type="button" onclick="window.copyDefaultTimingsToDayModal()" class="text-[11px] text-emerald-700 hover:text-emerald-800 bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1">
+                            <i class="fas fa-copy"></i> Copy Default
+                        </button>
+                        <button type="button" onclick="window.resetDayTimingModal()" class="text-[11px] text-rose-700 hover:text-rose-800 bg-rose-50 border border-rose-200 px-2.5 py-1 rounded-lg font-bold transition flex items-center gap-1">
+                            <i class="fas fa-undo"></i> Reset to Default
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Timings Inputs Grid -->
+                <div id="day-timing-inputs-grid" class="grid grid-cols-1 sm:grid-cols-2 gap-2.5">
+                    <!-- Dynamic inputs populated via JS -->
+                </div>
+            </div>
+
+            <!-- Footer -->
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex justify-between items-center gap-2">
+                <button type="button" onclick="window.closeDayTimingModal()" class="border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs px-4 py-2.5 rounded-xl transition">
+                    Cancel
+                </button>
+                <button type="button" onclick="window.saveDayTimingModal()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                    <i class="fas fa-check"></i> Save Timings (സമയക്രമം സേവ് ചെയ്യുക)
+                </button>
             </div>
         </div>
     </div>
@@ -7735,6 +7806,31 @@
     "maxTeacherDailyPeriods": 5
 };
 
+        // Science & Lab subject helper: Computer Science, Chemistry, Physics, Biology
+        function isScienceOrLabSubject(subjectName) {
+            if (!subjectName) return false;
+            const name = String(subjectName).toLowerCase().replace(/[\s_\-]+/g, ' ').trim();
+            return /\b(computer\s*science|cs|physics|physic|chemistry|chem|biology|biological\s*science|lab)\b|കമ്പ്യൂട്ടർ|കംപ്യൂട്ടർ|ഫിസിക്സ്|ബയോളജി|കെമിസ്ട്രി|الحاسوب/i.test(name);
+        }
+        window.isScienceOrLabSubject = isScienceOrLabSubject;
+
+        function isConsecutiveSubject(subjectName) {
+            return isScienceOrLabSubject(subjectName);
+        }
+        window.isConsecutiveSubject = isConsecutiveSubject;
+
+        function getPeriodTiming(periodIndex, dayIndex = null) {
+            if (dayIndex !== null && dayIndex !== undefined && appState.dayPeriodTimings && appState.dayPeriodTimings[dayIndex]) {
+                const val = appState.dayPeriodTimings[dayIndex][periodIndex];
+                if (val && val.trim()) return val.trim();
+            }
+            if (appState.periodTimings && appState.periodTimings[periodIndex]) {
+                return appState.periodTimings[periodIndex];
+            }
+            return 'Period ' + (periodIndex + 1);
+        }
+        window.getPeriodTiming = getPeriodTiming;
+
         const dayNames = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday", "Sunday"];
         const dayNamesEn = dayNames; // Alias used across rendering functions
         const monthNames = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
@@ -12149,7 +12245,7 @@
 
                 for (let d = 0; d < days; d++) {
                     html += `<tr class="day-block">`;
-                    html += `<td class="px-2 py-1.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}</td>`;
+                    html += `<td class="px-2 py-1.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}${isAdminLoggedIn ? `<button type="button" onclick="window.openDayTimingModal(${d})" class="ml-1 text-slate-400 hover:text-emerald-600 transition inline-flex items-center" title="${dayNamesEn[d]} സമയക്രമം മാറ്റുക"><i class="fas fa-clock text-[10px]"></i></button>` : ''}${(appState.dayPeriodTimings && appState.dayPeriodTimings[d]) ? '<span class="block text-[8px] text-emerald-600 font-semibold tracking-tight lowercase">custom time</span>' : ''}</td>`;
 
                     for (let p = 0; p < periods; p++) {
                         let assignedSlot = null;
@@ -12571,7 +12667,7 @@
                         const isActiveDay = typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(cls, d);
                         html += `<tr>`;
                         if (rIdx === 0) {
-                            html += `<td rowspan="${collegeClasses.length}" class="px-2 py-1.5 border border-slate-300 font-black bg-slate-100 text-slate-900 text-center align-middle whitespace-nowrap tracking-wider text-xs uppercase select-none">${dayNamesEn[d]}</td>`;
+                            html += `<td rowspan="${collegeClasses.length}" class="px-2 py-1.5 border border-slate-300 font-black bg-slate-100 text-slate-900 text-center align-middle whitespace-nowrap tracking-wider text-xs uppercase select-none">${dayNamesEn[d]}${isAdminLoggedIn ? `<button type="button" onclick="window.openDayTimingModal(${d})" class="ml-1 text-slate-400 hover:text-emerald-600 transition inline-flex items-center" title="${dayNamesEn[d]} സമയക്രമം മാറ്റുക"><i class="fas fa-clock text-[10px]"></i></button>` : ''}${(appState.dayPeriodTimings && appState.dayPeriodTimings[d]) ? '<span class="block text-[8px] text-emerald-600 font-semibold tracking-tight lowercase">custom time</span>' : ''}</td>`;
                         }
 
                         html += `<td class="px-2 py-1.5 border border-slate-300 font-extrabold text-slate-900 text-center align-middle bg-slate-50/80 whitespace-nowrap text-xs">${cls}</td>`;
@@ -13679,12 +13775,16 @@
             }
 
             // Rule 3: Dual-Campus Travel Buffer (Wafy Boys Campus vs Wafiyya Girls Campus)
+            // An interval exists between every 2 periods (between P2-P3, P4-P5, P6-P7).
+            // Dual-campus travel conflicts only apply within the same 2-period block (without an interval).
             const isWafyClass = (className.toLowerCase().includes('wafy') && !className.toLowerCase().includes('wafiyya'));
             const maxPeriods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
             const adjacentPeriods = [period - 1, period + 1];
 
             adjacentPeriods.forEach(adjP => {
                 if (adjP < 0 || adjP >= maxPeriods) return;
+                // Interval exists between every 2 periods:
+                if (Math.floor(adjP / 2) !== Math.floor(period / 2)) return;
                 if (!appState.timetable || !appState.timetable[day] || !appState.timetable[day][adjP]) return;
 
                 const adjClasses = appState.timetable[day][adjP];
@@ -13732,39 +13832,74 @@
             }
 
             // Rule 5: Teacher Daily Maximum Period Limit (Max 5 Periods per Day)
+            // Exempt subjects (Computer Science, Chemistry, Physics, Biology) are not capped at 5 periods
             const maxDailyTeacherLimit = Number(appState.maxTeacherDailyPeriods) || 5;
-            let teacherDailyCount = 0;
-            const totalPeriodsInDay = Math.max(maxPeriods, (appState.timetable && appState.timetable[day]) ? Object.keys(appState.timetable[day]).length : maxPeriods);
-            for (let p = 0; p <= totalPeriodsInDay; p++) {
-                if (!appState.timetable || !appState.timetable[day] || !appState.timetable[day][p]) continue;
-                const periodClasses = appState.timetable[day][p];
-                let teachesInPeriod = false;
+            const isProposedExempt = typeof isScienceOrLabSubject === 'function' ? isScienceOrLabSubject(proposedSubject) : false;
 
-                Object.keys(periodClasses).forEach(cls => {
-                    const isExcluded = (cls === className && p === period) || excludeCoords.some(c => c.day === day && c.period === p && c.className === cls);
-                    if (isExcluded) return;
+            if (!isProposedExempt) {
+                let teacherDailyCount = 0;
+                const totalPeriodsInDay = Math.max(maxPeriods, (appState.timetable && appState.timetable[day]) ? Object.keys(appState.timetable[day]).length : maxPeriods);
+                for (let p = 0; p <= totalPeriodsInDay; p++) {
+                    if (!appState.timetable || !appState.timetable[day] || !appState.timetable[day][p]) continue;
+                    const periodClasses = appState.timetable[day][p];
+                    let teachesInPeriod = false;
 
-                    const sl = periodClasses[cls];
-                    if (!sl) return;
-                    if (sl.teacherId === proposedTeacherId || sl.secondaryTeacherId === proposedTeacherId) {
-                        teachesInPeriod = true;
-                    } else if (sl.splitSlots && sl.splitSlots.some(s => s.teacherId === proposedTeacherId)) {
-                        teachesInPeriod = true;
+                    Object.keys(periodClasses).forEach(cls => {
+                        const isExcluded = (cls === className && p === period) || excludeCoords.some(c => c.day === day && c.period === p && c.className === cls);
+                        if (isExcluded) return;
+
+                        const sl = periodClasses[cls];
+                        if (!sl) return;
+                        let assignedSubject = '';
+                        if (sl.teacherId === proposedTeacherId || sl.secondaryTeacherId === proposedTeacherId) {
+                            teachesInPeriod = true;
+                            assignedSubject = sl.subject;
+                        } else if (sl.splitSlots) {
+                            const part = sl.splitSlots.find(s => s.teacherId === proposedTeacherId);
+                            if (part) {
+                                teachesInPeriod = true;
+                                assignedSubject = part.subject;
+                            }
+                        }
+                        if (teachesInPeriod && typeof isScienceOrLabSubject === 'function' && isScienceOrLabSubject(assignedSubject)) {
+                            // Exempt subjects do not count toward daily limit
+                            teachesInPeriod = false;
+                        }
+                    });
+
+                    if (teachesInPeriod) {
+                        teacherDailyCount++;
                     }
-                });
+                }
 
-                if (teachesInPeriod) {
-                    teacherDailyCount++;
+                if (teacherDailyCount >= maxDailyTeacherLimit) {
+                    conflicts.push({
+                        type: 'danger',
+                        icon: 'fa-user-clock',
+                        title: `പ്രതിദിന പിരീഡ് പരിധി കഴിഞ്ഞു (Daily Teacher Limit - Max ${maxDailyTeacherLimit}): ${teacherShort || teacherName}`,
+                        description: `<b>${teacherName}</b> ന് ${dayName} ൽ ഇതിനകം <b>${teacherDailyCount} പിരീഡുകൾ</b> ഷെഡ്യൂൾ ചെയ്തിട്ടുണ്ട്. ഒരു അധ്യാപകന് ഒരു ദിവസം പരമാവധി <b>${maxDailyTeacherLimit} പിരീഡുകൾ</b> മാത്രമേ അനുവദിക്കാവൂ! (കംപ്യൂട്ടർ സയൻസ്, ഫിസിക്സ്, കെമിസ്ട്രി, ബയോളജി ഒഴികെ).`
+                    });
                 }
             }
 
-            if (teacherDailyCount >= maxDailyTeacherLimit) {
-                conflicts.push({
-                    type: 'danger',
-                    icon: 'fa-user-clock',
-                    title: `പ്രതിദിന പിരീഡ് പരിധി കഴിഞ്ഞു (Daily Teacher Limit - Max ${maxDailyTeacherLimit}): ${teacherShort || teacherName}`,
-                    description: `<b>${teacherName}</b> ന് ${dayName} ൽ ഇതിനകം <b>${teacherDailyCount} പിരീഡുകൾ</b> ഷെഡ്യൂൾ ചെയ്തിട്ടുണ്ട്. ഒരു അധ്യാപകന് ഒരു ദിവസം പരമാവധി <b>${maxDailyTeacherLimit} പിരീഡുകൾ</b> മാത്രമേ അനുവദിക്കാവൂ!`
-                });
+            // Rule 6: Consecutive Period Restriction (Only Computer Science, Chemistry, Physics, Biology can have consecutive periods)
+            const isProposedConsecutiveAllowed = typeof isConsecutiveSubject === 'function' ? isConsecutiveSubject(proposedSubject) : false;
+            if (!isProposedConsecutiveAllowed) {
+                const adjacentSameClass = [period - 1, period + 1];
+                for (let adjP of adjacentSameClass) {
+                    if (adjP >= 0 && adjP < maxPeriods) {
+                        const otherSlot = (appState.timetable && appState.timetable[day] && appState.timetable[day][adjP]) ? appState.timetable[day][adjP][className] : null;
+                        if (otherSlot && otherSlot.subject === proposedSubject) {
+                            conflicts.push({
+                                type: 'warning',
+                                icon: 'fa-ban',
+                                title: `തുടർച്ചയായ പിരീഡ് നിയന്ത്രണം (Consecutive Period Restriction)`,
+                                description: `<b>${proposedSubject}</b> അടുത്തടുത്ത പിരീഡുകളിലായി (Period ${adjP + 1} & Period ${period + 1}) ഷെഡ്യൂൾ ചെയ്യാൻ അനുവദനീയമല്ല. കമ്പ്യൂട്ടർ സയൻസ്, ഫിസിക്സ്, കെമിസ്ട്രി, ബയോളജി എന്നീ വിഷയങ്ങൾക്ക് മാത്രമേ തുടർച്ചയായ പിരീഡുകൾ അനുവദിക്കൂ.`
+                            });
+                            break;
+                        }
+                    }
+                }
             }
 
             return conflicts;
@@ -14314,12 +14449,61 @@
             }
         });
 
+        let selectedSettingsTimingDay = 'default';
+
         function renderPeriodTimingInputs() {
             const container = document.getElementById('period-timings-container');
+            const tabsContainer = document.getElementById('period-timing-day-tabs');
+            const actionsRow = document.getElementById('day-timing-actions-row');
+            const badge = document.getElementById('timing-mode-badge');
             if (!container) return;
+
+            if (!appState.dayPeriodTimings) appState.dayPeriodTimings = {};
+            if (!appState.periodTimings || appState.periodTimings.length < appState.periods) {
+                appState.periodTimings = appState.periodTimings || [];
+                for (let i = appState.periodTimings.length; i < appState.periods; i++) {
+                    appState.periodTimings.push(`Period ${i + 1}`);
+                }
+            }
+
+            // Render Tabs
+            if (tabsContainer) {
+                let tabsHtml = `
+                    <button type="button" onclick="window.switchSettingsTimingDay('default')" class="px-2.5 py-1 rounded-lg text-xs font-bold transition ${selectedSettingsTimingDay === 'default' ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+                        Default (All Days)
+                    </button>
+                `;
+                const totalDays = appState.days || 6;
+                for (let d = 0; d < totalDays; d++) {
+                    const hasCustom = appState.dayPeriodTimings && appState.dayPeriodTimings[d] && appState.dayPeriodTimings[d].length > 0;
+                    const isSel = selectedSettingsTimingDay === d;
+                    tabsHtml += `
+                        <button type="button" onclick="window.switchSettingsTimingDay(${d})" class="px-2 py-1 rounded-lg text-[11px] font-bold transition flex items-center gap-1 ${isSel ? 'bg-emerald-600 text-white shadow-xs' : 'bg-slate-100 text-slate-700 hover:bg-slate-200'}">
+                            <span>${dayNamesEn[d].slice(0, 3)}</span>
+                            ${hasCustom ? '<span class="w-1.5 h-1.5 rounded-full bg-emerald-400"></span>' : ''}
+                        </button>
+                    `;
+                }
+                tabsContainer.innerHTML = tabsHtml;
+            }
+
+            if (badge) {
+                if (selectedSettingsTimingDay === 'default') {
+                    badge.innerText = 'General Default';
+                    badge.className = 'text-[10px] bg-slate-100 text-slate-600 border border-slate-200 px-2 py-0.5 rounded-full font-bold';
+                } else {
+                    const d = Number(selectedSettingsTimingDay);
+                    const hasCustom = appState.dayPeriodTimings && appState.dayPeriodTimings[d];
+                    badge.innerText = `${dayNamesEn[d]} (${hasCustom ? 'Custom' : 'Inherited'})`;
+                    badge.className = `text-[10px] px-2 py-0.5 rounded-full font-bold ${hasCustom ? 'bg-emerald-100 text-emerald-800 border border-emerald-300' : 'bg-amber-100 text-amber-800 border border-amber-300'}`;
+                }
+            }
+
             container.innerHTML = '';
+            const dayIdx = selectedSettingsTimingDay === 'default' ? null : Number(selectedSettingsTimingDay);
+
             for (let p = 0; p < appState.periods; p++) {
-                const current = appState.periodTimings[p] || ('Period ' + (p + 1));
+                const current = getPeriodTiming(p, dayIdx);
                 const div = document.createElement('div');
                 div.innerHTML = `
                     <label class="block text-[11px] text-slate-500 font-medium mb-0.5">P${p + 1} Time</label>
@@ -14327,13 +14511,186 @@
                 `;
                 container.appendChild(div);
             }
+
+            if (actionsRow) {
+                if (selectedSettingsTimingDay === 'default') {
+                    actionsRow.innerHTML = `
+                        <button type="button" onclick="window.applyDefaultTimingsToAllDays()" class="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 transition">
+                            <i class="fas fa-clone"></i> Apply Default to All Days
+                        </button>
+                    `;
+                } else {
+                    const d = Number(selectedSettingsTimingDay);
+                    actionsRow.innerHTML = `
+                        <button type="button" onclick="window.resetDayTimingsToDefault(${d})" class="text-[11px] text-rose-600 hover:text-rose-800 font-bold flex items-center gap-1 transition">
+                            <i class="fas fa-undo"></i> Reset ${dayNamesEn[d]} to Default
+                        </button>
+                        <button type="button" onclick="window.copyDefaultTimingsToDay(${d})" class="text-[11px] text-emerald-700 hover:text-emerald-800 font-bold flex items-center gap-1 transition">
+                            <i class="fas fa-copy"></i> Copy Default
+                        </button>
+                    `;
+                }
+            }
         }
+        window.renderPeriodTimingInputs = renderPeriodTimingInputs;
+
+        function switchSettingsTimingDay(day) {
+            selectedSettingsTimingDay = day;
+            renderPeriodTimingInputs();
+        }
+        window.switchSettingsTimingDay = switchSettingsTimingDay;
 
         function updatePeriodTiming(index, value) {
-            appState.periodTimings[index] = value;
-            if (appState.timetable) renderTimetable();
+            if (selectedSettingsTimingDay === 'default') {
+                appState.periodTimings[index] = value;
+            } else {
+                const d = Number(selectedSettingsTimingDay);
+                if (!appState.dayPeriodTimings) appState.dayPeriodTimings = {};
+                if (!appState.dayPeriodTimings[d]) {
+                    appState.dayPeriodTimings[d] = [...(appState.periodTimings || [])];
+                }
+                appState.dayPeriodTimings[d][index] = value;
+            }
+            saveStateToLocal();
             saveToCloud();
+            if (appState.timetable) renderTimetable();
         }
+        window.updatePeriodTiming = updatePeriodTiming;
+
+        function resetDayTimingsToDefault(dayIndex) {
+            if (appState.dayPeriodTimings && appState.dayPeriodTimings[dayIndex]) {
+                delete appState.dayPeriodTimings[dayIndex];
+                saveStateToLocal();
+                saveToCloud();
+                renderPeriodTimingInputs();
+                if (appState.timetable) renderTimetable();
+                showToast("Timings Reset", `${dayNamesEn[dayIndex]} timings reset to default.`);
+            }
+        }
+        window.resetDayTimingsToDefault = resetDayTimingsToDefault;
+
+        function copyDefaultTimingsToDay(dayIndex) {
+            if (!appState.dayPeriodTimings) appState.dayPeriodTimings = {};
+            appState.dayPeriodTimings[dayIndex] = [...(appState.periodTimings || [])];
+            saveStateToLocal();
+            saveToCloud();
+            renderPeriodTimingInputs();
+            if (appState.timetable) renderTimetable();
+            showToast("Timings Copied", `Default timings copied to ${dayNamesEn[dayIndex]}.`);
+        }
+        window.copyDefaultTimingsToDay = copyDefaultTimingsToDay;
+
+        function applyDefaultTimingsToAllDays() {
+            if (!confirm("Are you sure you want to reset all days to the default timings?")) return;
+            appState.dayPeriodTimings = {};
+            saveStateToLocal();
+            saveToCloud();
+            renderPeriodTimingInputs();
+            if (appState.timetable) renderTimetable();
+            showToast("Timings Applied", "Default timings applied to all days.");
+        }
+        window.applyDefaultTimingsToAllDays = applyDefaultTimingsToAllDays;
+
+        // Dedicated Day Timing Modal logic
+        let activeDayTimingModalDay = 0;
+
+        function openDayTimingModal(dayIndex) {
+            if (!isAdminLoggedIn) {
+                showAlert("Admin Only", "സമയക്രമം മാറ്റുന്നതിന് അഡ്മിൻ ലോഗിൻ ആവശ്യമാണ് (Admin login required).");
+                return;
+            }
+            activeDayTimingModalDay = Number(dayIndex);
+            const dayName = dayNamesEn[activeDayTimingModalDay] || 'Day ' + (activeDayTimingModalDay + 1);
+            const modal = document.getElementById('day-timing-edit-modal');
+            const titleEl = document.getElementById('day-timing-modal-title');
+            const subEl = document.getElementById('day-timing-modal-subtitle');
+            const grid = document.getElementById('day-timing-inputs-grid');
+            const statusLabel = document.getElementById('day-timing-status-label');
+
+            if (!modal || !grid) return;
+
+            if (titleEl) titleEl.innerText = `${dayName} - Timings Customization`;
+            if (subEl) subEl.innerText = `${dayName} ദിവസത്തെ ഓരോ പിരീഡിന്റെയും സമയക്രമം മാറ്റുക`;
+
+            const hasCustom = appState.dayPeriodTimings && appState.dayPeriodTimings[activeDayTimingModalDay];
+            if (statusLabel) {
+                statusLabel.innerHTML = `<span>Period Timings (${appState.periods || 6} Periods)</span> ${hasCustom ? '<span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full text-[10px] ml-1.5 font-bold">Custom Timings Active</span>' : '<span class="text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full text-[10px] ml-1.5 font-bold">Using Default Timings</span>'}`;
+            }
+
+            grid.innerHTML = '';
+            const totalPeriods = appState.periods || 6;
+            for (let p = 0; p < totalPeriods; p++) {
+                const val = getPeriodTiming(p, activeDayTimingModalDay);
+                const col = document.createElement('div');
+                col.className = 'bg-slate-50 border border-slate-200 rounded-xl p-2.5';
+                col.innerHTML = `
+                    <div class="flex justify-between items-center mb-1">
+                        <label class="text-xs font-bold text-slate-700">Period ${p + 1}</label>
+                        <span class="text-[10px] text-slate-400 font-mono">P${p + 1}</span>
+                    </div>
+                    <input type="text" id="day-timing-input-p${p}" value="${val}" placeholder="07:30 - 08:15" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                `;
+                grid.appendChild(col);
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        window.openDayTimingModal = openDayTimingModal;
+
+        function closeDayTimingModal() {
+            const modal = document.getElementById('day-timing-edit-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+        window.closeDayTimingModal = closeDayTimingModal;
+
+        function copyDefaultTimingsToDayModal() {
+            const totalPeriods = appState.periods || 6;
+            for (let p = 0; p < totalPeriods; p++) {
+                const inp = document.getElementById(`day-timing-input-p${p}`);
+                if (inp) {
+                    inp.value = appState.periodTimings[p] || ('Period ' + (p + 1));
+                }
+            }
+            showToast("Copied", "Default timings filled into inputs. Click Save to apply.");
+        }
+        window.copyDefaultTimingsToDayModal = copyDefaultTimingsToDayModal;
+
+        function resetDayTimingModal() {
+            if (confirm(`Reset ${dayNamesEn[activeDayTimingModalDay]} timings to default?`)) {
+                if (appState.dayPeriodTimings) {
+                    delete appState.dayPeriodTimings[activeDayTimingModalDay];
+                }
+                saveStateToLocal();
+                saveToCloud();
+                closeDayTimingModal();
+                if (appState.timetable) renderTimetable();
+                renderPeriodTimingInputs();
+                showToast("Reset Complete", `${dayNamesEn[activeDayTimingModalDay]} timings reset to default.`);
+            }
+        }
+        window.resetDayTimingModal = resetDayTimingModal;
+
+        function saveDayTimingModal() {
+            const totalPeriods = appState.periods || 6;
+            if (!appState.dayPeriodTimings) appState.dayPeriodTimings = {};
+            const newTimings = [];
+            for (let p = 0; p < totalPeriods; p++) {
+                const inp = document.getElementById(`day-timing-input-p${p}`);
+                newTimings.push(inp ? inp.value.trim() : (appState.periodTimings[p] || ''));
+            }
+            appState.dayPeriodTimings[activeDayTimingModalDay] = newTimings;
+            saveStateToLocal();
+            saveToCloud();
+            closeDayTimingModal();
+            if (appState.timetable) renderTimetable();
+            renderPeriodTimingInputs();
+            showToast("Timings Saved", `${dayNamesEn[activeDayTimingModalDay]} timings successfully updated!`);
+        }
+        window.saveDayTimingModal = saveDayTimingModal;
 
         // Faculty Management
         function escapeHtml(str) {
@@ -16409,10 +16766,14 @@
             };
 
             // Helper: check travel buffer clash for adjacent periods (p-1, p+1) across campuses
+            // An interval exists between every 2 periods (between P2-P3, P4-P5, P6-P7).
+            // Dual-campus travel conflicts only apply within the same 2-period block (without an interval).
             const hasTeacherTravelClashInSchedule = (tId, targetCollege, d, p, currentSchedule, enforceBuffer = true) => {
                 if (!enforceBuffer || !enableTravelBuffer || !tId) return false;
                 for (let adjP of [p - 1, p + 1]) {
                     if (adjP >= 0 && adjP < periods) {
+                        // Intervals exist between every 2 periods, allowing travel between campuses:
+                        if (Math.floor(adjP / 2) !== Math.floor(p / 2)) continue;
                         const slotMap = currentSchedule[d][adjP];
                         for (let cls in slotMap) {
                             const assigned = slotMap[cls];
@@ -16428,15 +16789,12 @@
 
             // Daily teacher workload rule:
             // Count only regular (non-exempt) subjects toward the 5-period daily limit.
-            // Computer Science, Physics, Mathematics, Biology and Chemistry are exempt.
+            // Computer Science, Physics, Chemistry, and Biology are exempt.
             const isTeacherDailyLimitExemptSubject = (subjectName) => {
-                const name = String(subjectName || '').toLowerCase().replace(/[\s_\-]+/g, ' ').trim();
-                return /\b(computer\s*science|cs|physics|physic|mathematics|maths?|biology|biological\s*science|chemistry|chem)\b|കമ്പ്യൂട്ടർ\s*സയൻസ്|ഫിസിക്സ്|മാത്തമാറ്റിക്സ്|മാത്സ്|ഗണിതം|ബയോളജി|കെമിസ്ട്രി/i.test(name);
+                return typeof isScienceOrLabSubject === 'function' ? isScienceOrLabSubject(subjectName) : false;
             };
 
             // Return the subject actually taught by this teacher in a slot.
-            // Split-batch slots contain several subjects, so using slot.subject
-            // ("Maths / Arabic", for example) would incorrectly exempt every teacher.
             const getSubjectForTeacherInSlot = (slot, tId) => {
                 if (!slot || !tId) return String(slot?.subject || '');
                 if (slot.allocationType === 'split') {
@@ -16462,8 +16820,6 @@
                 return count;
             };
 
-            const TEACHER_DAILY_PERIOD_LIMIT = 5;
-
             // Verify if a slot can be placed at (d, p) in currentSchedule with configurable constraint relaxation
             const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true, checkSubjectCount = true) => {
                 // Must be an active working day for this class
@@ -16471,6 +16827,19 @@
 
                 // Period must be empty for this class
                 if (currentSchedule[d][p][slot.className]) return false;
+
+                // Consecutive Period Restriction:
+                // Only Computer Science, Chemistry, Physics, Biology can be scheduled back-to-back in consecutive periods for the same class
+                if (!isConsecutiveSubject(slot.subject)) {
+                    if (p > 0) {
+                        const prevSlot = currentSchedule[d][p - 1][slot.className];
+                        if (prevSlot && prevSlot.subject === slot.subject) return false;
+                    }
+                    if (p < periods - 1) {
+                        const nextSlot = currentSchedule[d][p + 1][slot.className];
+                        if (nextSlot && nextSlot.subject === slot.subject) return false;
+                    }
+                }
 
                 // Check subject count for this class on day d
                 if (checkSubjectCount && maxSubjectPerDay < periods) {
@@ -16487,28 +16856,15 @@
                 const maxTeacherDailyLimit = Number(appState.maxTeacherDailyPeriods) || 5;
 
                 for (let tId of tIds) {
-                    // Exempt subject periods do not consume the teacher's five-period daily quota.
-                    // Any other subject is rejected once the teacher already has five counted periods.
+                    // Exempt subject periods (Computer Science, Chemistry, Physics, Biology) do not consume the teacher's daily quota
+                    // Regular subjects are rejected once the teacher already has maxTeacherDailyLimit counted periods.
                     const teacherSubject = getSubjectForTeacherInSlot(slot, tId);
                     if (!isTeacherDailyLimitExemptSubject(teacherSubject) &&
-                        getTeacherCountedPeriodsForDay(tId, d, currentSchedule) >= TEACHER_DAILY_PERIOD_LIMIT) return false;
+                        getTeacherCountedPeriodsForDay(tId, d, currentSchedule) >= maxTeacherDailyLimit) return false;
+
                     if (isTeacherUnavailable(tId, d, p)) return false;
                     if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)) return false;
                     if (hasTeacherTravelClashInSchedule(tId, slot.college, d, p, currentSchedule, enforceBuffer)) return false;
-
-                    // Enforce teacher maximum 5 periods per day across all classes and colleges
-                    let teacherDayCount = 0;
-                    for (let chkP = 0; chkP < periods; chkP++) {
-                        const slotMap = currentSchedule[d][chkP];
-                        for (let cls in slotMap) {
-                            const assigned = slotMap[cls];
-                            if (assigned && slotContainsTeacher(assigned, tId)) {
-                                teacherDayCount++;
-                                break;
-                            }
-                        }
-                    }
-                    if (teacherDayCount >= maxTeacherDailyLimit) return false;
                 }
                 return true;
             };
