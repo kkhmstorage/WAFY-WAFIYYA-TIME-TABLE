@@ -806,10 +806,18 @@
             </div>
 
             <!-- Admin Generator Widget -->
-            <div id="admin-generator-box" class="p-3 border-t border-slate-200 bg-slate-50/50 hidden">
+            <div id="admin-generator-box" class="p-3 border-t border-slate-200 bg-slate-50/50 hidden space-y-1.5">
                 <button onclick="window.generateTimetable()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-2 px-3 rounded-xl shadow transition duration-200 flex items-center justify-center gap-2 text-xs">
                     <i class="fas fa-magic text-emerald-200"></i> Generate Timetable
                 </button>
+                <div class="flex gap-1">
+                    <button id="side-btn-undo" type="button" onclick="window.undoTimetableAction()" disabled class="flex-1 opacity-40 cursor-not-allowed bg-white border border-slate-200 text-slate-700 text-[11px] font-bold py-1 px-2 rounded-lg transition flex items-center justify-center gap-1 shadow-2xs">
+                        <i class="fas fa-undo text-amber-600 text-[10px]"></i> Undo
+                    </button>
+                    <button id="side-btn-redo" type="button" onclick="window.redoTimetableAction()" disabled class="flex-1 opacity-40 cursor-not-allowed bg-white border border-slate-200 text-slate-700 text-[11px] font-bold py-1 px-2 rounded-lg transition flex items-center justify-center gap-1 shadow-2xs">
+                        <i class="fas fa-redo text-emerald-600 text-[10px]"></i> Redo
+                    </button>
+                </div>
             </div>
         </aside>
 
@@ -819,6 +827,34 @@
 
             <!-- Timetable Section (Default for Everyone) -->
             <section id="timetable-section" class="space-y-4">
+                <!-- Generated Timetable Preview Mode Banner -->
+                <div id="staged-preview-banner" class="hidden bg-gradient-to-r from-slate-900 via-indigo-950 to-slate-900 text-white p-3.5 rounded-2xl shadow-xl border border-indigo-500/30 flex flex-wrap items-center justify-between gap-3 no-print animate-in fade-in">
+                    <div class="flex items-center gap-3">
+                        <span class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300 shadow-inner">
+                            <i class="fas fa-eye animate-pulse text-base"></i>
+                        </span>
+                        <div>
+                            <div class="font-black text-xs sm:text-sm text-indigo-100 flex items-center gap-2">
+                                <span>ടൈംടേബിൾ പ്രിവ്യൂ മോഡ് (Preview Mode Active)</span>
+                                <span class="text-[9px] bg-amber-400 text-slate-950 px-2 py-0.5 rounded-full font-black uppercase tracking-wider">Not Yet Saved</span>
+                            </div>
+                            <div class="text-[11px] text-indigo-200/80 mt-0.5">ഇപ്പോൾ കാണുന്നത് പുതിയതായി ജനറേറ്റ് ചെയ്ത ഷെഡ്യൂളാണ്. പരിശോധിച്ച ശേഷം മാത്രം സ്ഥിരപ്പെടുത്തുക.</div>
+                        </div>
+                    </div>
+                    <div class="flex items-center gap-2">
+                        <button type="button" onclick="window.togglePreviewStagedTimetable()" class="bg-white/15 hover:bg-white/25 text-white text-xs px-3 py-1.5 rounded-xl transition font-bold border border-white/20">
+                            <i class="fas fa-list-check mr-1 text-emerald-300"></i> Review Details
+                        </button>
+                        <button type="button" onclick="window.applyStagedTimetable()" class="bg-emerald-500 hover:bg-emerald-400 text-slate-950 text-xs px-4 py-1.5 rounded-xl transition font-black shadow flex items-center gap-1.5">
+                            <i class="fas fa-check-circle"></i> Apply & Save (സ്ഥിരപ്പെടുത്തുക)
+                        </button>
+                        <button type="button" onclick="window.closeTimetableVerificationModal(false)" class="bg-rose-600/80 hover:bg-rose-600 text-white text-xs px-3 py-1.5 rounded-xl transition font-bold">
+                            <i class="fas fa-times mr-1"></i> Discard
+                        </button>
+                    </div>
+                </div>
+
+
                 
                 <!-- View Mode Controls -->
                 <div class="bg-white p-3 sm:p-4 rounded-2xl shadow-sm border border-slate-200 flex flex-col lg:flex-row justify-between items-stretch lg:items-center gap-3 no-print">
@@ -848,6 +884,16 @@
                         </div>
 
                         <div class="flex items-center gap-1.5 flex-wrap">
+                            <!-- Timetable History Undo / Redo Controls -->
+                            <div class="flex items-center gap-1 bg-slate-100 p-0.5 rounded-xl border border-slate-200">
+                                <button id="btn-undo-timetable" type="button" onclick="window.undoTimetableAction()" disabled class="opacity-40 cursor-not-allowed bg-white text-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition font-bold shadow-2xs" title="Undo change (അൺഡൂ)">
+                                    <i class="fas fa-undo text-amber-600 text-[11px]"></i> <span class="hidden sm:inline">Undo</span>
+                                </button>
+                                <button id="btn-redo-timetable" type="button" onclick="window.redoTimetableAction()" disabled class="opacity-40 cursor-not-allowed bg-white text-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition font-bold shadow-2xs" title="Redo change (റീഡൂ)">
+                                    <i class="fas fa-redo text-emerald-600 text-[11px]"></i> <span class="hidden sm:inline">Redo</span>
+                                </button>
+                            </div>
+
                             <button onclick="window.exportToCSV()" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm font-semibold" title="Export CSV">
                                 <i class="fas fa-file-csv text-emerald-600"></i> CSV
                             </button>
@@ -3071,6 +3117,114 @@
                     </button>
                     <button type="button" id="btn-slot-apply-clean" onclick="window.applyManualSlotEdit(false)" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
                         <i class="fas fa-check"></i> Save Slot
+                    </button>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- TIMETABLE GENERATION VERIFICATION & STAGING MODAL -->
+    <div id="timetable-verification-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl max-w-xl w-full shadow-2xl overflow-hidden border border-slate-200 animate-in fade-in zoom-in-95 duration-150 flex flex-col max-h-[92vh]">
+            <!-- Header -->
+            <div class="p-4 sm:p-5 bg-gradient-to-r from-slate-900 via-teal-950 to-emerald-950 text-white flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-3">
+                    <div id="gen-modal-icon-badge" class="w-10 h-10 rounded-xl bg-emerald-500/20 border border-emerald-400/40 flex items-center justify-center text-emerald-300 text-lg shadow-inner">
+                        <i class="fas fa-clipboard-check"></i>
+                    </div>
+                    <div>
+                        <div class="flex items-center gap-2">
+                            <h3 class="text-base sm:text-lg font-black tracking-tight text-white">Timetable Verification</h3>
+                            <span id="gen-modal-status-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
+                                🟢 100% Complete
+                            </span>
+                        </div>
+                        <p class="text-xs text-emerald-200/80">ടൈംടേബിൾ പരിശോധിച്ചു ഉറപ്പുവരുത്തിയ ശേഷം സ്ഥിരപ്പെടുത്തുക</p>
+                    </div>
+                </div>
+                <button type="button" onclick="window.closeTimetableVerificationModal()" class="text-slate-400 hover:text-white transition w-8 h-8 rounded-lg flex items-center justify-center hover:bg-white/10">
+                    <i class="fas fa-times text-base"></i>
+                </button>
+            </div>
+
+            <!-- Body -->
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-4">
+                
+                <!-- Notice Banner -->
+                <div id="gen-modal-notice-banner" class="bg-amber-50 border border-amber-200 rounded-xl p-3 text-xs text-amber-900 flex items-start gap-2.5">
+                    <i class="fas fa-shield-alt text-amber-600 text-sm mt-0.5 shrink-0"></i>
+                    <div class="leading-relaxed">
+                        <b>ശ്രദ്ധിക്കുക:</b> പുതിയ ടൈംടേബിൾ നിലവിലെ ഷെഡ്യൂളിലേക്ക് നേരിട്ട് മാറ്റിയിട്ടില്ല. താഴെയുള്ള വിവരങ്ങൾ പരിശോധിച്ച് തൃപ്തികരമാണെങ്കിൽ <b>'Apply Timetable'</b> ക്ലിക്ക് ചെയ്ത് സ്ഥിരപ്പെടുത്താം. ആവശ്യമെങ്കിൽ എപ്പോൾ വേണമെങ്കിലും <b>Undo / Redo</b> ചെയ്യാവുന്നതാണ്.
+                    </div>
+                </div>
+
+                <!-- Stats Grid -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-2 text-center">
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                        <div class="text-[10px] text-slate-500 font-bold uppercase">Allotted Hours</div>
+                        <div id="gen-stat-total" class="text-base font-black text-slate-800 mt-0.5">--</div>
+                    </div>
+                    <div class="bg-emerald-50 border border-emerald-200 rounded-xl p-2.5">
+                        <div class="text-[10px] text-emerald-700 font-bold uppercase">Scheduled</div>
+                        <div id="gen-stat-placed" class="text-base font-black text-emerald-800 mt-0.5">--</div>
+                    </div>
+                    <div class="bg-slate-50 border border-slate-200 rounded-xl p-2.5">
+                        <div class="text-[10px] text-slate-500 font-bold uppercase">Blank Periods</div>
+                        <div id="gen-stat-blank" class="text-base font-black text-slate-800 mt-0.5">0</div>
+                    </div>
+                    <div class="bg-purple-50 border border-purple-200 rounded-xl p-2.5">
+                        <div class="text-[10px] text-purple-700 font-bold uppercase">Science Pairs</div>
+                        <div id="gen-stat-science" class="text-base font-black text-purple-900 mt-0.5">--</div>
+                    </div>
+                </div>
+
+                <!-- Teacher Daily Workload Summary -->
+                <div class="bg-slate-50 border border-slate-200 rounded-xl p-3 space-y-2">
+                    <div class="flex items-center justify-between">
+                        <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                            <i class="fas fa-user-clock text-emerald-600"></i> അധ്യാപകരുടെ പ്രതിദിന വർക്ക് ലോഡ് (Workload Compliance)
+                        </span>
+                        <span id="gen-teacher-workload-badge" class="text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200">
+                            Max 5 Periods Rule Active
+                        </span>
+                    </div>
+                    <p class="text-[11px] text-slate-600 leading-normal" id="gen-teacher-workload-desc">
+                        എല്ലാ അധ്യാപകർക്കും പരമാവധി 5 പിരീഡിൽ താഴെ മാത്രം. ഒഴിഞ്ഞ് കിടക്കാതിരിക്കാൻ ആവശ്യമെങ്കിൽ മാത്രം 6 പിരീഡ് അനുവദിച്ചു.
+                    </p>
+                    <div id="gen-teachers-6periods-list" class="text-[11px] text-slate-600 hidden">
+                        <!-- Populated if any teacher had 6 periods -->
+                    </div>
+                </div>
+
+                <!-- Unplaced Warning List (if any) -->
+                <div id="gen-modal-unplaced-container" class="hidden bg-rose-50 border border-rose-200 rounded-xl p-3 space-y-2">
+                    <div class="flex items-center gap-2 text-rose-800 font-bold text-xs">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        <span>ഒഴിഞ്ഞ് കിടക്കുന്ന പിരീഡുകൾ (Unplaced Slots):</span>
+                    </div>
+                    <ul id="gen-modal-unplaced-list" class="text-xs text-rose-900 space-y-1 pl-4 list-disc">
+                        <!-- Populated if unplaced -->
+                    </ul>
+                </div>
+
+            </div>
+
+            <!-- Footer Actions -->
+            <div class="p-4 bg-slate-50 border-t border-slate-200 flex flex-wrap justify-between items-center gap-2">
+                <div class="flex gap-2">
+                    <button type="button" onclick="window.closeTimetableVerificationModal(false)" class="border border-slate-300 hover:bg-slate-100 text-slate-700 font-bold text-xs px-3.5 py-2.5 rounded-xl transition">
+                        <i class="fas fa-times mr-1"></i> Discard (റദ്ദാക്കുക)
+                    </button>
+                    <button type="button" onclick="window.regenerateTimetableFromModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-800 font-bold text-xs px-3.5 py-2.5 rounded-xl transition flex items-center gap-1.5">
+                        <i class="fas fa-redo text-slate-600"></i> Re-generate
+                    </button>
+                </div>
+                <div class="flex gap-2">
+                    <button type="button" id="btn-preview-staged-timetable" onclick="window.togglePreviewStagedTimetable()" class="bg-indigo-600 hover:bg-indigo-700 text-white font-bold text-xs px-3.5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fas fa-eye"></i> <span id="btn-preview-text">Preview (പ്രിവ്യൂ)</span>
+                    </button>
+                    <button type="button" onclick="window.applyStagedTimetable()" class="bg-emerald-600 hover:bg-emerald-700 text-white font-bold text-xs px-5 py-2.5 rounded-xl shadow transition flex items-center gap-1.5">
+                        <i class="fas fa-check-circle"></i> Apply Timetable (സ്ഥിരപ്പെടുത്തുക)
                     </button>
                 </div>
             </div>
@@ -7810,7 +7964,7 @@
         function isScienceOrLabSubject(subjectName) {
             if (!subjectName) return false;
             const name = String(subjectName).toLowerCase().replace(/[\s_\-]+/g, ' ').trim();
-            return /\b(computer\s*science|cs|physics|physic|chemistry|chem|biology|biological\s*science|lab)\b|കമ്പ്യൂട്ടർ|കംപ്യൂട്ടർ|ഫിസിക്സ്|ബയോളജി|കെമിസ്ട്രി|الحاسوب/i.test(name);
+            return /\b(computer(\s*science)?|cs|physics|physic|chemistry|chem|biology|biological\s*science|science|lab)\b|കമ്പ്യൂട്ടർ|കംപ്യൂട്ടർ|ഫിസിക്സ്|ബയോളജി|കെമിസ്ട്രി|الحاسوب/i.test(name);
         }
         window.isScienceOrLabSubject = isScienceOrLabSubject;
 
@@ -8861,6 +9015,309 @@
             updateDatabaseModalStats();
         }
 
+
+        // =========================================================================
+        // TIMETABLE HISTORY & UNDO / REDO ENGINE
+        // =========================================================================
+        const timetableHistory = {
+            undoStack: [],
+            redoStack: [],
+            maxDepth: 30
+        };
+
+        function pushTimetableState(desc = 'Modified timetable') {
+            if (!appState.timetable) return;
+            try {
+                const snapshot = JSON.stringify(appState.timetable);
+                timetableHistory.undoStack.push({
+                    timetable: JSON.parse(snapshot),
+                    desc: desc,
+                    timestamp: new Date()
+                });
+                if (timetableHistory.undoStack.length > timetableHistory.maxDepth) {
+                    timetableHistory.undoStack.shift();
+                }
+                timetableHistory.redoStack = []; // clear redo on new action
+                updateUndoRedoButtons();
+            } catch(e) {
+                console.warn("History push failed:", e);
+            }
+        }
+        window.pushTimetableState = pushTimetableState;
+
+        function updateUndoRedoButtons() {
+            const canUndo = timetableHistory.undoStack.length > 0;
+            const canRedo = timetableHistory.redoStack.length > 0;
+
+            const btnsUndo = [document.getElementById('btn-undo-timetable'), document.getElementById('side-btn-undo')];
+            const btnsRedo = [document.getElementById('btn-redo-timetable'), document.getElementById('side-btn-redo')];
+
+            btnsUndo.forEach(btn => {
+                if (!btn) return;
+                btn.disabled = !canUndo;
+                if (canUndo) {
+                    btn.classList.remove('opacity-40', 'cursor-not-allowed');
+                    btn.classList.add('hover:bg-amber-50', 'text-amber-900', 'border-amber-300');
+                    const lastAction = timetableHistory.undoStack[timetableHistory.undoStack.length - 1];
+                    btn.title = `Undo: ${lastAction.desc} (${timetableHistory.undoStack.length} changes available)`;
+                } else {
+                    btn.classList.add('opacity-40', 'cursor-not-allowed');
+                    btn.classList.remove('hover:bg-amber-50', 'text-amber-900', 'border-amber-300');
+                    btn.title = "No changes to undo (അൺഡൂ ചെയ്യാനില്ല)";
+                }
+            });
+
+            btnsRedo.forEach(btn => {
+                if (!btn) return;
+                btn.disabled = !canRedo;
+                if (canRedo) {
+                    btn.classList.remove('opacity-40', 'cursor-not-allowed');
+                    btn.classList.add('hover:bg-emerald-50', 'text-emerald-900', 'border-emerald-300');
+                    const nextAction = timetableHistory.redoStack[timetableHistory.redoStack.length - 1];
+                    btn.title = `Redo: ${nextAction.desc} (${timetableHistory.redoStack.length} changes available)`;
+                } else {
+                    btn.classList.add('opacity-40', 'cursor-not-allowed');
+                    btn.classList.remove('hover:bg-emerald-50', 'text-emerald-900', 'border-emerald-300');
+                    btn.title = "No changes to redo (റീഡൂ ചെയ്യാനില്ല)";
+                }
+            });
+        }
+        window.updateUndoRedoButtons = updateUndoRedoButtons;
+
+        function undoTimetableAction() {
+            if (timetableHistory.undoStack.length === 0) return;
+            const currentState = JSON.parse(JSON.stringify(appState.timetable));
+            const previous = timetableHistory.undoStack.pop();
+            timetableHistory.redoStack.push({
+                timetable: currentState,
+                desc: previous.desc,
+                timestamp: new Date()
+            });
+
+            appState.timetable = previous.timetable;
+            saveStateToLocal();
+            saveToCloud();
+            renderTimetable();
+            updateUndoRedoButtons();
+            showToast("Undo Successful (അൺഡൂ ചെയ്തു)", `മുൻപത്തെ അവസ്ഥയിലേക്ക് മാറ്റി: ${previous.desc}`);
+        }
+        window.undoTimetableAction = undoTimetableAction;
+
+        function redoTimetableAction() {
+            if (timetableHistory.redoStack.length === 0) return;
+            const currentState = JSON.parse(JSON.stringify(appState.timetable));
+            const next = timetableHistory.redoStack.pop();
+            timetableHistory.undoStack.push({
+                timetable: currentState,
+                desc: next.desc,
+                timestamp: new Date()
+            });
+
+            appState.timetable = next.timetable;
+            saveStateToLocal();
+            saveToCloud();
+            renderTimetable();
+            updateUndoRedoButtons();
+            showToast("Redo Successful (റീഡൂ ചെയ്തു)", `മാറ്റം പുനഃസ്ഥാപിച്ചു: ${next.desc}`);
+        }
+        window.redoTimetableAction = redoTimetableAction;
+
+        // =========================================================================
+        // TIMETABLE VERIFICATION & STAGING MODAL CONTROLLER
+        // =========================================================================
+        window.stagedGeneratedSchedule = null;
+        window.stagedUnscheduledList = [];
+        let isStagedPreviewActive = false;
+
+        function openTimetableVerificationModal(schedule, unscheduledList, totalAllottedCount) {
+            window.stagedGeneratedSchedule = schedule;
+            window.stagedUnscheduledList = unscheduledList || [];
+
+            const modal = document.getElementById('timetable-verification-modal');
+            if (!modal) return;
+
+            const statTotal = document.getElementById('gen-stat-total');
+            const statPlaced = document.getElementById('gen-stat-placed');
+            const statBlank = document.getElementById('gen-stat-blank');
+            const statScience = document.getElementById('gen-stat-science');
+            const statusBadge = document.getElementById('gen-modal-status-badge');
+            const workloadBadge = document.getElementById('gen-teacher-workload-badge');
+            const workloadDesc = document.getElementById('gen-teacher-workload-desc');
+            const teachers6List = document.getElementById('gen-teachers-6periods-list');
+            const unplacedBox = document.getElementById('gen-modal-unplaced-container');
+            const unplacedList = document.getElementById('gen-modal-unplaced-list');
+
+            const unplacedCount = (unscheduledList || []).length;
+            const placedCount = totalAllottedCount - unplacedCount;
+
+            if (statTotal) statTotal.innerText = totalAllottedCount;
+            if (statPlaced) statPlaced.innerText = placedCount;
+            if (statBlank) {
+                statBlank.innerText = unplacedCount;
+                statBlank.className = `text-base font-black mt-0.5 ${unplacedCount > 0 ? 'text-rose-600' : 'text-slate-800'}`;
+            }
+
+            // Count Science Pairs scheduled
+            let sciencePairs = 0;
+            const { days, periods, teachers } = appState;
+            for (let d = 0; d < days; d++) {
+                for (let p = 0; p < periods - 1; p++) {
+                    for (let cls in schedule[d][p]) {
+                        const s1 = schedule[d][p][cls];
+                        const s2 = schedule[d][p + 1][cls];
+                        if (s1 && s2 && s1.subject === s2.subject && typeof isScienceOrLabSubject === 'function' && isScienceOrLabSubject(s1.subject)) {
+                            sciencePairs++;
+                        }
+                    }
+                }
+            }
+            if (statScience) statScience.innerText = sciencePairs + ' pairs';
+
+            // Workload Analysis: Count how many teachers had 5 vs 6 periods
+            const teachersWith6Periods = new Set();
+            for (let d = 0; d < days; d++) {
+                (teachers || []).forEach(t => {
+                    let count = 0;
+                    for (let p = 0; p < periods; p++) {
+                        const slotMap = schedule[d][p] || {};
+                        for (let cls in slotMap) {
+                            const sl = slotMap[cls];
+                            if (sl && (sl.teacherId === t.id || sl.secondaryTeacherId === t.id || (sl.splitSlots && sl.splitSlots.some(s => s.teacherId === t.id)))) {
+                                count++;
+                                break;
+                            }
+                        }
+                    }
+                    if (count >= 6) {
+                        teachersWith6Periods.add(t.shortName || t.name);
+                    }
+                });
+            }
+
+            if (teachersWith6Periods.size > 0) {
+                if (workloadBadge) {
+                    workloadBadge.innerText = `${teachersWith6Periods.size} Faculty Required 6 Periods`;
+                    workloadBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-100 text-amber-900 border border-amber-300';
+                }
+                if (workloadDesc) {
+                    workloadDesc.innerHTML = `പിരീഡുകൾ ഒഴിഞ്ഞ് കിടക്കാതിരിക്കാൻ (Blank Periods ഒഴിവാക്കാൻ) പരമാവധി 5-ൽ നിന്ന് 6 പിരീഡുകൾ വരെ താഴെ കാണുന്ന അധ്യാപകർക്ക് അനുവദിച്ചിട്ടുണ്ട്: <b>${Array.from(teachersWith6Periods).join(', ')}</b>.`;
+                }
+            } else {
+                if (workloadBadge) {
+                    workloadBadge.innerText = 'All Faculty <= 5 Periods';
+                    workloadBadge.className = 'text-[10px] font-bold px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-800 border border-emerald-200';
+                }
+                if (workloadDesc) {
+                    workloadDesc.innerText = 'എല്ലാ അധ്യാപകരുടെയും പ്രതിദിന പിരീഡുകൾ 5 അല്ലെങ്കിൽ അതിൽ താഴെയാണ്. 5-ൽ കൂടുതൽ നൽകിയിട്ടില്ല.';
+                }
+            }
+
+            if (unplacedCount === 0) {
+                if (statusBadge) {
+                    statusBadge.innerText = '🟢 100% Complete - Zero Blank Periods';
+                    statusBadge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40';
+                }
+                if (unplacedBox) unplacedBox.classList.add('hidden');
+            } else {
+                if (statusBadge) {
+                    statusBadge.innerText = `⚠️ ${unplacedCount} Unplaced Slot(s)`;
+                    statusBadge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/40';
+                }
+                if (unplacedBox && unplacedList) {
+                    unplacedList.innerHTML = unscheduledList.map(u => `<li><b>${u.subject}</b> (${u.className} - ${u.college})</li>`).join('');
+                    unplacedBox.classList.remove('hidden');
+                }
+            }
+
+            modal.classList.remove('hidden');
+            modal.classList.add('flex');
+        }
+        window.openTimetableVerificationModal = openTimetableVerificationModal;
+
+        function closeTimetableVerificationModal(keepStaged = true) {
+            const modal = document.getElementById('timetable-verification-modal');
+            const banner = document.getElementById('staged-preview-banner');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+            if (!keepStaged) {
+                window.stagedGeneratedSchedule = null;
+                window.stagedUnscheduledList = [];
+                isStagedPreviewActive = false;
+                if (banner) banner.classList.add('hidden');
+                renderTimetable();
+                showToast("Discarded", "ജനറേറ്റ് ചെയ്ത ടൈംടേബിൾ ഒഴിവാക്കി. മുൻപത്തെ ടൈംടേബിൾ നിലനിർത്തി.");
+            }
+        }
+        window.closeTimetableVerificationModal = closeTimetableVerificationModal;
+
+        function togglePreviewStagedTimetable() {
+            if (!window.stagedGeneratedSchedule) return;
+            const modal = document.getElementById('timetable-verification-modal');
+            const banner = document.getElementById('staged-preview-banner');
+
+            isStagedPreviewActive = !isStagedPreviewActive;
+            if (isStagedPreviewActive) {
+                if (modal) {
+                    modal.classList.add('hidden');
+                    modal.classList.remove('flex');
+                }
+                if (banner) banner.classList.remove('hidden');
+                renderTimetable(window.stagedGeneratedSchedule);
+                showToast("Preview Active", "പുതിയ ടൈംടേബിൾ പ്രിവ്യൂ കാണുന്നു. സ്ഥിരപ്പെടുത്താൻ 'Apply' ക്ലിക്ക് ചെയ്യുക.");
+            } else {
+                if (banner) banner.classList.add('hidden');
+                renderTimetable(); // render saved timetable
+                if (modal) {
+                    modal.classList.remove('hidden');
+                    modal.classList.add('flex');
+                }
+            }
+        }
+        window.togglePreviewStagedTimetable = togglePreviewStagedTimetable;
+
+        function applyStagedTimetable() {
+            if (!window.stagedGeneratedSchedule) {
+                showAlert("Notice", "സ്ഥിരപ്പെടുത്താൻ ജനറേറ്റ് ചെയ്ത ടൈംടേബിൾ ലഭ്യമല്ല.");
+                return;
+            }
+
+            // Save previous state to history before overwriting
+            pushTimetableState(`Generated Timetable (${currentYear})`);
+
+            // Apply staged schedule to active timetable
+            appState.timetable = window.stagedGeneratedSchedule;
+            window.stagedGeneratedSchedule = null;
+            window.stagedUnscheduledList = [];
+            isStagedPreviewActive = false;
+
+            const banner = document.getElementById('staged-preview-banner');
+            if (banner) banner.classList.add('hidden');
+
+            const modal = document.getElementById('timetable-verification-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+
+            saveStateToLocal();
+            saveToCloud();
+            renderTimetable();
+            updateUndoRedoButtons();
+            showToast("Success", "പുതിയ ടൈംടേബിൾ വിജയകരമായി സ്ഥിരപ്പെടുത്തി ക്ലൗഡിൽ സേവ് ചെയ്തു!");
+        }
+        window.applyStagedTimetable = applyStagedTimetable;
+
+        function regenerateTimetableFromModal() {
+            closeTimetableVerificationModal(false);
+            setTimeout(() => {
+                window.generateTimetable();
+            }, 100);
+        }
+        window.regenerateTimetableFromModal = regenerateTimetableFromModal;
+
+
         function saveStateToLocal() {
             try {
                 localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
@@ -9862,20 +10319,22 @@
             renderTimetable();
         }
 
-        function renderTimetable() {
+        function renderTimetable(customSchedule = null) {
             const container = document.getElementById('timetable-container');
             if(!container) return;
+
+            const scheduleToRender = customSchedule || appState.timetable;
 
             if(timetableViewMode === 'today') {
                 renderTodayTimetable(container);
             } else if(timetableViewMode === 'college') {
-                renderCollegeTimetable(container, appState.days, appState.periods, appState.timetable);
+                renderCollegeTimetable(container, appState.days, appState.periods, scheduleToRender);
             } else if(timetableViewMode === 'class') {
-                renderClassTimetable(container, appState.days, appState.periods, appState.timetable);
+                renderClassTimetable(container, appState.days, appState.periods, scheduleToRender);
             } else if(timetableViewMode === 'teacher') {
-                renderTeacherTimetable(container, appState.days, appState.periods, appState.timetable);
+                renderTeacherTimetable(container, appState.days, appState.periods, scheduleToRender);
             } else {
-                renderMasterMatrixTimetable(container, appState.days, appState.periods, appState.timetable);
+                renderMasterMatrixTimetable(container, appState.days, appState.periods, scheduleToRender);
             }
 
             if (typeof renderPeriodReconciliationPanel === 'function') {
@@ -14042,6 +14501,11 @@
             }
             if (!activeManualSlotState || !appState.timetable) return;
 
+            // Save state for Undo before manual edit
+            if (typeof pushTimetableState === 'function') {
+                pushTimetableState('Manual Edit: ' + activeManualSlotState.className + ' P' + (activeManualSlotState.period + 1));
+            }
+
             const { day, period, className, actionTab } = activeManualSlotState;
             const currentTimetable = appState.timetable;
 
@@ -14186,6 +14650,7 @@
             saveToCloud();
             closeManualSlotEditor();
             renderTimetable();
+            if (typeof updateUndoRedoButtons === 'function') updateUndoRedoButtons();
             showToast("Timetable Updated", "ടൈം ടേബിളിൽ മാറ്റം വിജയകരമായി സേവ് ചെയ്തിരിക്കുന്നു.");
         }
 
@@ -16821,7 +17286,9 @@
             };
 
             // Verify if a slot can be placed at (d, p) in currentSchedule with configurable constraint relaxation
-            const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true, checkSubjectCount = true) => {
+            // maxDailyLimit: default 5; relaxed to 6 ONLY when periods would otherwise be left blank
+            // allowConsecutiveFallback: relaxed ONLY in fallback passes when periods would otherwise be left blank
+            const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true, checkSubjectCount = true, maxDailyLimit = null, allowConsecutiveFallback = false) => {
                 // Must be an active working day for this class
                 if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) return false;
 
@@ -16830,7 +17297,8 @@
 
                 // Consecutive Period Restriction:
                 // Only Computer Science, Chemistry, Physics, Biology can be scheduled back-to-back in consecutive periods for the same class
-                if (!isConsecutiveSubject(slot.subject)) {
+                // When allowConsecutiveFallback is true (only used in final fallback passes when periods would be left blank), relax this check
+                if (!isConsecutiveSubject(slot.subject) && !allowConsecutiveFallback) {
                     if (p > 0) {
                         const prevSlot = currentSchedule[d][p - 1][slot.className];
                         if (prevSlot && prevSlot.subject === slot.subject) return false;
@@ -16851,16 +17319,17 @@
                     if (subjectDayCount >= maxSubjectPerDay) return false;
                 }
 
-                // Check all teachers in slot for unavailable constraints, other class teaching, campus travel clashes, and max daily periods (Max 5)
+                // Check all teachers in slot for unavailable constraints, other class teaching, campus travel clashes, and daily limits
                 const tIds = getSlotTeachers(slot);
-                const maxTeacherDailyLimit = Number(appState.maxTeacherDailyPeriods) || 5;
+                // "പിരീഡ് ഒഴിഞ്ഞ് കിടക്കുന്ന അവസ്ഥയാണ് വരുന്നതെങ്കിൽ മാത്രമെ 5 ൽ നിന്ന് 6 വരെ അനുവദിക്കാം."
+                const effectiveDailyLimit = maxDailyLimit !== null ? maxDailyLimit : (Number(appState.maxTeacherDailyPeriods) || 5);
 
                 for (let tId of tIds) {
-                    // Exempt subject periods (Computer Science, Chemistry, Physics, Biology) do not consume the teacher's daily quota
-                    // Regular subjects are rejected once the teacher already has maxTeacherDailyLimit counted periods.
+                    // Exempt subject periods (Computer, Chemistry, Physics, Biology) do not consume the teacher's daily quota
+                    // Regular subjects are rejected once the teacher already has effectiveDailyLimit counted periods.
                     const teacherSubject = getSubjectForTeacherInSlot(slot, tId);
                     if (!isTeacherDailyLimitExemptSubject(teacherSubject) &&
-                        getTeacherCountedPeriodsForDay(tId, d, currentSchedule) >= maxTeacherDailyLimit) return false;
+                        getTeacherCountedPeriodsForDay(tId, d, currentSchedule) >= effectiveDailyLimit) return false;
 
                     if (isTeacherUnavailable(tId, d, p)) return false;
                     if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)) return false;
@@ -17297,7 +17766,7 @@
                     unscheduled = stillUnscheduled;
                 }
 
-                // PASS 5: Soft Travel Buffer Relaxation (with direct & intra-class placement)
+                // PASS 5: Soft Travel Buffer Relaxation (with direct & intra-class placement, max 5 periods)
                 if (unscheduled.length > 0) {
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
@@ -17306,7 +17775,7 @@
                             if (placed) break;
                             if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
                             for (let p = 0; p < periods; p++) {
-                                if (canPlaceSlot(slot, d, p, currentSchedule, 4, false, true)) {
+                                if (canPlaceSlot(slot, d, p, currentSchedule, 4, false, true, 5, false)) {
                                     assignSlotToSchedule(currentSchedule, d, p, slot, false);
                                     placed = true;
                                     break;
@@ -17318,8 +17787,9 @@
                     unscheduled = stillUnscheduled;
                 }
 
-                // PASS 6: Gap-Minimizing Placement (fills available internal gaps while preserving hard teacher daily limits)
-                // Exhaustive search: direct soft-travel placement + Intra-Class Shuffling to ensure 100% capacity
+                // PASS 6: Blank Period Prevention - Controlled Daily Limit Relaxation (5 to 6)
+                // "പിരീഡ് ഒഴിഞ്ഞ് കിടക്കുന്ന അവസ്ഥയാണ് വരുന്നതെങ്കിൽ മാത്രമെ 5 ൽ നിന്ന് 6 വരെ അനുവദിക്കാം."
+                // Only if slots would otherwise be left unscheduled (periods left blank), allow teacher daily limit up to 6
                 if (unscheduled.length > 0) {
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
@@ -17330,14 +17800,14 @@
                             for (let p = 0; p < periods; p++) {
                                 if (currentSchedule[d][p][slot.className]) continue;
 
-                                // Step 6A: Direct placement without subject count restrictions and soft travel buffer
-                                if (canPlaceSlot(slot, d, p, currentSchedule, 8, false, false)) {
+                                // Step 6A: Direct placement allowing up to 6 daily periods to avoid blank periods
+                                if (canPlaceSlot(slot, d, p, currentSchedule, 4, false, false, 6, false)) {
                                     assignSlotToSchedule(currentSchedule, d, p, slot, false);
                                     placed = true;
                                     break;
                                 }
 
-                                // Step 6B: Try swapping with any existing slot in this class
+                                // Step 6B: Try swapping with any existing slot in this class (with daily limit 6)
                                 for (let d_old = 0; d_old < days; d_old++) {
                                     if (placed) break;
                                     if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d_old)) continue;
@@ -17347,8 +17817,55 @@
                                         if (!sOld) continue;
 
                                         delete currentSchedule[d_old][p_old][slot.className];
-                                        if (canPlaceSlot(sOld, d, p, currentSchedule, 8, false, false) &&
-                                            canPlaceSlot(slot, d_old, p_old, currentSchedule, 8, false, false)) {
+                                        if (canPlaceSlot(sOld, d, p, currentSchedule, 4, false, false, 6, false) &&
+                                            canPlaceSlot(slot, d_old, p_old, currentSchedule, 4, false, false, 6, false)) {
+                                            assignSlotToSchedule(currentSchedule, d, p, sOld, false);
+                                            assignSlotToSchedule(currentSchedule, d_old, p_old, slot, false);
+                                            placed = true;
+                                            break;
+                                        } else {
+                                            currentSchedule[d_old][p_old][slot.className] = sOld;
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        if (!placed) stillUnscheduled.push(slot);
+                    }
+                    unscheduled = stillUnscheduled;
+                }
+
+                // PASS 7: Final Zero-Blank-Period Guarantee
+                // If any slot is still unassigned and an empty period exists for this class:
+                // Relax consecutive rule and allow limit 6 so no period is left empty
+                if (unscheduled.length > 0) {
+                    let stillUnscheduled = [];
+                    for (let slot of unscheduled) {
+                        let placed = false;
+                        for (let d = 0; d < days; d++) {
+                            if (placed) break;
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d)) continue;
+                            for (let p = 0; p < periods; p++) {
+                                if (currentSchedule[d][p][slot.className]) continue;
+
+                                if (canPlaceSlot(slot, d, p, currentSchedule, 8, false, false, 6, true)) {
+                                    assignSlotToSchedule(currentSchedule, d, p, slot, false);
+                                    placed = true;
+                                    break;
+                                }
+
+                                // Try swap with any slot in class
+                                for (let d_old = 0; d_old < days; d_old++) {
+                                    if (placed) break;
+                                    if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(slot.className, d_old)) continue;
+                                    for (let p_old = 0; p_old < periods; p_old++) {
+                                        if (d_old === d && p_old === p) continue;
+                                        const sOld = currentSchedule[d_old][p_old][slot.className];
+                                        if (!sOld) continue;
+
+                                        delete currentSchedule[d_old][p_old][slot.className];
+                                        if (canPlaceSlot(sOld, d, p, currentSchedule, 8, false, false, 6, true) &&
+                                            canPlaceSlot(slot, d_old, p_old, currentSchedule, 8, false, false, 6, true)) {
                                             assignSlotToSchedule(currentSchedule, d, p, sOld, false);
                                             assignSlotToSchedule(currentSchedule, d_old, p_old, slot, false);
                                             placed = true;
@@ -17471,31 +17988,19 @@
             // from an explicit Subject Allocation; this prevents hidden extra Biology
             // periods from exceeding class, teacher, or configured-day quotas.
 
-            appState.timetable = bestSchedule;
+            // Staging and Verification: Do NOT overwrite active timetable directly!
+            // "ടൈം ടേബിൾ ജനറേറ്റ് ചെയ്ത ശേഷം ചെക്ക് ചെയ്ത് ഉറപ്പു വരുത്തിയതിന് ശേഷം മാത്രമെ നലവിലുള്ള ടൈം ടേബിളിലേക്ക് പുതിയ ടൈം ടേബിൾ ആഡ് ആയി വരാവൂ."
+            window.stagedGeneratedSchedule = bestSchedule;
+            window.stagedUnscheduledList = bestUnscheduledList;
+            const totalRawSlotsCount = rawSlots.length;
 
-            if (bestUnscheduledList.length > 0) {
-                let counts = {};
-                bestUnscheduledList.forEach(u => {
-                    const key = u.subject + ' (' + u.className + ' - ' + u.college + ')';
-                    if (!counts[key]) counts[key] = { count: 0, reasons: new Set() };
-                    counts[key].count++;
-                    counts[key].reasons.add(u._reason || 'faculty availability, daily workload, class-day, subject-per-day, or campus-travel constraints');
-                });
-                let issues = [];
-                for (let item in counts) {
-                    issues.push('Could not place ' + counts[item].count + ' hr(s) of <b>' + item + '</b>. Reason: ' + Array.from(counts[item].reasons).join('; ') + '.');
-                }
-                const msgBox = document.getElementById('generation-messages');
-                document.getElementById('messages-list').innerHTML = issues.map(i => `<li>${i}</li>`).join('');
-                msgBox.classList.remove('hidden');
-                showToast("Timetable Notice", "Schedule generated with " + bestUnscheduledList.length + " constraint conflict(s). Review 'Generation Messages'.");
+            if (typeof openTimetableVerificationModal === 'function') {
+                openTimetableVerificationModal(bestSchedule, bestUnscheduledList, totalRawSlotsCount);
             } else {
-                document.getElementById('generation-messages').classList.add('hidden');
-                showToast("Success", "100% Complete timetable generated with zero unassigned periods for " + currentYear + "!");
+                appState.timetable = bestSchedule;
+                renderTimetable();
+                saveToCloud();
             }
-
-            renderTimetable();
-            saveToCloud();
         }
 
         // Initial Templates
