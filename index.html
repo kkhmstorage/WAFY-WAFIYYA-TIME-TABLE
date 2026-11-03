@@ -16203,8 +16203,8 @@
             document.getElementById('timetable-container').innerHTML = `
                 <div class="p-12 text-center">
                     <i class="fas fa-circle-notch fa-spin text-4xl text-emerald-600 mb-3"></i>
-                    <p class="text-sm font-semibold text-slate-700">Computing optimal timetable with Multi-Hop Kempe Chain Engine...</p>
-                    <p class="text-xs text-slate-400 mt-1">Analyzing cross-campus teacher clashes & zero-gap distribution for ${currentYear}</p>
+                    <p class="text-sm font-semibold text-slate-700">Computing timetable with teacher daily limits and compact period distribution...</p>
+                    <p class="text-xs text-slate-400 mt-1">Enforcing max 5 non-exempt periods per teacher/day and minimizing empty gaps for ${currentYear}</p>
                 </div>
             `;
             document.getElementById('generation-messages').classList.add('hidden');
@@ -16369,6 +16369,32 @@
                 return false;
             };
 
+            // Daily teacher workload rule:
+            // Count only regular (non-exempt) subjects toward the 5-period daily limit.
+            // Computer Science, Physics, Mathematics, Biology and Chemistry are exempt.
+            const isTeacherDailyLimitExemptSubject = (subjectName) => {
+                const name = String(subjectName || '').toLowerCase().replace(/[\s_\-]+/g, ' ').trim();
+                return /\b(computer\s*science|cs|physics|physic|mathematics|maths?|biology|biological\s*science|chemistry|chem)\b|കമ്പ്യൂട്ടർ\s*സയൻസ്|ഫിസിക്സ്|മാത്തമാറ്റിക്സ്|മാത്സ്|ഗണിതം|ബയോളജി|കെമിസ്ട്രി/i.test(name);
+            };
+
+            const getTeacherCountedPeriodsForDay = (tId, d, currentSchedule) => {
+                if (!tId || !currentSchedule[d]) return 0;
+                let count = 0;
+                for (let p = 0; p < periods; p++) {
+                    const slotMap = currentSchedule[d][p] || {};
+                    for (const cls in slotMap) {
+                        const assigned = slotMap[cls];
+                        if (assigned && slotContainsTeacher(assigned, tId) &&
+                            !isTeacherDailyLimitExemptSubject(assigned.subject)) {
+                            count++;
+                        }
+                    }
+                }
+                return count;
+            };
+
+            const TEACHER_DAILY_PERIOD_LIMIT = 5;
+
             // Verify if a slot can be placed at (d, p) in currentSchedule with configurable constraint relaxation
             const canPlaceSlot = (slot, d, p, currentSchedule, maxSubjectPerDay = 2, enforceBuffer = true, checkSubjectCount = true) => {
                 // Must be an active working day for this class
@@ -16390,6 +16416,10 @@
                 // Check all teachers in slot for unavailable constraints, other class teaching, and campus travel clashes
                 const tIds = getSlotTeachers(slot);
                 for (let tId of tIds) {
+                    // Exempt subject periods do not consume the teacher's five-period daily quota.
+                    // Any other subject is rejected once the teacher already has five counted periods.
+                    if (!isTeacherDailyLimitExemptSubject(slot.subject) &&
+                        getTeacherCountedPeriodsForDay(tId, d, currentSchedule) >= TEACHER_DAILY_PERIOD_LIMIT) return false;
                     if (isTeacherUnavailable(tId, d, p)) return false;
                     if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)) return false;
                     if (hasTeacherTravelClashInSchedule(tId, slot.college, d, p, currentSchedule, enforceBuffer)) return false;
@@ -16406,6 +16436,28 @@
             // Helper: Proximity & Clustering Scoring for candidate placement
             const getCandidatePlacementScore = (slot, d, p, currentSchedule) => {
                 let score = 0;
+
+                // 0. Class timetable compactness: strongly prefer filling an internal gap,
+                // then placing next to an existing period, instead of scattering periods.
+                const classDayPeriods = [];
+                for (let cp = 0; cp < periods; cp++) {
+                    if (currentSchedule[d][cp][slot.className]) classDayPeriods.push(cp);
+                }
+                if (classDayPeriods.length > 0) {
+                    const minP = Math.min(...classDayPeriods);
+                    const maxP = Math.max(...classDayPeriods);
+                    const hasBefore = classDayPeriods.some(cp => cp < p);
+                    const hasAfter = classDayPeriods.some(cp => cp > p);
+                    const adjacent = (p > 0 && !!currentSchedule[d][p - 1][slot.className]) ||
+                                     (p < periods - 1 && !!currentSchedule[d][p + 1][slot.className]);
+                    if (hasBefore && hasAfter) score += 500;       // fill a gap inside the day's schedule
+                    if (adjacent) score += 220;                    // extend a continuous block
+                    if (p === minP - 1 || p === maxP + 1) score += 140; // extend either edge
+                    score += classDayPeriods.length * 18;          // finish an already-used day first
+                } else {
+                    // When opening a new day, prefer earlier periods to avoid late isolated lessons.
+                    score += Math.max(0, periods - p) * 4;
+                }
 
                 // 1. Science Lab Subject Soft Clustering Bonus (+120 for adjacent period of same subject)
                 if (isConsecutiveSubject(slot.subject)) {
@@ -16442,6 +16494,7 @@
             let bestSchedule = null;
             let minUnscheduledCount = 999999;
             let bestConsecutivePairs = -1;
+            let bestCompactnessScore = -Infinity;
             let bestUnscheduledList = [];
             const maxAttempts = 100;
 
@@ -16823,7 +16876,7 @@
                     unscheduled = stillUnscheduled;
                 }
 
-                // PASS 6: Zero-Gap Guarantee (Complete Elimination of Blank Periods for Dense Schedules)
+                // PASS 6: Gap-Minimizing Placement (fills available internal gaps while preserving hard teacher daily limits)
                 // Exhaustive search: direct soft-travel placement + Intra-Class Shuffling to ensure 100% capacity
                 if (unscheduled.length > 0) {
                     let stillUnscheduled = [];
@@ -16902,10 +16955,39 @@
                     }
                 }
 
-                // Keep track of the mathematically best attempt found across all restarts
-                if (unscheduled.length < minUnscheduledCount || 
-                    (unscheduled.length === minUnscheduledCount && consecutivePairsCount > bestConsecutivePairs)) {
+                // Score each attempt for compact class-day layouts. Internal empty periods
+                // between the first and last lesson are penalized heavily.
+                let compactnessScore = 0;
+                for (let d = 0; d < days; d++) {
+                    const classesOnDay = new Set();
+                    for (let p = 0; p < periods; p++) {
+                        Object.keys(currentSchedule[d][p] || {}).forEach(cls => {
+                            if (currentSchedule[d][p][cls]) classesOnDay.add(cls);
+                        });
+                    }
+                    classesOnDay.forEach(cls => {
+                        const occupied = [];
+                        for (let p = 0; p < periods; p++) {
+                            if (currentSchedule[d][p][cls]) occupied.push(p);
+                        }
+                        if (occupied.length > 1) {
+                            const internalGaps = (occupied[occupied.length - 1] - occupied[0] + 1) - occupied.length;
+                            compactnessScore -= internalGaps * 100;
+                            for (let i = 1; i < occupied.length; i++) {
+                                if (occupied[i] === occupied[i - 1] + 1) compactnessScore += 8;
+                            }
+                        }
+                    });
+                }
+
+                // Keep the attempt with the fewest unassigned lessons, then the fewest
+                // internal gaps, then the best science/dual-campus clustering.
+                if (unscheduled.length < minUnscheduledCount ||
+                    (unscheduled.length === minUnscheduledCount &&
+                     (compactnessScore > bestCompactnessScore ||
+                      (compactnessScore === bestCompactnessScore && consecutivePairsCount > bestConsecutivePairs)))) {
                     minUnscheduledCount = unscheduled.length;
+                    bestCompactnessScore = compactnessScore;
                     bestConsecutivePairs = consecutivePairsCount;
                     bestSchedule = currentSchedule;
                     bestUnscheduledList = unscheduled;
