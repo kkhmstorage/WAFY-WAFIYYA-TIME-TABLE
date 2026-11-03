@@ -582,95 +582,9 @@
         }
 
     
-        /* Fit-to-screen single-glance mode: Zero horizontal scrolling */
-        .fit-to-screen-active #timetable-main-column {
-            width: 100% !important;
-            max-width: 100% !important;
-        }
-        .fit-to-screen-active #timetable-container {
-            overflow-x: auto !important;
-            width: 100% !important;
-            max-width: 100% !important;
-            box-sizing: border-box !important;
-            padding: 8px !important;
-        }
-        .fit-to-screen-active table {
-            table-layout: fixed !important;
-            width: 100% !important;
-            min-width: 100% !important;
-            border-collapse: collapse !important;
-        }
-        .fit-to-screen-active th,
-        .fit-to-screen-active td {
-            padding: 2.5px 1.5px !important;
-            word-break: break-word !important;
-        }
-        .fit-to-screen-active th.period-col-header {
-            min-width: 0 !important;
-            width: auto !important;
-        }
-        .fit-to-screen-active th.day-col-header {
-            width: 52px !important;
-            min-width: 48px !important;
-            font-size: 9px !important;
-        }
-        .fit-to-screen-active th.class-col-header {
-            width: 68px !important;
-            min-width: 60px !important;
-            font-size: 9px !important;
-        }
-        .fit-to-screen-active td.day-col-cell {
-            width: 52px !important;
-            min-width: 48px !important;
-            font-size: 9px !important;
-            padding: 2px !important;
-        }
-        .fit-to-screen-active td.class-col-cell {
-            width: 68px !important;
-            min-width: 60px !important;
-            font-size: 9px !important;
-            padding: 2px !important;
-        }
-        .fit-to-screen-active .period-cell {
-            min-height: unset !important;
-            height: auto !important;
-            padding: 2px 1px !important;
-        }
-        .fit-to-screen-active .period-cell > div {
-            min-height: 42px !important;
-            padding: 1px 0 !important;
-            gap: 0.5px !important;
-        }
-        .fit-to-screen-active .period-cell .subject-title {
-            font-size: 9px !important;
-            line-height: 1.15 !important;
-        }
-        .fit-to-screen-active .period-cell .subject-title.arabic-subject {
-            font-size: 10.5px !important;
-            line-height: 1.2 !important;
-        }
-        .fit-to-screen-active .period-cell .teacher-name {
-            font-size: 7.5px !important;
-            line-height: 1 !important;
-        }
-        .fit-to-screen-active .period-cell span.font-mono {
-            font-size: 7.5px !important;
-            padding: 0.5px 2px !important;
-        }
-        @media (min-width: 640px) {
-            .fit-to-screen-active th.day-col-header { width: 68px !important; font-size: 10px !important; }
-            .fit-to-screen-active th.class-col-header { width: 85px !important; font-size: 10px !important; }
-            .fit-to-screen-active td.day-col-cell { width: 68px !important; font-size: 10px !important; }
-            .fit-to-screen-active td.class-col-cell { width: 85px !important; font-size: 10px !important; }
-            .fit-to-screen-active .period-cell > div { min-height: 46px !important; }
-            .fit-to-screen-active .period-cell .subject-title { font-size: 10.5px !important; }
-            .fit-to-screen-active .period-cell .subject-title.arabic-subject { font-size: 12px !important; }
-            .fit-to-screen-active .period-cell .teacher-name { font-size: 8.5px !important; }
-        }
-
-    </style>
+        </style>
 </head>
-<body class="text-slate-800 min-h-screen md:h-screen flex flex-col antialiased bg-slate-100 fit-to-screen-active">
+<body class="text-slate-800 min-h-screen md:h-screen flex flex-col antialiased bg-slate-100">
 
     <!-- Top Header -->
     <header class="bg-gradient-to-r from-emerald-950 via-teal-950 to-slate-950 text-white px-3 py-2.5 sm:px-4 sm:py-3.5 shadow-lg flex flex-wrap justify-between items-center gap-2 shrink-0 border-b border-emerald-700/60 no-print">
@@ -927,40 +841,21 @@
                             <!-- Populated dynamically based on mode -->
                         </div>
 
-                        <div class="flex flex-wrap items-center gap-1.5">
-                            <!-- Fit to Screen & Zoom Controls -->
-                            <button id="btn-toggle-fit-screen" onclick="window.toggleFitToScreenMode()" class="bg-emerald-50 hover:bg-emerald-100 text-emerald-800 border border-emerald-300 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-2xs font-bold" title="സ്ക്രീനിൽ ഒതുക്കുക (ഒറ്റ നോട്ടത്തിൽ) / സ്ക്രോൾ വ്യൂ">
-                                <i class="fas fa-compress-arrows-alt text-emerald-600"></i> <span id="fit-screen-label">ഒറ്റ നോട്ടത്തിൽ (Fit)</span>
-                            </button>
-
-                            <div class="inline-flex items-center rounded-lg bg-slate-100 border border-slate-200 p-0.5 text-xs shadow-2xs">
-                                <button type="button" onclick="window.zoomTimetable(-10)" class="px-2 py-1 text-slate-600 hover:text-slate-900 font-bold" title="Zoom Out (-)">
-                                    <i class="fas fa-minus text-[10px]"></i>
-                                </button>
-                                <span id="zoom-level-text" class="px-1.5 font-mono text-[10.5px] font-bold text-slate-700">100%</span>
-                                <button type="button" onclick="window.zoomTimetable(10)" class="px-2 py-1 text-slate-600 hover:text-slate-900 font-bold" title="Zoom In (+)">
-                                    <i class="fas fa-plus text-[10px]"></i>
-                                </button>
-                                <button type="button" onclick="window.resetZoomTimetable()" class="px-1.5 py-0.5 text-[9.5px] text-slate-400 hover:text-slate-700" title="Reset">
-                                    1:1
-                                </button>
-                            </div>
-
-                            <!-- True Vector PDF Export (Excel/Word Quality) -->
-                            <button onclick="window.printVectorPDF()" class="bg-gradient-to-r from-emerald-600 to-teal-700 hover:from-emerald-700 hover:to-teal-800 text-white text-xs px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm font-bold" title="True Vector PDF (Word/Excel ക്വാളിറ്റി - സൂം ചെയ്യുമ്പോൾ മങ്ങില്ല)">
-                                <i class="fas fa-file-pdf text-amber-300"></i> <span>Vector PDF (Excel ക്വാളിറ്റി)</span>
-                            </button>
-
-                            <button onclick="window.downloadTimetablePDF(null, 'a3')" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-2xs font-semibold" title="Download A3 Image PDF">
-                                <i class="fas fa-download text-emerald-600"></i> <span>A3 ഫയൽ</span>
-                            </button>
-
-                            <button onclick="window.exportToCSV()" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1 transition shadow-2xs font-semibold" title="Export CSV">
+                        <div class="flex items-center gap-1.5 flex-wrap">
+                            <button onclick="window.exportToCSV()" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm font-semibold" title="Export CSV">
                                 <i class="fas fa-file-csv text-emerald-600"></i> CSV
                             </button>
-
-                            <button id="btn-toggle-period-audit" onclick="window.togglePeriodAuditSidebar()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm font-semibold" title="Toggle Class-wise Period Allocation Status">
-                                <i class="fas fa-tasks"></i> <span>പിരീഡ് സ്റ്റാറ്റസ്</span>
+                            <button onclick="window.downloadTimetablePDF(null, 'a3')" class="bg-emerald-600 hover:bg-emerald-700 text-white text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm font-semibold" title="Download Complete Timetable as A3 Noticeboard PDF (Recommended - Zero Cutoffs)">
+                                <i class="fas fa-file-pdf"></i> Download PDF (A3)
+                            </button>
+                            <button onclick="window.downloadTimetablePDF(null, 'a4')" class="bg-white hover:bg-slate-50 border border-slate-200 text-slate-700 text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1 transition shadow-sm font-semibold" title="Download Compact A4 PDF">
+                                <i class="fas fa-file-alt text-slate-500"></i> A4 PDF
+                            </button>
+                            <button onclick="window.print()" class="bg-slate-800 hover:bg-slate-900 text-white text-xs px-3 sm:px-3.5 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow font-semibold" title="Print Timetable Noticeboard">
+                                <i class="fas fa-print"></i> Print
+                            </button>
+                            <button id="btn-toggle-period-audit" onclick="window.togglePeriodAuditSidebar()" class="bg-indigo-600 hover:bg-indigo-700 text-white text-xs px-2.5 sm:px-3 py-1.5 rounded-lg flex items-center gap-1.5 transition shadow-sm font-semibold" title="Toggle Class-wise Period Allocation Status">
+                                <i class="fas fa-tasks"></i> <span>പിരീഡ് സ്റ്റാറ്റസ് (Audit)</span>
                                 <span id="audit-shortage-badge" class="hidden bg-rose-500 text-white text-[9px] px-1.5 py-0.2 rounded-full font-black"></span>
                             </button>
                         </div>
