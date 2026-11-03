@@ -9,6 +9,14 @@
 /.idea/navEditor.xml
 /.idea/assetWizardSettings.xml
 .DS_Store
+Thumbs.db
+*.log
+
+# Editor directories
+.vscode/
+.idea/
+
+# Android & Gradle Build Artifacts
 /build
 /captures
 .externalNativeBuild

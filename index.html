@@ -16,7 +16,13 @@
         body { font-family: 'Inter', sans-serif; background-color: #f8fafc; }
         .tab-btn.active { border-color: #059669; color: #059669; background-color: #ecfdf5; font-weight: 700; }
         .mob-tab-btn.active { background-color: #059669 !important; color: white !important; font-weight: 700; }
-        .period-cell { min-height: 82px; transition: all 0.15s ease; }
+        .period-cell { 
+            min-height: auto; 
+            height: auto; 
+            transition: all 0.15s ease; 
+            padding: 3px 4px !important;
+            vertical-align: middle !important;
+        }
         .period-cell:hover { transform: scale(1.01); z-index: 10; }
         .overflow-x-auto { -webkit-overflow-scrolling: touch; }
         @page {
@@ -3072,6 +3078,7 @@
         let currentReportSubTab = 'monthly'; // 'monthly' | 'annual'
         let isSaving = false;
         let isAdminLoggedIn = false;
+        let selectedTeacherViewId = null; // Currently selected faculty member in Teacher Timetable view
         let isLeaderLoggedIn = false;
         let currentLeaderUser = null;
         let leaderAuth = {
@@ -8579,6 +8586,9 @@
                 // 3. Faculty / Teacher View Deep Linking
                 if (role === 'teacher' || role === 'faculty' || teacherId) {
                     window.switchTab('timetable');
+                    if (teacherId) {
+                        selectedTeacherViewId = teacherId;
+                    }
                     window.setTimetableViewMode('teacher');
                     if (teacherId) {
                         setTimeout(() => {
@@ -9677,12 +9687,20 @@
                     </select>
                 `;
             } else if(timetableViewMode === 'teacher') {
+                if (!selectedTeacherViewId || (selectedTeacherViewId !== 'all' && !appState.teachers.some(t => t.id === selectedTeacherViewId))) {
+                    selectedTeacherViewId = appState.teachers[0] ? appState.teachers[0].id : '';
+                }
                 container.innerHTML = `
-                    <label class="text-slate-500 mr-1 font-medium">Select Faculty:</label>
-                    <select id="teacher-view-filter" onchange="window.renderTimetable()" class="bg-transparent font-bold text-slate-800 outline-none cursor-pointer max-w-[160px] sm:max-w-none truncate">
-                        <option value="all">-- All Faculty Members --</option>
-                        ${appState.teachers.map(t=>`<option value="${t.id}">${t.name} (${t.shortName})</option>`).join('')}
-                    </select>
+                    <div class="flex items-center gap-1.5 flex-wrap">
+                        <label class="text-slate-500 font-medium flex items-center gap-1">
+                            <i class="fas fa-user-tie text-emerald-600"></i>
+                            <span>Select Faculty:</span>
+                        </label>
+                        <select id="teacher-view-filter" onchange="window.onTeacherFilterChange(this.value)" class="bg-white border border-slate-300 rounded-lg px-2.5 py-1 text-xs font-bold text-slate-800 outline-none cursor-pointer max-w-[220px] sm:max-w-none shadow-2xs focus:ring-2 focus:ring-emerald-500">
+                            ${appState.teachers.map(t=>`<option value="${t.id}" ${t.id === selectedTeacherViewId ? 'selected' : ''}>${t.name} (${t.shortName})</option>`).join('')}
+                            <option value="all" ${selectedTeacherViewId === 'all' ? 'selected' : ''}>-- All Faculty (Print All) --</option>
+                        </select>
+                    </div>
                 `;
             } else {
                 container.innerHTML = `
@@ -11879,8 +11897,8 @@
             if (!slot) {
                 return `
                     <div class="flex flex-col items-center justify-center text-center py-1 opacity-50">
-                        <i class="fas fa-coffee text-[9px] mb-0.5 text-slate-400"></i>
-                        <span class="text-[8.5px] font-bold uppercase tracking-wider text-slate-500">Free</span>
+                        <i class="fas fa-coffee text-[8.5px] mb-0.5 text-slate-400"></i>
+                        <span class="text-[8px] font-bold uppercase tracking-wider text-slate-500 leading-none">Free</span>
                     </div>
                 `;
             }
@@ -11894,15 +11912,15 @@
                 ];
 
                 return `
-                    <div class="flex flex-col gap-1 w-full text-center py-0.5">
+                    <div class="flex flex-col gap-0.5 w-full text-center py-0.5">
                         ${splitSlots.map((s, idx) => {
                             const t = appState.teachers.find(tch => tch.id === s.teacherId);
                             const cScheme = colors[idx % colors.length];
                             return `
                                 <div class="bg-white/95 p-1 rounded-md border ${cScheme.border} shadow-2xs">
-                                    <div class="text-[7.5px] font-extrabold uppercase ${cScheme.text} tracking-tight leading-none">${s.batchLabel || s.subject + ' Batch'}</div>
-                                    <div class="font-black text-[11px] leading-tight text-slate-900 mt-0.5 truncate">${s.subject}</div>
-                                    <div class="text-[8.5px] font-bold text-slate-600 font-mono mt-0.5 flex items-center justify-center gap-1">
+                                    <div class="text-[7px] font-extrabold uppercase ${cScheme.text} tracking-tight leading-none">${s.batchLabel || s.subject + ' Batch'}</div>
+                                    <div class="font-black text-[10.5px] leading-tight text-slate-900 mt-0.5 truncate">${s.subject}</div>
+                                    <div class="text-[8px] font-bold text-slate-600 font-mono mt-0.5 flex items-center justify-center gap-1">
                                         <span>${t ? t.shortName : ''}</span>
                                     </div>
                                 </div>
@@ -11918,17 +11936,17 @@
                 const isArabic = /[\u0600-\u06FF]/.test(slot.subject);
 
                 return `
-                    <div class="flex flex-col items-center justify-center text-center w-full h-full min-h-[46px] gap-0.5 py-0.5">
-                        <span class="inline-block bg-amber-100 text-amber-900 border border-amber-300 font-black text-[7.5px] px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5">
-                            <i class="fas fa-user-friends text-[7px] mr-0.5"></i> Shared
+                    <div class="flex flex-col items-center justify-center text-center w-full h-full gap-0.5 py-0.5">
+                        <span class="inline-block bg-amber-100 text-amber-900 border border-amber-300 font-black text-[7px] px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5">
+                            <i class="fas fa-user-friends text-[6.5px] mr-0.5"></i> Shared
                         </span>
-                        <div class="subject-title font-black text-slate-950 text-center leading-snug ${isArabic ? 'text-[12.5px] arabic-subject' : 'text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
+                        <div class="subject-title font-black text-slate-950 text-center leading-tight ${isArabic ? 'text-[11.5px] sm:text-[12px] arabic-subject' : 'text-[10.5px] sm:text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
                             ${slot.subject}
                         </div>
-                        <div class="teacher-name font-bold text-slate-700 text-center text-[9px] leading-tight">
+                        <div class="teacher-name font-bold text-slate-700 text-center text-[8.5px] leading-tight mt-0.5">
                             ${t1 ? t1.shortName : ''} / ${t2 ? t2.shortName : ''}
                         </div>
-                        <div class="text-[7.5px] text-amber-800 font-semibold italic">
+                        <div class="text-[7px] text-amber-800 font-semibold italic">
                             (${slot.shareMode === 'both' ? 'Both' : 'Either-Or'})
                         </div>
                     </div>
@@ -11944,19 +11962,19 @@
                     : '';
 
                 return `
-                    <div class="flex flex-col items-center justify-center text-center w-full h-full min-h-[48px] gap-0.5 py-0.5 rounded-lg border-2 border-indigo-400 bg-gradient-to-b from-indigo-50/95 via-purple-50/90 to-white shadow-xs">
-                        <span class="inline-flex items-center gap-1 bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 text-white font-black text-[7.5px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs mb-0.5">
-                            <i class="fas fa-dna text-[7px] text-pink-300"></i> അഡീഷണൽ • BIOLOGY
+                    <div class="flex flex-col items-center justify-center text-center w-full h-full gap-0.5 py-0.5 rounded-lg border border-indigo-400 bg-gradient-to-b from-indigo-50/95 via-purple-50/90 to-white shadow-xs">
+                        <span class="inline-flex items-center gap-1 bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 text-white font-black text-[7px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs mb-0.5">
+                            <i class="fas fa-dna text-[6.5px] text-pink-300"></i> അഡീഷണൽ • BIOLOGY
                         </span>
                         ${manualBadge}
-                        <div class="subject-title font-black text-indigo-950 text-center leading-snug ${isArabic ? 'text-[12.5px] arabic-subject' : 'text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
+                        <div class="subject-title font-black text-indigo-950 text-center leading-tight ${isArabic ? 'text-[11.5px] sm:text-[12px] arabic-subject' : 'text-[10.5px] sm:text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
                             ${slot.subject}
                         </div>
-                        <div class="teacher-name font-bold text-indigo-900 text-center leading-tight ${isTeacherArabic ? 'text-[10px] arabic-text' : 'text-[9.5px]'}" ${isTeacherArabic ? 'dir="rtl"' : ''}>
+                        <div class="teacher-name font-bold text-indigo-900 text-center leading-tight ${isTeacherArabic ? 'text-[9.5px] arabic-text' : 'text-[9px]'}" ${isTeacherArabic ? 'dir="rtl"' : ''}>
                             ${teacher ? teacher.name : ''}
                         </div>
                         <div class="flex items-center justify-center text-center mt-0.5">
-                            <span class="inline-block bg-indigo-100 text-indigo-900 border border-indigo-300 font-mono font-black text-[8.5px] px-1.5 py-0.5 rounded shadow-2xs uppercase tracking-wider">${teacher ? teacher.shortName : ''}</span>
+                            <span class="inline-block bg-indigo-100 text-indigo-900 border border-indigo-300 font-mono font-black text-[8px] px-1.5 py-0.2 rounded shadow-2xs uppercase tracking-wider">${teacher ? teacher.shortName : ''}</span>
                         </div>
                     </div>
                 `;
@@ -11972,16 +11990,16 @@
                 : '';
 
             return `
-                <div class="flex flex-col items-center justify-center text-center w-full h-full min-h-[46px] gap-0.5">
+                <div class="flex flex-col items-center justify-center text-center w-full h-full gap-0.5 py-0.5">
                     ${manualBadge}
-                    <div class="subject-title font-black text-slate-950 text-center leading-snug ${isArabic ? 'text-[12.5px] arabic-subject' : 'text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
+                    <div class="subject-title font-black text-slate-950 text-center leading-tight ${isArabic ? 'text-[11.5px] sm:text-[12px] arabic-subject' : 'text-[10.5px] sm:text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
                         ${slot.subject}
                     </div>
-                    <div class="teacher-name font-bold text-slate-700 text-center leading-tight ${isTeacherArabic ? 'text-[10px] arabic-text' : 'text-[9.5px]'}" ${isTeacherArabic ? 'dir="rtl"' : ''}>
+                    <div class="teacher-name font-bold text-slate-700 text-center leading-tight ${isTeacherArabic ? 'text-[9.5px] arabic-text' : 'text-[9px]'}" ${isTeacherArabic ? 'dir="rtl"' : ''}>
                         ${teacher ? teacher.name : ''}
                     </div>
                     <div class="flex items-center justify-center text-center mt-0.5">
-                        <span class="inline-block ${teacherBadgeColor} font-mono font-black text-[8.5px] px-1.5 py-0.5 rounded shadow-2xs uppercase tracking-wider">${teacher ? teacher.shortName : ''}</span>
+                        <span class="inline-block ${teacherBadgeColor} font-mono font-black text-[8px] px-1.5 py-0.2 rounded shadow-2xs uppercase tracking-wider">${teacher ? teacher.shortName : ''}</span>
                     </div>
                 </div>
             `;
@@ -11990,7 +12008,8 @@
         // 1. Teacher Timetable
         function renderTeacherTimetable(container, days, periods, timetable) {
             const filterEl = document.getElementById('teacher-view-filter');
-            const selectedTeacherId = filterEl ? filterEl.value : 'all';
+            const selectedTeacherId = filterEl ? filterEl.value : (selectedTeacherViewId || (appState.teachers[0] ? appState.teachers[0].id : 'all'));
+            selectedTeacherViewId = selectedTeacherId;
 
             const teachersToRender = selectedTeacherId === 'all' ? 
                 appState.teachers : 
@@ -12022,32 +12041,63 @@
                     return false;
                 });
 
+                // Calculate teacher weekly total teaching periods
+                let weeklyHours = 0;
+                for (let d = 0; d < days; d++) {
+                    for (let p = 0; p < periods; p++) {
+                        if (timetable && timetable[d] && timetable[d][p]) {
+                            for (let cls in timetable[d][p]) {
+                                const slot = timetable[d][p][cls];
+                                if (!slot) continue;
+                                if (slot.allocationType === 'split') {
+                                    if ((slot.splitSlots || []).some(s => s.teacherId === teacher.id)) { weeklyHours++; break; }
+                                } else if (slot.allocationType === 'shared') {
+                                    if (slot.teacherId === teacher.id || slot.secondaryTeacherId === teacher.id) { weeklyHours++; break; }
+                                } else {
+                                    if (slot.teacherId === teacher.id) { weeklyHours++; break; }
+                                }
+                            }
+                        }
+                    }
+                    if (teacherHasAdditionalSlot && WAFIYYA_T1_ADDITIONAL_DAYS.includes(d) && timetable && timetable[d] && timetable[d][periods]) {
+                        for (let cls in timetable[d][periods]) {
+                            const s = timetable[d][periods][cls];
+                            if (s && (s.teacherId === teacher.id || s.secondaryTeacherId === teacher.id)) { weeklyHours++; break; }
+                        }
+                    }
+                }
+
                 html += `
-                    <div class="mb-8 border border-slate-200 rounded-2xl overflow-hidden shadow-sm page-break-inside-avoid bg-white">
-                        <div class="bg-slate-100 p-3.5 flex justify-between items-center border-b border-slate-200">
+                    <div class="mb-6 border border-slate-200 rounded-2xl overflow-hidden shadow-sm page-break-inside-avoid bg-white timetable-print-card">
+                        <div class="bg-slate-100 p-3 sm:p-3.5 flex justify-between items-center border-b border-slate-200">
                             <div>
                                 <h3 class="font-bold text-sm text-slate-800 flex items-center gap-2">
                                     <span class="w-6 h-6 rounded bg-emerald-600 text-white flex items-center justify-center text-xs font-mono font-bold">${teacher.shortName}</span>
-                                    ${teacher.name}
+                                    <span>${teacher.name}</span>
                                 </h3>
                                 <p class="text-[11px] text-slate-500">Weekly Faculty Schedule • Academic Year ${currentYear}</p>
                             </div>
-                            <span class="text-xs bg-emerald-100 text-emerald-800 px-2 py-0.5 rounded font-medium">Faculty Timetable</span>
+                            <div class="flex items-center gap-2">
+                                <span class="text-xs bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 shadow-2xs">
+                                    <i class="fas fa-clock text-emerald-600"></i> ${weeklyHours} Periods / Week
+                                </span>
+                                <span class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-lg font-semibold hidden sm:inline-block">Faculty Timetable</span>
+                            </div>
                         </div>
 
                         <div class="overflow-x-auto w-full">
                             <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
                                 <thead class="bg-slate-50 text-slate-600 text-xs font-semibold">
                                     <tr>
-                                        <th class="px-3 py-2.5 border border-slate-200 text-center align-middle w-24 bg-slate-100 font-black">Day</th>
+                                        <th class="px-2.5 py-2 border border-slate-200 text-center align-middle w-20 sm:w-24 bg-slate-100 font-black text-slate-800 text-xs">Day</th>
                                         ${Array.from({length: periods}, (_, i) => `
-                                            <th class="px-2 py-2 border border-slate-200 min-w-[90px] text-center align-middle">
-                                                <div class="font-extrabold text-xs">Period ${i + 1}</div>
-                                                <div class="text-[9px] text-slate-400 font-medium mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
+                                            <th class="px-2 py-1.5 border border-slate-200 min-w-[105px] sm:min-w-[115px] text-center align-middle bg-slate-50">
+                                                <div class="font-extrabold text-xs text-slate-800">Period ${i + 1}</div>
+                                                <div class="text-[9px] text-slate-400 font-medium tracking-tight">${appState.periodTimings[i] || ''}</div>
                                             </th>
                                         `).join('')}
                                         ${teacherHasAdditionalSlot ? `
-                                            <th class="px-2 py-2 border border-purple-300 bg-purple-50 min-w-[95px] text-center align-middle font-black text-xs text-purple-950">
+                                            <th class="px-2 py-1.5 border border-purple-300 bg-purple-50 min-w-[105px] sm:min-w-[115px] text-center align-middle font-black text-xs text-purple-950">
                                                 <div class="flex items-center justify-center gap-1"><i class="fas fa-dna text-purple-600"></i> Additional</div>
                                                 <div class="text-[8.5px] text-purple-700 font-bold">T1 Biology</div>
                                             </th>
@@ -12059,7 +12109,7 @@
 
                 for (let d = 0; d < days; d++) {
                     html += `<tr class="day-block">`;
-                    html += `<td class="px-3 py-2.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}</td>`;
+                    html += `<td class="px-2 py-1.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}</td>`;
 
                     for (let p = 0; p < periods; p++) {
                         let assignedSlot = null;
@@ -12104,28 +12154,28 @@
                         if (assignedSlot) {
                             const isWafy = assignedSlot.college === appState.institutions[0];
                             const bg = isWafy ? 'bg-emerald-50 text-emerald-950 border border-emerald-200' : 'bg-purple-50 text-purple-950 border border-purple-200';
-                            const tag = isWafy ? 'bg-emerald-200 text-emerald-800' : 'bg-purple-200 text-purple-800';
+                            const tag = isWafy ? 'bg-emerald-100 text-emerald-800 border border-emerald-200' : 'bg-purple-100 text-purple-800 border border-purple-200';
                             const isArabic = /[\u0600-\u06FF]/.test(assignedSlot.subject);
 
                             let extraBadge = '';
                             if (assignedSlot.isSplit) {
-                                extraBadge = `<span class="inline-block bg-emerald-100 text-emerald-800 border border-emerald-300 text-[8px] font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5"><i class="fas fa-columns text-[7px] mr-0.5"></i> ${assignedSlot.batchLabel || 'Split Batch'}</span>`;
+                                extraBadge = `<span class="inline-block bg-emerald-100 text-emerald-800 border border-emerald-300 text-[7.5px] font-extrabold px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5"><i class="fas fa-columns text-[6.5px] mr-0.5"></i> ${assignedSlot.batchLabel || 'Split Batch'}</span>`;
                             } else if (assignedSlot.isShared) {
-                                extraBadge = `<span class="inline-block bg-amber-100 text-amber-900 border border-amber-300 text-[8px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5"><i class="fas fa-user-friends text-[7px] mr-0.5"></i> Shared with ${assignedSlot.coTeacher ? assignedSlot.coTeacher.shortName : 'Faculty'}</span>`;
+                                extraBadge = `<span class="inline-block bg-amber-100 text-amber-900 border border-amber-300 text-[7.5px] font-black px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5"><i class="fas fa-user-friends text-[6.5px] mr-0.5"></i> Shared with ${assignedSlot.coTeacher ? assignedSlot.coTeacher.shortName : 'Faculty'}</span>`;
                             }
 
                             html += `
-                                <td class="border border-slate-200 p-1.5 period-cell ${bg} text-center align-middle">
-                                    <div class="flex flex-col items-center justify-center text-center w-full min-h-[46px] gap-0.5">
+                                <td class="border border-slate-200 p-1 sm:p-1.5 period-cell ${bg} text-center align-middle">
+                                    <div class="flex flex-col items-center justify-center text-center w-full h-full py-0.5 gap-0.5">
                                         ${extraBadge}
-                                        <div class="font-black leading-snug text-slate-900 ${isArabic ? 'text-[12.5px] arabic-subject' : 'text-xs uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>${assignedSlot.subject}</div>
-                                        <div class="text-[10px] text-slate-700 font-bold leading-tight mt-0.5">${assignedSlot.className}</div>
-                                        <span class="inline-block text-[8.5px] px-1.5 py-0.2 rounded font-semibold mt-0.5 ${tag}">${assignedSlot.college}</span>
+                                        <div class="subject-title font-black text-slate-950 leading-tight ${isArabic ? 'text-[11.5px] sm:text-[12px] arabic-subject' : 'text-[11px] sm:text-xs uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>${assignedSlot.subject}</div>
+                                        <div class="text-[9.5px] sm:text-[10px] text-slate-700 font-extrabold leading-tight mt-0.5">${assignedSlot.className}</div>
+                                        <span class="inline-block text-[7.5px] sm:text-[8px] px-1.5 py-0.5 rounded font-bold mt-0.5 leading-none ${tag}">${assignedSlot.college}</span>
                                     </div>
                                 </td>
                             `;
                         } else {
-                            html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle">-</td>`;
+                            html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/20">-</td>`;
                         }
                     }
 
@@ -12143,21 +12193,21 @@
 
                         if (addSlotForTeacher) {
                             html += `
-                                <td class="border border-purple-300 p-1.5 period-cell bg-indigo-50/90 text-center align-middle">
-                                    <div class="flex flex-col items-center justify-center text-center w-full min-h-[46px] gap-0.5">
+                                <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle">
+                                    <div class="flex flex-col items-center justify-center text-center w-full h-full py-0.5 gap-0.5">
                                         <span class="inline-flex items-center gap-1 bg-gradient-to-r from-indigo-700 to-purple-800 text-white font-black text-[7px] px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5">
                                             <i class="fas fa-dna text-[6px]"></i> Additional
                                         </span>
-                                        <div class="font-black leading-snug text-indigo-950 text-xs">${addSlotForTeacher.subject}</div>
-                                        <div class="text-[10px] text-indigo-900 font-bold leading-tight mt-0.5">${addSlotForTeacher.className}</div>
-                                        <span class="inline-block text-[8px] px-1.5 py-0.2 rounded font-semibold mt-0.5 bg-indigo-200 text-indigo-900">Wafiyya Campus</span>
+                                        <div class="subject-title font-black text-indigo-950 leading-tight text-xs">${addSlotForTeacher.subject}</div>
+                                        <div class="text-[9.5px] sm:text-[10px] text-indigo-900 font-extrabold leading-tight mt-0.5">${addSlotForTeacher.className}</div>
+                                        <span class="inline-block text-[7.5px] sm:text-[8px] px-1.5 py-0.5 rounded font-bold mt-0.5 leading-none bg-indigo-200 text-indigo-900">Wafiyya Campus</span>
                                     </div>
                                 </td>
                             `;
                         } else if (WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
-                            html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle">-</td>`;
+                            html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/20">-</td>`;
                         } else {
-                            html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle bg-slate-50/50">—</td>`;
+                            html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/50">—</td>`;
                         }
                     }
                     html += `</tr>`;
@@ -12216,19 +12266,19 @@
                         <table class="min-w-full divide-y divide-slate-200 text-center border-collapse">
                             <thead class="bg-slate-50 text-slate-700 text-xs font-bold uppercase tracking-wider">
                                 <tr>
-                                    <th class="px-3 py-2.5 border border-slate-200 text-center align-middle w-28 bg-slate-100 font-black">Day</th>
+                                    <th class="px-2.5 py-2 border border-slate-200 text-center align-middle w-20 sm:w-24 bg-slate-100 font-black text-slate-800 text-xs">Day</th>
                                     ${Array.from({length: periods}, (_, i) => `
-                                        <th class="px-3 py-2.5 border border-slate-200 bg-slate-50 min-w-[95px] text-center align-middle">
-                                            <div class="font-extrabold text-xs">Period ${i + 1}</div>
+                                        <th class="px-2 py-1.5 border border-slate-200 bg-slate-50 min-w-[105px] sm:min-w-[115px] text-center align-middle">
+                                            <div class="font-extrabold text-xs text-slate-800">Period ${i + 1}</div>
                                             <div class="text-[9px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                         </th>
                                     `).join('')}
                                     ${isT1 ? `
-                                        <th class="px-3 py-2.5 border border-purple-300 bg-purple-100 text-purple-950 min-w-[110px] text-center align-middle shadow-2xs">
+                                        <th class="px-2 py-1.5 border border-purple-300 bg-purple-100 text-purple-950 min-w-[105px] sm:min-w-[115px] text-center align-middle shadow-2xs">
                                             <div class="font-black text-xs flex items-center justify-center gap-1 text-purple-950">
                                                 <i class="fas fa-dna text-purple-700"></i> അഡീഷണൽ പിരീഡ്
                                             </div>
-                                            <div class="text-[9px] text-purple-700 font-bold mt-0.5 tracking-tight">Biology Only • Mon, Wed, Fri</div>
+                                            <div class="text-[8.5px] text-purple-700 font-bold mt-0.5 tracking-tight">Biology Only • Mon, Wed, Fri</div>
                                         </th>
                                     ` : ''}
                                 </tr>
@@ -12239,12 +12289,12 @@
             for (let d = 0; d < days; d++) {
                 const isActiveDay = typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(targetClass, d);
                 html += `<tr class="day-block ${!isActiveDay ? 'bg-slate-50/70' : ''}">`;
-                html += `<td class="px-3 py-2.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}</td>`;
+                html += `<td class="px-2 py-1.5 border border-slate-200 font-black bg-slate-50 text-slate-800 text-center align-middle whitespace-nowrap text-xs uppercase">${dayNamesEn[d]}</td>`;
 
                 if (!isActiveDay) {
                     html += `
-                        <td colspan="${periods + (isT1 ? 1 : 0)}" class="border border-slate-200 p-2.5 text-center align-middle bg-slate-50/60 text-slate-400">
-                            <span class="inline-flex items-center gap-1.5 px-3 py-1 rounded-full bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200">
+                        <td colspan="${periods + (isT1 ? 1 : 0)}" class="border border-slate-200 p-2 text-center align-middle bg-slate-50/60 text-slate-400">
+                            <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200">
                                 <i class="fas fa-bed text-[11px] text-slate-400"></i>
                                 <span>ക്ലാസുകളില്ല (Off Day / No Classes Scheduled)</span>
                             </span>
@@ -12265,7 +12315,7 @@
 
                     if (slot) {
                         html += `
-                            <td class="border border-slate-200 p-1.5 period-cell ${bg} text-center align-middle ${adminInteractiveAttr}">
+                            <td class="border border-slate-200 p-1 sm:p-1.5 period-cell ${bg} text-center align-middle ${adminInteractiveAttr}">
                                 ${getTimetableCellHtml(slot, isWafy)}
                             </td>
                         `;
@@ -12273,7 +12323,7 @@
                         const adminFreeInteractive = isAdminLoggedIn 
                             ? `cursor-pointer hover:bg-emerald-50/80 hover:ring-2 hover:ring-emerald-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${p}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് പുതിയ വിഷയം നൽകുക (Admin Slot Edit)` 
                             : '';
-                        html += `<td class="border border-slate-200 p-1.5 text-slate-400 italic text-[10px] text-center align-middle ${adminFreeInteractive}">${getTimetableCellHtml(null, isWafy)}</td>`;
+                        html += `<td class="border border-slate-200 p-1 text-slate-400 italic text-[10px] text-center align-middle bg-slate-50/20 ${adminFreeInteractive}">${getTimetableCellHtml(null, isWafy)}</td>`;
                     }
                 }
 
@@ -12285,7 +12335,7 @@
                             : '';
                         if (addSlot) {
                             html += `
-                                <td class="border border-purple-300 p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
+                                <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
                                     ${getTimetableCellHtml(addSlot, false)}
                                 </td>
                             `;
@@ -12313,6 +12363,11 @@
             html += `</tbody></table></div></div>`;
 
             container.innerHTML = html;
+        }
+
+        function onTeacherFilterChange(viewId) {
+            selectedTeacherViewId = viewId;
+            renderTimetable();
         }
 
         // 3. College-Wise Timetable View (Wafy Campus vs Wafiyya Campus vs Combined)
@@ -12432,16 +12487,16 @@
                             <table class="min-w-full divide-y divide-slate-300 text-center border-collapse">
                                 <thead class="bg-slate-900 text-white text-xs font-bold uppercase tracking-wider">
                                     <tr>
-                                        <th class="px-2.5 py-2.5 border border-slate-700 text-center align-middle w-24 bg-slate-900 text-white font-black uppercase tracking-wider text-xs">Day</th>
-                                        <th class="px-2.5 py-2.5 border border-slate-700 text-center align-middle w-28 bg-slate-900 text-white font-black uppercase tracking-wider text-xs">Class Batch</th>
+                                        <th class="px-2 py-1.5 border border-slate-700 text-center align-middle w-20 sm:w-24 bg-slate-900 text-white font-black uppercase tracking-wider text-xs">Day</th>
+                                        <th class="px-2 py-1.5 border border-slate-700 text-center align-middle w-24 sm:w-28 bg-slate-900 text-white font-black uppercase tracking-wider text-xs">Class Batch</th>
                                         ${Array.from({length: periods}, (_, i) => `
-                                            <th class="px-2 py-2 border border-slate-700 bg-slate-900 min-w-[95px] text-white text-center align-middle">
+                                            <th class="px-2 py-1.5 border border-slate-700 bg-slate-900 min-w-[105px] sm:min-w-[115px] text-white text-center align-middle">
                                                 <div class="font-extrabold tracking-wide text-xs">Period ${i + 1}</div>
                                                 <div class="text-[9px] text-emerald-300 font-medium mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                             </th>
                                         `).join('')}
                                         ${hasWafiyyaT1InCollege ? `
-                                            <th class="px-2 py-2 border border-purple-800 bg-purple-950 min-w-[110px] text-white text-center align-middle shadow-inner">
+                                            <th class="px-2 py-1.5 border border-purple-800 bg-purple-950 min-w-[105px] sm:min-w-[115px] text-white text-center align-middle shadow-inner">
                                                 <div class="font-black tracking-wide text-xs text-amber-300 flex items-center justify-center gap-1">
                                                     <i class="fas fa-dna text-[11px] text-pink-400"></i> Additional (T1/T2)
                                                 </div>
@@ -12458,10 +12513,10 @@
                         const isActiveDay = typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(cls, d);
                         html += `<tr>`;
                         if (rIdx === 0) {
-                            html += `<td rowspan="${collegeClasses.length}" class="px-2.5 py-2 border border-slate-300 font-black bg-slate-100 text-slate-900 text-center align-middle whitespace-nowrap tracking-wider text-xs uppercase select-none">${dayNamesEn[d]}</td>`;
+                            html += `<td rowspan="${collegeClasses.length}" class="px-2 py-1.5 border border-slate-300 font-black bg-slate-100 text-slate-900 text-center align-middle whitespace-nowrap tracking-wider text-xs uppercase select-none">${dayNamesEn[d]}</td>`;
                         }
 
-                        html += `<td class="px-2.5 py-2 border border-slate-300 font-extrabold text-slate-900 text-center align-middle bg-slate-50/80 whitespace-nowrap text-xs">${cls}</td>`;
+                        html += `<td class="px-2 py-1.5 border border-slate-300 font-extrabold text-slate-900 text-center align-middle bg-slate-50/80 whitespace-nowrap text-xs">${cls}</td>`;
 
                         if (!isActiveDay) {
                             html += `
@@ -12487,16 +12542,16 @@
 
                             if (slot) {
                                 html += `
-                                    <td class="border border-slate-300 p-1.5 period-cell ${cellBg} text-center align-middle ${adminInteractiveAttr}">
+                                    <td class="border border-slate-300 p-1 sm:p-1.5 period-cell ${cellBg} text-center align-middle ${adminInteractiveAttr}">
                                         ${getTimetableCellHtml(slot, isWafy)}
                                     </td>
                                 `;
                             } else {
                                 const adminFreeInteractive = isAdminLoggedIn 
-                                    ? `cursor-pointer hover:bg-emerald-50/80 hover:ring-2 hover:ring-emerald-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${p}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് പുതിയ വിഷയം നൽകുക (Admin Slot Edit)` 
-                                    : '';
+                                ? `cursor-pointer hover:bg-emerald-50/80 hover:ring-2 hover:ring-emerald-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${p}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് പുതിയ വിഷയം നൽകുക (Admin Slot Edit)` 
+                                : '';
                                 html += `
-                                    <td class="border border-slate-300 p-1.5 text-slate-400 text-[10px] text-center align-middle bg-slate-50/30 ${adminFreeInteractive}">
+                                    <td class="border border-slate-300 p-1 text-slate-400 text-[10px] text-center align-middle bg-slate-50/30 ${adminFreeInteractive}">
                                         ${getTimetableCellHtml(null, isWafy)}
                                     </td>
                                 `;
@@ -12511,7 +12566,7 @@
                                     : '';
                                 if (addSlot) {
                                     html += `
-                                        <td class="border border-purple-300 p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
+                                        <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
                                             ${getTimetableCellHtml(addSlot, false)}
                                         </td>
                                     `;
@@ -12520,7 +12575,7 @@
                                         ? `cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അസൈൻ ചെയ്യുക (Admin Slot Edit)` 
                                         : '';
                                     html += `
-                                        <td class="border border-purple-200 p-1.5 text-center align-middle bg-purple-50/30 ${adminFreeInteractive}">
+                                        <td class="border border-purple-200 p-1 text-center align-middle bg-purple-50/30 ${adminFreeInteractive}">
                                             <div class="flex flex-col items-center justify-center text-center py-1 opacity-70">
                                                 <i class="fas fa-dna text-[9px] mb-0.5 text-purple-400"></i>
                                                 <span class="text-[8px] font-bold uppercase tracking-wider text-purple-700">Biology Slot</span>
@@ -21302,6 +21357,7 @@
         window.showGeneratePasswordModal = showGeneratePasswordModal;
         window.setTimetableViewMode = setTimetableViewMode;
         window.selectCollegeTimetableView = selectCollegeTimetableView;
+        window.onTeacherFilterChange = onTeacherFilterChange;
         window.fillAdminCredentials = fillAdminCredentials;
         window.renderTimetable = renderTimetable;
         window.downloadTimetablePDF = downloadTimetablePDF;
