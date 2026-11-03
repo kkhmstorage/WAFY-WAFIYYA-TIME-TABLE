@@ -16377,6 +16377,18 @@
                 return /\b(computer\s*science|cs|physics|physic|mathematics|maths?|biology|biological\s*science|chemistry|chem)\b|കമ്പ്യൂട്ടർ\s*സയൻസ്|ഫിസിക്സ്|മാത്തമാറ്റിക്സ്|മാത്സ്|ഗണിതം|ബയോളജി|കെമിസ്ട്രി/i.test(name);
             };
 
+            // Return the subject actually taught by this teacher in a slot.
+            // Split-batch slots contain several subjects, so using slot.subject
+            // ("Maths / Arabic", for example) would incorrectly exempt every teacher.
+            const getSubjectForTeacherInSlot = (slot, tId) => {
+                if (!slot || !tId) return String(slot?.subject || '');
+                if (slot.allocationType === 'split') {
+                    const own = (slot.splitSlots || []).find(part => part.teacherId === tId);
+                    return own ? String(own.subject || '') : '';
+                }
+                return String(slot.subject || '');
+            };
+
             const getTeacherCountedPeriodsForDay = (tId, d, currentSchedule) => {
                 if (!tId || !currentSchedule[d]) return 0;
                 let count = 0;
@@ -16384,9 +16396,9 @@
                     const slotMap = currentSchedule[d][p] || {};
                     for (const cls in slotMap) {
                         const assigned = slotMap[cls];
-                        if (assigned && slotContainsTeacher(assigned, tId) &&
-                            !isTeacherDailyLimitExemptSubject(assigned.subject)) {
-                            count++;
+                        if (assigned && slotContainsTeacher(assigned, tId)) {
+                            const teacherSubject = getSubjectForTeacherInSlot(assigned, tId);
+                            if (!isTeacherDailyLimitExemptSubject(teacherSubject)) count++;
                         }
                     }
                 }
@@ -16418,7 +16430,8 @@
                 for (let tId of tIds) {
                     // Exempt subject periods do not consume the teacher's five-period daily quota.
                     // Any other subject is rejected once the teacher already has five counted periods.
-                    if (!isTeacherDailyLimitExemptSubject(slot.subject) &&
+                    const teacherSubject = getSubjectForTeacherInSlot(slot, tId);
+                    if (!isTeacherDailyLimitExemptSubject(teacherSubject) &&
                         getTeacherCountedPeriodsForDay(tId, d, currentSchedule) >= TEACHER_DAILY_PERIOD_LIMIT) return false;
                     if (isTeacherUnavailable(tId, d, p)) return false;
                     if (isTeacherBusyInSchedule(tId, d, p, currentSchedule, slot.className)) return false;
@@ -17009,47 +17022,25 @@
                             if (!slot) continue;
 
                             const key = `${cls}:::${slot.id || slot.subject}`;
-                            const matchingAllotment = classes.find(c => c.className === cls && (c.id === slot.id || c.subject === slot.subject));
-                            const maxAllowed = matchingAllotment ? Number(matchingAllotment.hours || 0) : 999;
+                            const matchingAllotment = classes.find(c => c.className === cls && (
+                                slot.id != null ? c.id === slot.id : c.subject === slot.subject
+                            ));
+                            const maxAllowed = matchingAllotment ? Number(matchingAllotment.hours || 0) : 0;
 
                             classAllotmentCounters[key] = (classAllotmentCounters[key] || 0) + 1;
-                            if (classAllotmentCounters[key] > maxAllowed) {
-                                // Strictly delete any excess period beyond what was officially allotted
+                            if (!matchingAllotment || classAllotmentCounters[key] > maxAllowed) {
+                                // Never keep a period that has no matching allocation or exceeds its quota.
                                 delete bestSchedule[d][p][cls];
+                                bestUnscheduledList.push({ ...slot, _reason: !matchingAllotment ? 'No matching subject allocation' : 'Subject allocation quota exceeded' });
                             }
                         }
                     }
                 }
             }
 
-            // Wafiyya T1 & T2 Additional Biology Periods (Mon, Wed, Fri) Automatic Placement Engine
-            if (bestSchedule) {
-                const targetClasses = (appState.classesList || []).filter(c => isWafiyyaT1Class(c));
-                targetClasses.forEach(wafiyyaClass => {
-                    const bioAllotment = (appState.classes || []).find(c => c.className === wafiyyaClass && isBiologySubject(c.subject));
-                    if (bioAllotment) {
-                        for (let d of WAFIYYA_T1_ADDITIONAL_DAYS) {
-                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(wafiyyaClass, d)) continue;
-                            if (!bestSchedule[d]) bestSchedule[d] = {};
-                            if (!bestSchedule[d][periods]) bestSchedule[d][periods] = {};
-
-                            if (!bestSchedule[d][periods][wafiyyaClass]) {
-                                bestSchedule[d][periods][wafiyyaClass] = {
-                                    id: bioAllotment.id || ('bio_add_' + wafiyyaClass + '_' + d),
-                                    allocationType: 'standard',
-                                    college: bioAllotment.college || (appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)"),
-                                    className: wafiyyaClass,
-                                    subject: bioAllotment.subject || 'Biology',
-                                    teacherId: bioAllotment.teacherId,
-                                    hours: bioAllotment.hours || 3,
-                                    isAdditional: true,
-                                    isBiologyAdditional: true
-                                };
-                            }
-                        }
-                    }
-                });
-            }
+            // No periods are added after optimization. Every scheduled lesson must come
+            // from an explicit Subject Allocation; this prevents hidden extra Biology
+            // periods from exceeding class, teacher, or configured-day quotas.
 
             appState.timetable = bestSchedule;
 
@@ -17057,11 +17048,13 @@
                 let counts = {};
                 bestUnscheduledList.forEach(u => {
                     const key = u.subject + ' (' + u.className + ' - ' + u.college + ')';
-                    counts[key] = (counts[key] || 0) + 1;
+                    if (!counts[key]) counts[key] = { count: 0, reasons: new Set() };
+                    counts[key].count++;
+                    counts[key].reasons.add(u._reason || 'faculty availability, daily workload, class-day, subject-per-day, or campus-travel constraints');
                 });
                 let issues = [];
                 for (let item in counts) {
-                    issues.push('Could not place ' + counts[item] + ' hr(s) of <b>' + item + '</b> due to faculty schedule conflicts or unavailable constraints.');
+                    issues.push('Could not place ' + counts[item].count + ' hr(s) of <b>' + item + '</b>. Reason: ' + Array.from(counts[item].reasons).join('; ') + '.');
                 }
                 const msgBox = document.getElementById('generation-messages');
                 document.getElementById('messages-list').innerHTML = issues.map(i => `<li>${i}</li>`).join('');
