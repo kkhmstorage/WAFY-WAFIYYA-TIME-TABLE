@@ -2968,6 +2968,17 @@
                 <!-- TAB 1: ASSIGN / CHANGE SUBJECT -->
                 <div id="slot-tab-assign-pane" class="space-y-3">
                     <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block font-bold text-slate-700">
+                                <i class="fas fa-university text-emerald-600 mr-1"></i> കോളേജ് & ക്ലാസ് (College & Class):
+                            </label>
+                            <span class="text-[10px] text-slate-500">കോളേജോ ക്ലാസോ മാറ്റാം</span>
+                        </div>
+                        <select id="slot-select-class" onchange="window.onManualSlotClassChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-emerald-500 focus:outline-none mb-1">
+                            <!-- Populated dynamically with grouped Wafy & Wafiyya classes -->
+                        </select>
+                    </div>
+                    <div>
                         <label class="block font-bold text-slate-700 mb-1">നൽകേണ്ട വിഷയം തിരഞ്ഞെടുക്കുക (Select Allotted Subject):</label>
                         <select id="slot-select-subject" onchange="window.onManualSlotSubjectChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
                             <!-- Populated with allotted subjects of this class -->
@@ -2988,6 +2999,17 @@
 
                 <!-- TAB 2: SWAP WITH ANOTHER PERIOD -->
                 <div id="slot-tab-swap-pane" class="space-y-3 hidden">
+                    <div>
+                        <div class="flex items-center justify-between mb-1">
+                            <label class="block font-bold text-slate-700">
+                                <i class="fas fa-university text-blue-600 mr-1"></i> മാറ്റേണ്ട കോളേജ് & ക്ലാസ് / ഫാക്കൽറ്റി (Target College / Class / Faculty):
+                            </label>
+                            <span class="text-[10px] text-slate-500">കോളേജുകൾ തമ്മിൽ മാറ്റാം</span>
+                        </div>
+                        <select id="slot-select-swap-class" onchange="window.onManualSlotSwapClassChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none mb-1">
+                            <!-- Populated with faculty schedule option and grouped classes -->
+                        </select>
+                    </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">മാറ്റേണ്ട മറ്റൊരു പിരീഡ് തിരഞ്ഞെടുക്കുക (Select Period to Swap with):</label>
                         <select id="slot-select-swap-target" onchange="window.onManualSlotSwapTargetChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
@@ -12081,6 +12103,11 @@
                                 <span class="text-xs bg-emerald-100 text-emerald-800 border border-emerald-200 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 shadow-2xs">
                                     <i class="fas fa-clock text-emerald-600"></i> ${weeklyHours} Periods / Week
                                 </span>
+                                ${isAdminLoggedIn ? `
+                                    <span class="text-[10px] bg-amber-100 text-amber-900 border border-amber-300 px-2.5 py-1 rounded-lg font-bold flex items-center gap-1 shadow-2xs">
+                                        <i class="fas fa-edit text-amber-600"></i> Admin Editor Active
+                                    </span>
+                                ` : ''}
                                 <span class="text-xs bg-slate-200 text-slate-700 px-2 py-1 rounded-lg font-semibold hidden sm:inline-block">Faculty Timetable</span>
                             </div>
                         </div>
@@ -12165,7 +12192,7 @@
                             }
 
                             html += `
-                                <td class="border border-slate-200 p-1 sm:p-1.5 period-cell ${bg} text-center align-middle">
+                                <td class="border border-slate-200 p-1 sm:p-1.5 period-cell ${bg} text-center align-middle ${isAdminLoggedIn ? 'cursor-pointer hover:ring-2 hover:ring-emerald-500 hover:shadow-md transition' : ''}" ${isAdminLoggedIn ? `onclick="window.openManualSlotEditor(${d}, ${p}, '${assignedSlot.className}', '${teacher.id}')" title="ക്ലിക്ക് ചെയ്ത് ഈ പിരീഡിൽ മാറ്റം വരുത്തുക / സ്വാപ്പ് ചെയ്യുക (Admin Slot Edit - ${assignedSlot.className})"` : ''}>
                                     <div class="flex flex-col items-center justify-center text-center w-full h-full py-0.5 gap-0.5">
                                         ${extraBadge}
                                         <div class="subject-title font-black text-slate-950 leading-tight ${isArabic ? 'text-[11.5px] sm:text-[12px] arabic-subject' : 'text-[11px] sm:text-xs uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>${assignedSlot.subject}</div>
@@ -12175,7 +12202,13 @@
                                 </td>
                             `;
                         } else {
-                            html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/20">-</td>`;
+                            const freeInteractive = isAdminLoggedIn 
+                                ? 'cursor-pointer hover:bg-emerald-50/80 hover:ring-2 hover:ring-emerald-400 hover:shadow-sm transition' 
+                                : '';
+                            const freeOnClick = isAdminLoggedIn 
+                                ? `onclick="window.openTeacherFreeSlotEditor(${d}, ${p}, '${teacher.id}')" title="ക്ലിക്ക് ചെയ്ത് പുതിയ വിഷയം നൽകുക / സ്വാപ്പ് ചെയ്യുക (Admin Slot Edit)"` 
+                                : '';
+                            html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/20 ${freeInteractive}" ${freeOnClick}>-</td>`;
                         }
                     }
 
@@ -12192,8 +12225,14 @@
                         }
 
                         if (addSlotForTeacher) {
+                            const adminAddInteractive = isAdminLoggedIn 
+                                ? 'cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:shadow-md transition' 
+                                : '';
+                            const addOnClick = isAdminLoggedIn 
+                                ? `onclick="window.openManualSlotEditor(${d}, ${periods}, '${addSlotForTeacher.className}', '${teacher.id}')" title="ക്ലിക്ക് ചെയ്ത് അഡീഷണൽ പിരീഡിൽ മാറ്റം വരുത്തുക / സ്വാപ്പ് ചെയ്യുക"` 
+                                : '';
                             html += `
-                                <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle">
+                                <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminAddInteractive}" ${addOnClick}>
                                     <div class="flex flex-col items-center justify-center text-center w-full h-full py-0.5 gap-0.5">
                                         <span class="inline-flex items-center gap-1 bg-gradient-to-r from-indigo-700 to-purple-800 text-white font-black text-[7px] px-1.5 py-0.2 rounded-full uppercase tracking-wider mb-0.5">
                                             <i class="fas fa-dna text-[6px]"></i> Additional
@@ -12205,7 +12244,13 @@
                                 </td>
                             `;
                         } else if (WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
-                            html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/20">-</td>`;
+                            const freeAddInteractive = isAdminLoggedIn 
+                                ? 'cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition' 
+                                : '';
+                            const freeAddOnClick = isAdminLoggedIn 
+                                ? `onclick="window.openTeacherFreeSlotEditor(${d}, ${periods}, '${teacher.id}')" title="ക്ലിക്ക് ചെയ്ത് അഡീഷണൽ പിരീഡ് നൽകുക / മാറ്റുക"` 
+                                : '';
+                            html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/20 ${freeAddInteractive}" ${freeAddOnClick}>-</td>`;
                         } else {
                             html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/50">—</td>`;
                         }
@@ -13041,7 +13086,88 @@
         // =============================================================
         let activeManualSlotState = null;
 
-        function openManualSlotEditor(dayIndex, periodIndex, className) {
+        function populateClassSelectDropdown(selectEl, selectedClass, includeTeacherAllOption = false) {
+            if (!selectEl) return;
+            selectEl.innerHTML = '';
+
+            if (includeTeacherAllOption && activeManualSlotState && activeManualSlotState.teacherId) {
+                const teacher = appState.teachers.find(t => t.id === activeManualSlotState.teacherId);
+                const tOpt = document.createElement('option');
+                tOpt.value = '__TEACHER_SCHEDULE__';
+                tOpt.textContent = `★ ${teacher ? (teacher.shortName + ' - ' + teacher.name) : 'ഈ അധ്യാപകന്റെ'} എല്ലാ പിരീഡുകളും (രണ്ട് കോളേജുകളും)`;
+                selectEl.appendChild(tOpt);
+            }
+
+            const wafyInst = appState.institutions[0] || "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )";
+            const wafiyyaInst = appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)";
+
+            const classesList = appState.classesList && appState.classesList.length > 0 
+                ? appState.classesList 
+                : [...new Set(appState.classes.map(c => c.className))];
+
+            const wafyClasses = classesList.filter(c => c.toLowerCase().includes('wafy') && !c.toLowerCase().includes('wafiyya'));
+            const wafiyyaClasses = classesList.filter(c => c.toLowerCase().includes('wafiyya'));
+            const otherClasses = classesList.filter(c => !wafyClasses.includes(c) && !wafiyyaClasses.includes(c));
+
+            if (wafyClasses.length > 0) {
+                const grp = document.createElement('optgroup');
+                grp.label = `🏛️ ${wafyInst}`;
+                wafyClasses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    if (c === selectedClass) opt.selected = true;
+                    grp.appendChild(opt);
+                });
+                selectEl.appendChild(grp);
+            }
+
+            if (wafiyyaClasses.length > 0) {
+                const grp = document.createElement('optgroup');
+                grp.label = `🌸 ${wafiyyaInst}`;
+                wafiyyaClasses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    if (c === selectedClass) opt.selected = true;
+                    grp.appendChild(opt);
+                });
+                selectEl.appendChild(grp);
+            }
+
+            if (otherClasses.length > 0) {
+                const grp = document.createElement('optgroup');
+                grp.label = '📚 മറ്റ് ക്ലാസുകൾ (Other Classes)';
+                otherClasses.forEach(c => {
+                    const opt = document.createElement('option');
+                    opt.value = c;
+                    opt.textContent = c;
+                    if (c === selectedClass) opt.selected = true;
+                    grp.appendChild(opt);
+                });
+                selectEl.appendChild(grp);
+            }
+        }
+
+        function openTeacherFreeSlotEditor(dayIndex, periodIndex, teacherId) {
+            if (!isAdminLoggedIn) {
+                showAlert("പ്രവേശനം തടഞ്ഞു", "ടൈം ടേബിളിൽ മാറ്റം വരുത്താൻ അഡ്മിൻ ലോഗിൻ ആവശ്യമാണ് (Admin Login Required).");
+                return;
+            }
+
+            if (!appState.timetable || !appState.timetable[dayIndex] || !appState.timetable[dayIndex][periodIndex]) {
+                showAlert("ശ്രദ്ധിക്കുക", "ടൈം ടേബിൾ ഇതുവരെ ജനറേറ്റ് ചെയ്തിട്ടില്ല. ആദ്യം 'Generate Timetable' ചെയ്യുക.");
+                return;
+            }
+
+            // Find first class this teacher is allotted to
+            const teacherAllotments = appState.classes.filter(c => c.teacherId === teacherId || c.secondaryTeacherId === teacherId);
+            const defaultClass = teacherAllotments.length > 0 ? teacherAllotments[0].className : (appState.classesList[0] || 'Wafy Thanawiyya T1');
+
+            openManualSlotEditor(dayIndex, periodIndex, defaultClass, teacherId);
+        }
+
+        function openManualSlotEditor(dayIndex, periodIndex, className, teacherId = null) {
             if (!isAdminLoggedIn) {
                 showAlert("പ്രവേശനം തടഞ്ഞു", "ടൈം ടേബിളിൽ മാറ്റം വരുത്താൻ അഡ്മിൻ ലോഗിൻ ആവശ്യമാണ് (Admin Login Required). ആദ്യം അഡ്മിനായി ലോഗിൻ ചെയ്യുക.");
                 return;
@@ -13053,14 +13179,19 @@
             }
 
             const currentSlot = appState.timetable[dayIndex][periodIndex][className] || null;
+            const effectiveTeacherId = teacherId || (currentSlot ? currentSlot.teacherId : null);
+
             activeManualSlotState = {
                 day: dayIndex,
                 period: periodIndex,
                 className: className,
+                initialClassName: className,
+                teacherId: effectiveTeacherId,
                 currentSlot: currentSlot,
                 actionTab: 'assign',
                 targetSubject: '',
-                targetTeacherId: '',
+                targetTeacherId: effectiveTeacherId || '',
+                swapTargetClass: className,
                 swapTarget: null
             };
 
@@ -13105,15 +13236,29 @@
                     const manualBadge = currentSlot.isManualOverride 
                         ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded border border-amber-300 ml-1.5"><i class="fas fa-edit mr-0.5"></i> Manual</span>` 
                         : '';
+                    const isWafy = (className.toLowerCase().includes('wafy') && !className.toLowerCase().includes('wafiyya'));
+                    const tagClass = isWafy ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800';
+                    const collegeTag = isWafy ? 'KKHM Wafy' : 'Al-Gaith Wafiyya';
+
                     currentDisplay.innerHTML = `
-                        <div class="flex items-center gap-2">
-                            <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
-                            <span class="font-black text-slate-900">${currentSlot.subject}</span>
-                            ${manualBadge}
-                        </div>
-                        <div class="text-right">
-                            <span class="font-bold text-slate-700">${t ? t.name : 'Unknown Faculty'}</span>
-                            <span class="text-[10px] text-slate-500 font-mono ml-1">(${t ? t.shortName : ''})</span>
+                        <div class="w-full">
+                            <div class="flex items-center justify-between">
+                                <div class="flex items-center gap-2">
+                                    <span class="w-2.5 h-2.5 rounded-full bg-emerald-500"></span>
+                                    <span class="font-black text-slate-900">${currentSlot.subject}</span>
+                                    ${manualBadge}
+                                </div>
+                                <div class="text-right">
+                                    <span class="font-bold text-slate-700">${t ? t.name : 'Unknown Faculty'}</span>
+                                    <span class="text-[10px] text-slate-500 font-mono ml-1">(${t ? t.shortName : ''})</span>
+                                </div>
+                            </div>
+                            <div class="mt-1 pt-1 border-t border-slate-100 flex items-center justify-between text-[10px]">
+                                <span class="font-extrabold text-slate-700 flex items-center gap-1">
+                                    <i class="fas fa-graduation-cap text-slate-400"></i> ${className}
+                                </span>
+                                <span class="font-bold px-1.5 py-0.5 rounded ${tagClass}">${collegeTag}</span>
+                            </div>
                         </div>
                     `;
                 } else {
@@ -13127,71 +13272,118 @@
                 }
             }
 
-            // 3. Populate Allotted Subjects for this class
-            const subjectSelect = document.getElementById('slot-select-subject');
-            if (subjectSelect) {
-                subjectSelect.innerHTML = '';
-                const classAllotments = appState.classes.filter(c => c.className === className);
-                let uniqueSubjects = [];
-                classAllotments.forEach(c => {
-                    if (!uniqueSubjects.find(s => s.subject === c.subject)) {
-                        uniqueSubjects.push({ subject: c.subject, teacherId: c.teacherId, hours: c.hours });
-                    }
-                });
-
-                if (uniqueSubjects.length === 0) {
-                    const allUnique = [...new Set(appState.classes.map(c => c.subject))];
-                    uniqueSubjects = allUnique.map(sb => {
-                        const found = appState.classes.find(c => c.subject === sb);
-                        return { subject: sb, teacherId: found ? found.teacherId : '', hours: found ? found.hours : 0 };
-                    });
-                }
-
-                if (currentSlot && currentSlot.subject && !uniqueSubjects.find(s => s.subject === currentSlot.subject)) {
-                    uniqueSubjects.unshift({ subject: currentSlot.subject, teacherId: currentSlot.teacherId, hours: 0 });
-                }
-
-                // If editing an additional period in Wafiyya T1, restrict strictly to Biology subjects!
-                if (isAdditionalSlot && isWafiyyaT1Class(className)) {
-                    let bioSubjects = uniqueSubjects.filter(s => isBiologySubject(s.subject));
-                    if (bioSubjects.length === 0) {
-                        // Find any biology faculty in the system
-                        const bioAllotmentAny = appState.classes.find(c => isBiologySubject(c.subject));
-                        bioSubjects = [{ 
-                            subject: 'Biology', 
-                            teacherId: bioAllotmentAny ? bioAllotmentAny.teacherId : '', 
-                            hours: 3 
-                        }];
-                    }
-                    uniqueSubjects = bioSubjects;
-                }
-
-                uniqueSubjects.forEach(s => {
-                    const opt = document.createElement('option');
-                    opt.value = s.subject;
-                    const t = appState.teachers.find(tch => tch.id === s.teacherId);
-                    opt.textContent = `${s.subject} (${s.hours || 0} hrs/wk) — ${t ? t.shortName : ''}`;
-                    subjectSelect.appendChild(opt);
-                });
-
-                if (currentSlot && currentSlot.subject) {
-                    subjectSelect.value = currentSlot.subject;
-                }
-                activeManualSlotState.targetSubject = subjectSelect.value;
+            // 3. Populate Class dropdowns
+            const classSelect = document.getElementById('slot-select-class');
+            if (classSelect) {
+                populateClassSelectDropdown(classSelect, className, false);
             }
 
-            // 4. Populate Teachers
+            const swapClassSelect = document.getElementById('slot-select-swap-class');
+            if (swapClassSelect) {
+                populateClassSelectDropdown(swapClassSelect, effectiveTeacherId ? '__TEACHER_SCHEDULE__' : className, !!effectiveTeacherId);
+            }
+
+            // 4. Populate Subjects for current class
+            populateManualSlotSubjectSelect();
+
+            // 5. Populate Teachers
             populateManualSlotTeacherSelect();
 
-            // 5. Populate Swap Target Options
+            // 6. Populate Swap Target Options
             populateManualSlotSwapTargets();
 
-            // 6. Set initial Tab to 'assign'
+            // 7. Set initial Tab to 'assign'
             setSlotActionTab('assign');
 
-            // 7. Show Modal
+            // 8. Show Modal
             const modal = document.getElementById('manual-slot-edit-modal');
             if (modal) modal.classList.remove('hidden');
+        }
+
+        function populateManualSlotSubjectSelect() {
+            if (!activeManualSlotState) return;
+            const subjectSelect = document.getElementById('slot-select-subject');
+            if (!subjectSelect) return;
+
+            subjectSelect.innerHTML = '';
+            const className = activeManualSlotState.className;
+            const currentSlot = activeManualSlotState.currentSlot;
+            const isAdditionalSlot = activeManualSlotState.period >= (parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7);
+
+            const classAllotments = appState.classes.filter(c => c.className === className);
+            let uniqueSubjects = [];
+            classAllotments.forEach(c => {
+                if (!uniqueSubjects.find(s => s.subject === c.subject)) {
+                    uniqueSubjects.push({ subject: c.subject, teacherId: c.teacherId, hours: c.hours });
+                }
+            });
+
+            if (uniqueSubjects.length === 0) {
+                const allUnique = [...new Set(appState.classes.map(c => c.subject))];
+                uniqueSubjects = allUnique.map(sb => {
+                    const found = appState.classes.find(c => c.subject === sb);
+                    return { subject: sb, teacherId: found ? found.teacherId : '', hours: found ? found.hours : 0 };
+                });
+            }
+
+            if (currentSlot && currentSlot.subject && !uniqueSubjects.find(s => s.subject === currentSlot.subject)) {
+                uniqueSubjects.unshift({ subject: currentSlot.subject, teacherId: currentSlot.teacherId, hours: 0 });
+            }
+
+            if (isAdditionalSlot && isWafiyyaT1Class(className)) {
+                let bioSubjects = uniqueSubjects.filter(s => isBiologySubject(s.subject));
+                if (bioSubjects.length === 0) {
+                    const bioAllotmentAny = appState.classes.find(c => isBiologySubject(c.subject));
+                    bioSubjects = [{ 
+                        subject: 'Biology', 
+                        teacherId: bioAllotmentAny ? bioAllotmentAny.teacherId : '', 
+                        hours: 3 
+                    }];
+                }
+                uniqueSubjects = bioSubjects;
+            }
+
+            uniqueSubjects.forEach(s => {
+                const opt = document.createElement('option');
+                opt.value = s.subject;
+                const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                opt.textContent = `${s.subject} (${s.hours || 0} hrs/wk) — ${t ? t.shortName : ''}`;
+                subjectSelect.appendChild(opt);
+            });
+
+            if (currentSlot && currentSlot.subject) {
+                subjectSelect.value = currentSlot.subject;
+            }
+            activeManualSlotState.targetSubject = subjectSelect.value;
+        }
+
+        function onManualSlotClassChanged() {
+            const classSelect = document.getElementById('slot-select-class');
+            if (!classSelect || !activeManualSlotState) return;
+            const newClass = classSelect.value;
+            activeManualSlotState.className = newClass;
+
+            const classNameEl = document.getElementById('slot-modal-class-name');
+            if (classNameEl) classNameEl.textContent = newClass;
+
+            const isAdditionalSlot = activeManualSlotState.period >= (parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7);
+            const addBanner = document.getElementById('slot-modal-additional-banner');
+            if (addBanner) {
+                if (isAdditionalSlot && isWafiyyaT1Class(newClass)) {
+                    addBanner.classList.remove('hidden');
+                } else {
+                    addBanner.classList.add('hidden');
+                }
+            }
+
+            populateManualSlotSubjectSelect();
+            populateManualSlotTeacherSelect();
+            validateAndRenderSlotConflicts();
+        }
+
+        function onManualSlotSwapClassChanged() {
+            populateManualSlotSwapTargets();
+            validateAndRenderSlotConflicts();
         }
 
         function populateManualSlotTeacherSelect() {
@@ -13223,33 +13415,78 @@
 
         function populateManualSlotSwapTargets() {
             const swapSelect = document.getElementById('slot-select-swap-target');
+            const swapClassSelect = document.getElementById('slot-select-swap-class');
             if (!swapSelect || !activeManualSlotState) return;
 
+            const targetClassVal = swapClassSelect ? swapClassSelect.value : activeManualSlotState.className;
+            activeManualSlotState.swapTargetClass = targetClassVal;
             swapSelect.innerHTML = '';
+
             const days = parseInt(appState.settings ? appState.settings.workingDays : appState.days) || 6;
             const periods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
-            const cls = activeManualSlotState.className;
             let firstTarget = null;
 
-            for (let d = 0; d < days; d++) {
-                if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(cls, d)) continue;
+            if (targetClassVal === '__TEACHER_SCHEDULE__' && activeManualSlotState.teacherId) {
+                // List all periods of this teacher across both colleges
+                const teacherId = activeManualSlotState.teacherId;
+                for (let d = 0; d < days; d++) {
+                    for (let p = 0; p < periods; p++) {
+                        if (d === activeManualSlotState.day && p === activeManualSlotState.period) continue;
+                        if (!appState.timetable || !appState.timetable[d] || !appState.timetable[d][p]) continue;
 
-                for (let p = 0; p < periods; p++) {
-                    if (d === activeManualSlotState.day && p === activeManualSlotState.period) continue;
+                        for (let cls in appState.timetable[d][p]) {
+                            const s = appState.timetable[d][p][cls];
+                            if (!s) continue;
+                            let matches = false;
+                            if (s.allocationType === 'split') {
+                                matches = (s.splitSlots || []).some(x => x.teacherId === teacherId);
+                            } else if (s.allocationType === 'shared') {
+                                matches = (s.teacherId === teacherId || s.secondaryTeacherId === teacherId);
+                            } else {
+                                matches = (s.teacherId === teacherId);
+                            }
 
-                    const targetSlot = (appState.timetable[d] && appState.timetable[d][p]) ? appState.timetable[d][p][cls] : null;
-                    const opt = document.createElement('option');
-                    opt.value = `${d}_${p}`;
-                    
-                    if (targetSlot) {
-                        const t = appState.teachers.find(tch => tch.id === targetSlot.teacherId);
-                        opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: ${targetSlot.subject} (${t ? t.shortName : 'N/A'})`;
-                    } else {
-                        opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: [ഒഴിഞ്ഞ പിരീഡ് / Free Period]`;
+                            if (matches) {
+                                const opt = document.createElement('option');
+                                opt.value = `${d}_${p}_${cls}`;
+                                const isWafy = (cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya'));
+                                const campusTag = isWafy ? 'Wafy' : 'Wafiyya';
+                                opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: ${s.subject} (${cls} • ${campusTag})`;
+                                if (!firstTarget) firstTarget = { day: d, period: p, className: cls };
+                                swapSelect.appendChild(opt);
+                            }
+                        }
                     }
+                }
 
-                    if (!firstTarget) firstTarget = { day: d, period: p };
+                if (swapSelect.options.length === 0) {
+                    const opt = document.createElement('option');
+                    opt.value = '';
+                    opt.textContent = 'ഈ അധ്യാപകന് മാറ്റാൻ മറ്റ് പിരീഡുകൾ ഷെഡ്യൂൾ ചെയ്തിട്ടില്ല';
                     swapSelect.appendChild(opt);
+                }
+            } else {
+                const cls = (targetClassVal && targetClassVal !== '__TEACHER_SCHEDULE__') ? targetClassVal : activeManualSlotState.className;
+                for (let d = 0; d < days; d++) {
+                    if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(cls, d)) continue;
+
+                    for (let p = 0; p < periods; p++) {
+                        if (d === activeManualSlotState.day && p === activeManualSlotState.period && cls === activeManualSlotState.className) continue;
+
+                        const targetSlot = (appState.timetable[d] && appState.timetable[d][p]) ? appState.timetable[d][p][cls] : null;
+                        const opt = document.createElement('option');
+                        opt.value = `${d}_${p}_${cls}`;
+                        
+                        if (targetSlot) {
+                            const t = appState.teachers.find(tch => tch.id === targetSlot.teacherId);
+                            opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: ${targetSlot.subject} (${t ? t.shortName : 'N/A'})`;
+                        } else {
+                            opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: [ഒഴിഞ്ഞ പിരീഡ് / Free Period]`;
+                        }
+
+                        if (!firstTarget) firstTarget = { day: d, period: p, className: cls };
+                        swapSelect.appendChild(opt);
+                    }
                 }
             }
 
@@ -13263,29 +13500,50 @@
             if (!previewCard || !swapSelect || !activeManualSlotState) return;
 
             const val = swapSelect.value;
-            if (!val) return;
-            const [tDay, tPeriod] = val.split('_').map(Number);
-            activeManualSlotState.swapTarget = { day: tDay, period: tPeriod };
+            if (!val) {
+                previewCard.innerHTML = '<div class="text-slate-400 italic text-center py-2">സ്വാപ്പ് ചെയ്യാൻ സാധ്യമായ മറ്റൊരു പിരീഡ് തിരഞ്ഞെടുക്കുക.</div>';
+                return;
+            }
 
-            const cls = activeManualSlotState.className;
+            const parts = val.split('_');
+            const tDay = parseInt(parts[0]);
+            const tPeriod = parseInt(parts[1]);
+            const tClass = parts.length > 2 ? parts.slice(2).join('_') : (activeManualSlotState.swapTargetClass || activeManualSlotState.className);
+
+            activeManualSlotState.swapTarget = { day: tDay, period: tPeriod, className: tClass };
+
+            const srcClass = activeManualSlotState.className;
             const currentSlot = activeManualSlotState.currentSlot;
-            const targetSlot = (appState.timetable[tDay] && appState.timetable[tDay][tPeriod]) ? appState.timetable[tDay][tPeriod][cls] : null;
+            const targetSlot = (appState.timetable[tDay] && appState.timetable[tDay][tPeriod]) ? appState.timetable[tDay][tPeriod][tClass] : null;
 
-            const currentSubText = currentSlot ? currentSlot.subject : 'Free Period';
-            const targetSubText = targetSlot ? targetSlot.subject : 'Free Period';
+            const currentSubText = currentSlot ? `${currentSlot.subject} (${srcClass})` : `Free Period (${srcClass})`;
+            const targetSubText = targetSlot ? `${targetSlot.subject} (${tClass})` : `Free Period (${tClass})`;
+
+            const isCrossClass = srcClass !== tClass;
+            const srcIsWafy = (srcClass.toLowerCase().includes('wafy') && !srcClass.toLowerCase().includes('wafiyya'));
+            const tgtIsWafy = (tClass.toLowerCase().includes('wafy') && !tClass.toLowerCase().includes('wafiyya'));
+            const isCrossCollege = srcIsWafy !== tgtIsWafy;
+
+            let crossBadge = '';
+            if (isCrossCollege) {
+                crossBadge = `<span class="inline-block bg-purple-100 text-purple-900 border border-purple-300 text-[9px] font-extrabold px-2 py-0.5 rounded-full mb-1.5"><i class="fas fa-university mr-1"></i> Cross-College Swap: ${srcIsWafy ? 'Wafy' : 'Wafiyya'} ⇄ ${tgtIsWafy ? 'Wafy' : 'Wafiyya'}</span>`;
+            } else if (isCrossClass) {
+                crossBadge = `<span class="inline-block bg-blue-100 text-blue-900 border border-blue-300 text-[9px] font-extrabold px-2 py-0.5 rounded-full mb-1.5"><i class="fas fa-exchange-alt mr-1"></i> Cross-Class Swap: ${srcClass} ⇄ ${tClass}</span>`;
+            }
 
             previewCard.innerHTML = `
-                <div class="font-extrabold text-blue-900 mb-1 flex items-center gap-1.5">
-                    <i class="fas fa-random text-blue-600"></i> സ്വാപ്പ് ചെയ്യുമ്പോൾ സംഭവിക്കുന്നത് (Swap Outcome):
+                <div class="font-extrabold text-blue-900 mb-1 flex items-center justify-between">
+                    <span class="flex items-center gap-1.5"><i class="fas fa-random text-blue-600"></i> സ്വാപ്പ് ചെയ്യുമ്പോൾ സംഭവിക്കുന്നത് (Swap Outcome):</span>
                 </div>
-                <div class="grid grid-cols-2 gap-2 mt-1.5 text-[11px]">
+                ${crossBadge}
+                <div class="grid grid-cols-2 gap-2 mt-1 text-[11px]">
                     <div class="bg-white p-2 rounded-lg border border-blue-200 shadow-2xs">
-                        <span class="text-[9px] font-bold text-slate-400 block uppercase">${dayNamesEn[activeManualSlotState.day]} P${activeManualSlotState.period + 1} ലേക്ക്:</span>
-                        <span class="font-bold text-slate-900">${targetSubText}</span>
+                        <span class="text-[9px] font-bold text-slate-400 block uppercase">${dayNamesEn[activeManualSlotState.day]} P${activeManualSlotState.period + 1} (${srcClass}) ലേക്ക്:</span>
+                        <span class="font-bold text-slate-900 block mt-0.5">${targetSubText}</span>
                     </div>
                     <div class="bg-white p-2 rounded-lg border border-blue-200 shadow-2xs">
-                        <span class="text-[9px] font-bold text-slate-400 block uppercase">${dayNamesEn[tDay]} P${tPeriod + 1} ലേക്ക്:</span>
-                        <span class="font-bold text-slate-900">${currentSubText}</span>
+                        <span class="text-[9px] font-bold text-slate-400 block uppercase">${dayNamesEn[tDay]} P${tPeriod + 1} (${tClass}) ലേക്ക്:</span>
+                        <span class="font-bold text-slate-900 block mt-0.5">${currentSubText}</span>
                     </div>
                 </div>
             `;
@@ -13505,28 +13763,29 @@
                 );
             } else if (activeManualSlotState.actionTab === 'swap') {
                 if (activeManualSlotState.swapTarget) {
-                    const { day: tDay, period: tPeriod } = activeManualSlotState.swapTarget;
-                    const cls = activeManualSlotState.className;
+                    const { day: tDay, period: tPeriod, className: tClass } = activeManualSlotState.swapTarget;
+                    const srcClass = activeManualSlotState.className;
+                    const tgtClass = tClass || activeManualSlotState.swapTargetClass || srcClass;
                     const currentSlot = activeManualSlotState.currentSlot;
-                    const targetSlot = (appState.timetable[tDay] && appState.timetable[tDay][tPeriod]) ? appState.timetable[tDay][tPeriod][cls] : null;
+                    const targetSlot = (appState.timetable[tDay] && appState.timetable[tDay][tPeriod]) ? appState.timetable[tDay][tPeriod][tgtClass] : null;
 
                     const excludeList = [
-                        { day: activeManualSlotState.day, period: activeManualSlotState.period, className: cls },
-                        { day: tDay, period: tPeriod, className: cls }
+                        { day: activeManualSlotState.day, period: activeManualSlotState.period, className: srcClass },
+                        { day: tDay, period: tPeriod, className: tgtClass }
                     ];
 
                     if (currentSlot) {
-                        const cConflicts = checkSlotPlacementConflicts(tDay, tPeriod, cls, currentSlot.subject, currentSlot.teacherId, excludeList);
+                        const cConflicts = checkSlotPlacementConflicts(tDay, tPeriod, tgtClass, currentSlot.subject, currentSlot.teacherId, excludeList);
                         cConflicts.forEach(c => {
-                            c.title = `[Swap -> P${tPeriod + 1}] ` + c.title;
+                            c.title = `[Swap -> ${tgtClass} P${tPeriod + 1}] ` + c.title;
                             allConflicts.push(c);
                         });
                     }
 
                     if (targetSlot) {
-                        const tConflicts = checkSlotPlacementConflicts(activeManualSlotState.day, activeManualSlotState.period, cls, targetSlot.subject, targetSlot.teacherId, excludeList);
+                        const tConflicts = checkSlotPlacementConflicts(activeManualSlotState.day, activeManualSlotState.period, srcClass, targetSlot.subject, targetSlot.teacherId, excludeList);
                         tConflicts.forEach(c => {
-                            c.title = `[Swap -> P${activeManualSlotState.period + 1}] ` + c.title;
+                            c.title = `[Swap -> ${srcClass} P${activeManualSlotState.period + 1}] ` + c.title;
                             allConflicts.push(c);
                         });
                     }
@@ -13653,7 +13912,15 @@
                     }
                 }
 
-                const isWafy = (className.toLowerCase().includes('wafy') && !className.toLowerCase().includes('wafiyya'));
+                const initClass = activeManualSlotState.initialClassName;
+                const newClass = activeManualSlotState.className;
+
+                // If class was changed from initial, remove from old class slot
+                if (initClass && initClass !== newClass && currentTimetable[day] && currentTimetable[day][period]) {
+                    delete currentTimetable[day][period][initClass];
+                }
+
+                const isWafy = (newClass.toLowerCase().includes('wafy') && !newClass.toLowerCase().includes('wafiyya'));
                 const collegeName = isWafy 
                     ? (appState.institutions[0] || "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )")
                     : (appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)");
@@ -13662,7 +13929,7 @@
                     id: 'manual_' + Date.now(),
                     allocationType: 'standard',
                     college: collegeName,
-                    className: className,
+                    className: newClass,
                     subject: sub,
                     teacherId: tch,
                     isManualOverride: true,
@@ -13673,34 +13940,61 @@
 
                 if (!currentTimetable[day]) currentTimetable[day] = {};
                 if (!currentTimetable[day][period]) currentTimetable[day][period] = {};
-                currentTimetable[day][period][className] = newSlot;
+                currentTimetable[day][period][newClass] = newSlot;
 
                 const periodTitle = isAdditionalSlot ? 'അഡീഷണൽ പിരീഡ്' : `Period ${period + 1}`;
                 showAlert(
                     isOverride ? "ഓവർറൈഡ് ചെയ്തു" : "വിജയകരം", 
-                    `${className} ന് ${dayNamesEn[day]} ${periodTitle}-ൽ <b>${sub}</b> വിജയകരമായി സെറ്റ് ചെയ്തു.${isOverride ? ' (Admin Force Override)' : ''}`
+                    `<b>${newClass}</b> ന് ${dayNamesEn[day]} ${periodTitle}-ൽ <b>${sub}</b> വിജയകരമായി സെറ്റ് ചെയ്തു.${isOverride ? ' (Admin Force Override)' : ''}`
                 );
             } else if (actionTab === 'swap') {
                 if (!activeManualSlotState.swapTarget) return;
-                const { day: tDay, period: tPeriod } = activeManualSlotState.swapTarget;
+                const { day: tDay, period: tPeriod, className: tClass } = activeManualSlotState.swapTarget;
+                const srcClass = activeManualSlotState.className;
+                const tgtClass = tClass || activeManualSlotState.swapTargetClass || srcClass;
 
-                const slotA = (currentTimetable[day] && currentTimetable[day][period]) ? currentTimetable[day][period][className] : null;
-                const slotB = (currentTimetable[tDay] && currentTimetable[tDay][tPeriod]) ? currentTimetable[tDay][tPeriod][className] : null;
+                const slotA = (currentTimetable[day] && currentTimetable[day][period]) ? currentTimetable[day][period][srcClass] : null;
+                const slotB = (currentTimetable[tDay] && currentTimetable[tDay][tPeriod]) ? currentTimetable[tDay][tPeriod][tgtClass] : null;
 
-                if (slotA) slotA.isManualOverride = true;
-                if (slotB) slotB.isManualOverride = true;
+                if (slotA) {
+                    slotA.isManualOverride = true;
+                    slotA.className = tgtClass;
+                    const tgtIsWafy = (tgtClass.toLowerCase().includes('wafy') && !tgtClass.toLowerCase().includes('wafiyya'));
+                    slotA.college = tgtIsWafy 
+                        ? (appState.institutions[0] || "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )")
+                        : (appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)");
+                }
+                if (slotB) {
+                    slotB.isManualOverride = true;
+                    slotB.className = srcClass;
+                    const srcIsWafy = (srcClass.toLowerCase().includes('wafy') && !srcClass.toLowerCase().includes('wafiyya'));
+                    slotB.college = srcIsWafy 
+                        ? (appState.institutions[0] || "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )")
+                        : (appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)");
+                }
 
                 if (!currentTimetable[day]) currentTimetable[day] = {};
                 if (!currentTimetable[day][period]) currentTimetable[day][period] = {};
-                currentTimetable[day][period][className] = slotB;
+                if (slotB) {
+                    currentTimetable[day][period][srcClass] = slotB;
+                } else {
+                    delete currentTimetable[day][period][srcClass];
+                }
 
                 if (!currentTimetable[tDay]) currentTimetable[tDay] = {};
                 if (!currentTimetable[tDay][tPeriod]) currentTimetable[tDay][tPeriod] = {};
-                currentTimetable[tDay][tPeriod][className] = slotA;
+                if (slotA) {
+                    currentTimetable[tDay][tPeriod][tgtClass] = slotA;
+                } else {
+                    delete currentTimetable[tDay][tPeriod][tgtClass];
+                }
 
+                const isCrossClass = srcClass !== tgtClass;
                 showAlert(
                     "സ്വാപ്പ് വിജയകരം", 
-                    `${className} ലെ ${dayNamesEn[day]} P${period + 1} ഉം ${dayNamesEn[tDay]} P${tPeriod + 1} ഉം പരസ്പരം വിജയകരമായി മാറ്റി.`
+                    isCrossClass
+                        ? `<b>${srcClass}</b> (${dayNamesEn[day]} P${period + 1}) ഉം <b>${tgtClass}</b> (${dayNamesEn[tDay]} P${tPeriod + 1}) ഉം പരസ്പരം വിജയകരമായി മാറ്റി (Cross-Class / Cross-College Swap).`
+                        : `${srcClass} ലെ ${dayNamesEn[day]} P${period + 1} ഉം ${dayNamesEn[tDay]} P${tPeriod + 1} ഉം പരസ്പരം വിജയകരമായി മാറ്റി.`
                 );
             }
 
@@ -21371,8 +21665,11 @@
 
         // Manual Timetable Slot Editor Window Handlers
         window.openManualSlotEditor = openManualSlotEditor;
+        window.openTeacherFreeSlotEditor = openTeacherFreeSlotEditor;
         window.closeManualSlotEditor = closeManualSlotEditor;
         window.setSlotActionTab = setSlotActionTab;
+        window.onManualSlotClassChanged = onManualSlotClassChanged;
+        window.onManualSlotSwapClassChanged = onManualSlotSwapClassChanged;
         window.onManualSlotSubjectChanged = onManualSlotSubjectChanged;
         window.onManualSlotTeacherChanged = onManualSlotTeacherChanged;
         window.onManualSlotSwapTargetChanged = onManualSlotSwapTargetChanged;
