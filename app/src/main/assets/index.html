@@ -807,6 +807,13 @@
 
             <!-- Admin Generator Widget -->
             <div id="admin-generator-box" class="p-3 border-t border-slate-200 bg-slate-50/50 hidden space-y-1.5">
+                <div class="flex items-center justify-between gap-1.5 px-2 py-1.5 bg-white/90 rounded-xl border border-slate-200 shadow-2xs">
+                    <label for="preserve-manual-slots" class="text-[10.5px] font-bold text-slate-700 cursor-pointer select-none flex items-center gap-1.5">
+                        <i class="fas fa-lock text-amber-500 text-[10px]"></i>
+                        <span>മാന്വൽ പിരീഡ് ലോക്ക്</span>
+                    </label>
+                    <input type="checkbox" id="preserve-manual-slots" checked onchange="window.togglePreserveManualSlots(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer" title="മാന്വൽ ആയി സെറ്റ് ചെയ്ത പിരീഡുകൾ മാറ്റാതെ നിലനിർത്തുക (Lock Manual Slots)">
+                </div>
                 <button onclick="window.generateTimetable()" class="w-full bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white font-semibold py-2 px-3 rounded-xl shadow transition duration-200 flex items-center justify-center gap-2 text-xs">
                     <i class="fas fa-magic text-emerald-200"></i> Generate Timetable
                 </button>
@@ -1630,6 +1637,19 @@
                             <p class="text-[11px] text-slate-500 mt-1">ഒരു അധ്യാപകന് രണ്ട് ക്യാമ്പസുകളിലുമായി ഒരു ദിവസം നൽകാവുന്ന പരമാവധി പിരീഡുകൾ (സ്ഥിരമായി 5 പിരീഡ്).</p>
                         </div>
 
+                        <!-- Preserve Manual Slots Toggle -->
+                        <div class="p-3 bg-slate-50 border border-slate-200 rounded-xl flex items-center justify-between gap-3">
+                            <div>
+                                <div class="text-xs font-bold text-slate-800 flex items-center gap-1.5">
+                                    <i class="fas fa-lock text-amber-500"></i> മാന്വൽ പിരീഡുകൾ ലോക്ക് ചെയ്യുക (Preserve Manual Slots)
+                                </div>
+                                <div class="text-[11px] text-slate-500 mt-0.5">
+                                    ടിക്ക് രേഖപ്പെടുത്തിയാൽ പുതിയ ടൈംടേബിൾ ജനറേറ്റ് ചെയ്യുമ്പോൾ മാന്വലായി മാറ്റിയ പിരീഡുകൾ മാറില്ല. ടിക്ക് മാറ്റിയാൽ എല്ലാം ഒറ്റയടിക്ക് പുതിയതാകും.
+                                </div>
+                            </div>
+                            <input type="checkbox" id="preserve-manual-slots-settings" checked onchange="window.togglePreserveManualSlots(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
+                        </div>
+
                         <!-- Class Management -->
                         <div class="pt-2">
                             <label class="block text-xs font-medium text-slate-600 mb-1">Classes / Batches (Comma Separated)</label>
@@ -2090,13 +2110,21 @@
                     </div>
                 </div>
 
-                <div class="flex justify-between items-center pt-2">
+                <div class="flex flex-wrap justify-between items-center gap-3 pt-2">
                     <button onclick="window.switchTab('teachers')" class="text-slate-600 hover:text-slate-800 text-sm font-medium flex items-center gap-1.5">
                         <i class="fas fa-arrow-left text-xs"></i> Back to Faculty
                     </button>
-                    <button onclick="window.generateTimetable()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 shadow">
-                        <i class="fas fa-magic"></i> Generate Timetable
-                    </button>
+                    <div class="flex items-center gap-3">
+                        <label class="flex items-center gap-2 bg-white px-3 py-2 rounded-xl border border-slate-200 shadow-2xs cursor-pointer select-none">
+                            <input type="checkbox" id="preserve-manual-slots-alloc" checked onchange="window.togglePreserveManualSlots(this.checked)" class="w-4 h-4 text-emerald-600 rounded border-slate-300 focus:ring-emerald-500 cursor-pointer">
+                            <span class="text-xs font-bold text-slate-700 flex items-center gap-1.5">
+                                <i class="fas fa-lock text-amber-500 text-[11px]"></i> മാന്വൽ പിരീഡുകൾ നിലനിർത്തുക (Lock Manual Slots)
+                            </span>
+                        </label>
+                        <button onclick="window.generateTimetable()" class="bg-gradient-to-r from-emerald-600 to-teal-600 hover:from-emerald-700 hover:to-teal-700 text-white px-6 py-2.5 rounded-xl text-sm font-semibold transition flex items-center gap-2 shadow">
+                            <i class="fas fa-magic"></i> Generate Timetable
+                        </button>
+                    </div>
                 </div>
             </section>
         </div>
@@ -3137,6 +3165,9 @@
                             <h3 class="text-base sm:text-lg font-black tracking-tight text-white">Timetable Verification</h3>
                             <span id="gen-modal-status-badge" class="text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-emerald-500/20 text-emerald-300 border border-emerald-400/40">
                                 🟢 100% Complete
+                            </span>
+                            <span id="gen-modal-manual-badge" class="hidden text-[10px] font-bold px-2 py-0.5 rounded-full bg-amber-400/20 text-amber-300 border border-amber-400/40">
+                                <i class="fas fa-lock text-[9px] mr-1"></i> Manual Slots Preserved
                             </span>
                         </div>
                         <p class="text-xs text-emerald-200/80">ടൈംടേബിൾ പരിശോധിച്ചു ഉറപ്പുവരുത്തിയ ശേഷം സ്ഥിരപ്പെടുത്തുക</p>
@@ -8078,6 +8109,13 @@
             const sideAccessTag = document.getElementById('sidebar-access-mode-tag');
             const setupHeaderBadge = document.getElementById('setup-header-badge');
 
+            // Synchronize preserve manual slots checkbox
+            const currentPreserveVal = (appState.preserveManualSlots !== false);
+            ['preserve-manual-slots', 'preserve-manual-slots-alloc', 'preserve-manual-slots-settings'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el) el.checked = currentPreserveVal;
+            });
+
             // Disable or enable configuration inputs (Admin Only)
             const setupInputs = ['inst1-name', 'inst2-name', 'days-count', 'periods-count', 'enable-travel-buffer', 'max-teacher-daily-periods', 'total-working-days-input'];
             setupInputs.forEach(id => {
@@ -9129,9 +9167,22 @@
         window.stagedUnscheduledList = [];
         let isStagedPreviewActive = false;
 
-        function openTimetableVerificationModal(schedule, unscheduledList, totalAllottedCount) {
+        function openTimetableVerificationModal(schedule, unscheduledList, totalAllottedCount, preservedManualCount = 0) {
             window.stagedGeneratedSchedule = schedule;
             window.stagedUnscheduledList = unscheduledList || [];
+
+            const manualBadgeEl = document.getElementById('gen-modal-manual-badge');
+            if (manualBadgeEl) {
+                if (preservedManualCount > 0) {
+                    manualBadgeEl.innerHTML = `<i class="fas fa-lock text-[9px] mr-1"></i> ${preservedManualCount} മാന്വൽ പിരീഡുകൾ ലോക്ക് ചെയ്തു`;
+                    manualBadgeEl.classList.remove('hidden');
+                } else if (appState.preserveManualSlots === false) {
+                    manualBadgeEl.innerHTML = `<i class="fas fa-sync text-[9px] mr-1"></i> Full Fresh Regeneration`;
+                    manualBadgeEl.classList.remove('hidden');
+                } else {
+                    manualBadgeEl.classList.add('hidden');
+                }
+            }
 
             const modal = document.getElementById('timetable-verification-modal');
             if (!modal) return;
@@ -9318,6 +9369,55 @@
         window.regenerateTimetableFromModal = regenerateTimetableFromModal;
 
 
+
+        function togglePreserveManualSlots(checked) {
+            appState.preserveManualSlots = !!checked;
+            saveStateToLocal();
+            saveToCloud();
+
+            ['preserve-manual-slots', 'preserve-manual-slots-alloc', 'preserve-manual-slots-settings'].forEach(id => {
+                const el = document.getElementById(id);
+                if (el && el.checked !== appState.preserveManualSlots) {
+                    el.checked = appState.preserveManualSlots;
+                }
+            });
+
+            if (appState.preserveManualSlots) {
+                showToast("Manual Slots Locked (മാന്വൽ ലോക്ക് സജീവം)", "മാന്വൽ ആയി സെറ്റ് ചെയ്ത പിരീഡുകൾ മാറ്റാതെ നിലനിർത്തും. പുതിയ ടൈംടേബിൾ ഇവയ്ക്ക് മുകളിൽ ജനറേറ്റ് ചെയ്യില്ല.");
+            } else {
+                showToast("Full Regeneration Active (പൂർണ്ണ ജനറേഷൻ)", "മാന്വൽ ലോക്ക് മാറ്റി. ഇനി ജനറേറ്റ് ചെയ്യുമ്പോൾ എല്ലാ പിരീഡുകളും ഒറ്റയടിക്ക് പുതിയതായി ജനറേറ്റ് ചെയ്യപ്പെടും.");
+            }
+        }
+        window.togglePreserveManualSlots = togglePreserveManualSlots;
+
+        function toggleSlotPin(dayIndex, periodIndex, className) {
+            if (!isAdminLoggedIn) {
+                showAlert("Access Denied", "Only administrators can pin or unpin timetable slots.");
+                return;
+            }
+            if (!appState.timetable || !appState.timetable[dayIndex] || !appState.timetable[dayIndex][periodIndex]) return;
+            const sl = appState.timetable[dayIndex][periodIndex][className];
+            if (!sl) return;
+
+            pushTimetableState(`Toggle Lock: ${className} P${periodIndex + 1}`);
+            const isCurrentlyPinned = !!(sl.isManualOverride || sl.isPinned);
+            sl.isManualOverride = !isCurrentlyPinned;
+            sl.isPinned = !isCurrentlyPinned;
+
+            saveStateToLocal();
+            saveToCloud();
+            renderTimetable();
+            closeManualSlotEditor();
+            updateUndoRedoButtons();
+
+            showToast(
+                sl.isPinned ? "Slot Locked (പിരീഡ് ലോക്ക് ചെയ്തു)" : "Slot Unlocked (അൺലോക്ക് ചെയ്തു)",
+                `${className} (${dayNamesEn[dayIndex]} P${periodIndex + 1}) ${sl.isPinned ? 'ലോക്ക് ചെയ്തു. പുതിയ ടൈംടേബിൾ ജനറേറ്റ് ചെയ്യുമ്പോൾ ഇത് മാറില്ല.' : 'അൺലോക്ക് ചെയ്തു. ഇനി പുതിയ ജനറേഷനിൽ മാറും.'}`
+            );
+        }
+        window.toggleSlotPin = toggleSlotPin;
+
+
         function saveStateToLocal() {
             try {
                 localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
@@ -9330,6 +9430,9 @@
 
         function ensureDataStructures() {
             if(!appState.deletedTeachers) appState.deletedTeachers = [];
+            if(!appState.dayPeriodTimings) appState.dayPeriodTimings = {};
+            if(appState.maxTeacherDailyPeriods === undefined) appState.maxTeacherDailyPeriods = 5;
+            if(appState.preserveManualSlots === undefined) appState.preserveManualSlots = true;
             if(!appState.specialTimetables) appState.specialTimetables = [];
             if(!appState.dailyAudits) appState.dailyAudits = {};
             if(!appState.totalWorkingDays) appState.totalWorkingDays = 200;
@@ -9375,6 +9478,8 @@
                     days: appState.days,
                     periods: appState.periods,
                     enableTravelBuffer: appState.enableTravelBuffer,
+                    preserveManualSlots: appState.preserveManualSlots !== false,
+                    maxTeacherDailyPeriods: appState.maxTeacherDailyPeriods || 5,
                     totalWorkingDays: appState.totalWorkingDays || 200,
                     semesters: appState.semesters || null,
                     classesList: appState.classesList,
@@ -13802,7 +13907,7 @@
                 if (currentSlot) {
                     const t = appState.teachers.find(tch => tch.id === currentSlot.teacherId);
                     const manualBadge = currentSlot.isManualOverride 
-                        ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded border border-amber-300 ml-1.5"><i class="fas fa-edit mr-0.5"></i> Manual</span>` 
+                        ? `<span class="bg-amber-100 text-amber-800 text-[9px] font-black px-1.5 py-0.5 rounded border border-amber-300 ml-1.5"><i class="fas fa-lock mr-0.5"></i> Locked / Manual</span>` 
                         : '';
                     const isWafy = (className.toLowerCase().includes('wafy') && !className.toLowerCase().includes('wafiyya'));
                     const tagClass = isWafy ? 'bg-emerald-100 text-emerald-800' : 'bg-purple-100 text-purple-800';
@@ -16966,6 +17071,9 @@
             const maxDailyInp = document.getElementById('max-teacher-daily-periods');
             if (maxDailyInp) maxDailyInp.value = appState.maxTeacherDailyPeriods || 5;
 
+            const preserveManualInp = document.getElementById('preserve-manual-slots-settings');
+            if (preserveManualInp) preserveManualInp.checked = (appState.preserveManualSlots !== false);
+
             renderPeriodTimingInputs();
             updateDropdowns();
             renderClassWorkingDaysSettings();
@@ -17094,6 +17202,31 @@
         async function runMultiClassAlgorithm() {
             const { days, periods, teachers, classes, enableTravelBuffer } = appState;
 
+            // 1. Identify locked / manually set slots if preserveManualSlots is enabled
+            // "നമ്മുടെ ടൈം ടേബിളിൽ മാന്വൽ ആയി സെറ്റ് ചെയ്ത പിരീഡുകൾ പുതിയ ടൈംടേബിളുകൾ ജനറേറ്റ് ചെയ്യുന്ന സമയത്ത് മാറ്റം സംഭവിക്കരുത്"
+            const shouldPreserveManual = (appState.preserveManualSlots !== false);
+            const lockedManualSlots = [];
+
+            if (shouldPreserveManual && appState.timetable) {
+                for (let d = 0; d < days; d++) {
+                    if (!appState.timetable[d]) continue;
+                    for (let p = 0; p < periods; p++) {
+                        if (!appState.timetable[d][p]) continue;
+                        for (let cls in appState.timetable[d][p]) {
+                            const sl = appState.timetable[d][p][cls];
+                            if (sl && (sl.isManualOverride || sl.isPinned || (typeof sl.id === 'string' && sl.id.startsWith('manual_')))) {
+                                lockedManualSlots.push({
+                                    d,
+                                    p,
+                                    cls,
+                                    slot: { ...sl, isManualOverride: true, isPinned: true }
+                                });
+                            }
+                        }
+                    }
+                }
+            }
+
             // Expand raw class allotments into individual 1-hour schedulable slot tokens
             let rawSlots = [];
             classes.forEach(c => {
@@ -17163,6 +17296,19 @@
                     }
                 }
             });
+
+            // Deduct pre-scheduled manual slots from rawSlots so class & teacher quotas match exactly
+            if (lockedManualSlots.length > 0) {
+                for (let ms of lockedManualSlots) {
+                    const matchIdx = rawSlots.findIndex(s => 
+                        s.className === ms.cls && 
+                        (s.id === ms.slot.id || s.subject === ms.slot.subject || (ms.slot.teacherId && s.teacherId === ms.slot.teacherId))
+                    );
+                    if (matchIdx !== -1) {
+                        rawSlots.splice(matchIdx, 1);
+                    }
+                }
+            }
 
             // Helper: identify science lab subjects that should be scheduled in 2 consecutive periods
             const isConsecutiveSubject = (subjectName) => {
@@ -17419,6 +17565,13 @@
                     Array(periods).fill(null).map(() => ({}))
                 );
 
+                // Pre-place locked manual slots for this attempt so they remain completely fixed
+                if (lockedManualSlots.length > 0) {
+                    for (let ms of lockedManualSlots) {
+                        currentSchedule[ms.d][ms.p][ms.cls] = { ...ms.slot };
+                    }
+                }
+
                 // Clone slot tokens for this attempt
                 let slots = rawSlots.map(s => ({ ...s }));
 
@@ -17584,7 +17737,7 @@
                                     for (let p2 = 0; p2 < periods; p2++) {
                                         if (d2 === d && p2 === p) continue;
                                         const s2 = currentSchedule[d2][p2][slot.className];
-                                        if (!s2) continue;
+                                        if (!s2 || s2.isManualOverride || s2.isPinned) continue; // Locked manual slot cannot be moved
 
                                         // Temporarily lift s2 from (d2, p2)
                                         delete currentSchedule[d2][p2][slot.className];
@@ -17632,6 +17785,7 @@
                                     for (let cls in currentSchedule[d][p]) {
                                         const occ = currentSchedule[d][p][cls];
                                         if (occ && slotContainsTeacher(occ, tId)) {
+                                            if (occ.isManualOverride || occ.isPinned) continue; // Locked manual slot cannot be ejected
                                             blockerClass = cls;
                                             blockerSlot = occ;
                                             break;
@@ -17995,7 +18149,7 @@
             const totalRawSlotsCount = rawSlots.length;
 
             if (typeof openTimetableVerificationModal === 'function') {
-                openTimetableVerificationModal(bestSchedule, bestUnscheduledList, totalRawSlotsCount);
+                openTimetableVerificationModal(bestSchedule, bestUnscheduledList, totalRawSlotsCount, lockedManualSlots.length);
             } else {
                 appState.timetable = bestSchedule;
                 renderTimetable();
