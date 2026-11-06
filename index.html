@@ -14446,8 +14446,13 @@
                 }
             }
 
-            // Rule 6: Consecutive Period Restriction (Only Computer Science, Chemistry, Physics, Biology can have consecutive periods)
-            const isProposedConsecutiveAllowed = typeof isConsecutiveSubject === 'function' ? isConsecutiveSubject(proposedSubject) : false;
+            // Rule 6: Consecutive Period Restriction
+            // "3 പിരീഡിനേക്കാൾ കൂടുതലുള്ളവ ഒന്നിൽ കൂടുതൽ വരുന്നെങ്കിൽ അടുപ്പിച്ച പിരീഡായാൽ നല്ലത്"
+            // Science lab subjects OR subjects with > 3 weekly hours CAN be scheduled consecutively.
+            // Low-hour subjects (<= 3 hours, non-science) should NOT be scheduled consecutively.
+            const classAllot = (appState.classes || []).find(c => c.className === className && c.subject === proposedSubject);
+            const subjectWeeklyHours = classAllot ? Number(classAllot.hours || 0) : 0;
+            const isProposedConsecutiveAllowed = (typeof isConsecutiveSubject === 'function' && isConsecutiveSubject(proposedSubject)) || (subjectWeeklyHours > 3);
             if (!isProposedConsecutiveAllowed) {
                 const adjacentSameClass = [period - 1, period + 1];
                 for (let adjP of adjacentSameClass) {
@@ -14458,11 +14463,33 @@
                                 type: 'warning',
                                 icon: 'fa-ban',
                                 title: `തുടർച്ചയായ പിരീഡ് നിയന്ത്രണം (Consecutive Period Restriction)`,
-                                description: `<b>${proposedSubject}</b> അടുത്തടുത്ത പിരീഡുകളിലായി (Period ${adjP + 1} & Period ${period + 1}) ഷെഡ്യൂൾ ചെയ്യാൻ അനുവദനീയമല്ല. കമ്പ്യൂട്ടർ സയൻസ്, ഫിസിക്സ്, കെമിസ്ട്രി, ബയോളജി എന്നീ വിഷയങ്ങൾക്ക് മാത്രമേ തുടർച്ചയായ പിരീഡുകൾ അനുവദിക്കൂ.`
+                                description: `<b>${proposedSubject}</b> (ആകെ ${subjectWeeklyHours} മണിക്കൂർ) അടുത്തടുത്ത പിരീഡുകളിലായി (Period ${adjP + 1} & Period ${period + 1}) ഷെഡ്യൂൾ ചെയ്യാൻ അനുവദനീയമല്ല. 3 പിരീഡിൽ കൂടുതലുള്ള വിഷയങ്ങൾക്കോ സയൻസ് വിഷയങ്ങൾക്കോ മാത്രമേ തുടർച്ചയായ പിരീഡുകൾ അനുവദിക്കൂ.`
                             });
                             break;
                         }
                     }
+                }
+            }
+
+            // Rule 7: Saturday Restriction for Low-Hour Subjects (<= 3 hours/week: max 1 period on Saturday)
+            // "കുറഞ്ഞ പിരീഡുകളുള്ളവ 3ഉം 3 ൽ താഴെയുള്ളതും ശനി യാഴ്ച്ച ദിവസങ്ങളിൽ 1 ൽ കൂടുതൽ പിരീഡുകൾ ഇടരുത് ലീവിൽ മിസ്സായാൽ കൂടുതൽ പിരീഡുകൾ മിസ്സാവും"
+            const isSaturdayConflict = (day === 5 || (dayNamesEn[day] && dayNamesEn[day].toLowerCase().includes('saturday')));
+            if (isSaturdayConflict && subjectWeeklyHours > 0 && subjectWeeklyHours <= 3) {
+                let satCount = 0;
+                for (let p = 0; p < maxPeriods; p++) {
+                    if (p === period) continue;
+                    const s = (appState.timetable && appState.timetable[day] && appState.timetable[day][p]) ? appState.timetable[day][p][className] : null;
+                    if (s && s.subject === proposedSubject) {
+                        satCount++;
+                    }
+                }
+                if (satCount >= 1) {
+                    conflicts.push({
+                        type: 'warning',
+                        icon: 'fa-calendar-week',
+                        title: `ശനിയാഴ്ച പിരീഡ് നിയന്ത്രണം (Saturday Max 1 Period Limit)`,
+                        description: `<b>${proposedSubject}</b> (ആകെ ${subjectWeeklyHours} മണിക്കൂർ) ശനിയാഴ്ച ഇതിനകം ഒരു പിരീഡ് ഉണ്ട്. 3-ഓ അതിൽ താഴെയോ മണിക്കൂറുള്ള വിഷയങ്ങൾക്ക് ശനിയാഴ്ച പരമാവധി 1 പിരീഡ് മാത്രമേ അനുവദിക്കാവൂ (ലീവിൽ കൂടുതൽ പിരീഡുകൾ നഷ്ടപ്പെടാതിരിക്കാൻ). leave loss prevention.`
+                    });
                 }
             }
 
@@ -17545,10 +17572,13 @@
                 // Period must be empty for this class
                 if (currentSchedule[d][p][slot.className]) return false;
 
-                // Consecutive Period Restriction:
-                // Only Computer Science, Chemistry, Physics, Biology can be scheduled back-to-back in consecutive periods for the same class
-                // When allowConsecutiveFallback is true (only used in final fallback passes when periods would be left blank), relax this check
-                if (!isConsecutiveSubject(slot.subject) && !allowConsecutiveFallback) {
+                // Consecutive Period Rule:
+                // "3 പിരീഡിനേക്കാൾ കൂടുതലുള്ളവ ഒന്നിൽ കൂടുതൽ വരുന്നെങ്കിൽ അടുപ്പിച്ച പിരീഡായാൽ നല്ലത്"
+                // Subjects with > 3 hours or Science lab subjects CAN be consecutive.
+                // Low-hour subjects (<= 3 hours, non-science) should NOT be scheduled consecutively.
+                const slotHours = Number(slot.hours) || 0;
+                const isConsecutiveAllowed = isConsecutiveSubject(slot.subject) || (slotHours > 3);
+                if (!isConsecutiveAllowed && !allowConsecutiveFallback) {
                     if (p > 0) {
                         const prevSlot = currentSchedule[d][p - 1][slot.className];
                         if (prevSlot && prevSlot.subject === slot.subject) return false;
@@ -17557,6 +17587,18 @@
                         const nextSlot = currentSchedule[d][p + 1][slot.className];
                         if (nextSlot && nextSlot.subject === slot.subject) return false;
                     }
+                }
+
+                // Saturday Restriction for Low-Hour Subjects (<= 3 hours):
+                // "കുറഞ്ഞ പിരീഡുകളുള്ളവ 3ഉം 3 ൽ താഴെയുള്ളതും ശനി യാഴ്ച്ച ദിവസങ്ങളിൽ 1 ൽ കൂടുതൽ പിരീഡുകൾ ഇടരുത് ലീവിൽ മിസ്സായാൽ കൂടുതൽ പിരീഡുകൾ മിസ്സാവും."
+                const isSat = (d === 5 || (typeof dayNames !== 'undefined' && dayNames[d] === 'Saturday') || (typeof dayNamesEn !== 'undefined' && dayNamesEn[d] && dayNamesEn[d].toLowerCase().includes('saturday')));
+                if (isSat && slotHours <= 3 && !allowConsecutiveFallback) {
+                    let satCount = 0;
+                    for (let chkP = 0; chkP < periods; chkP++) {
+                        const s = currentSchedule[d][chkP][slot.className];
+                        if (s && s.subject === slot.subject) satCount++;
+                    }
+                    if (satCount >= 1) return false; // Max 1 period on Saturday for <= 3h subjects
                 }
 
                 // Check subject count for this class on day d
@@ -17620,12 +17662,40 @@
                     score += Math.max(0, periods - p) * 4;
                 }
 
-                // 1. Science Lab Subject Soft Clustering Bonus (+120 for adjacent period of same subject)
-                if (isConsecutiveSubject(slot.subject)) {
-                    const prevSlot = p > 0 ? currentSchedule[d][p - 1][slot.className] : null;
-                    const nextSlot = p < periods - 1 ? currentSchedule[d][p + 1][slot.className] : null;
-                    if ((prevSlot && prevSlot.subject === slot.subject) || (nextSlot && nextSlot.subject === slot.subject)) {
-                        score += 120;
+                // 1. Consecutive placement preference for subjects > 3 hours and Science Lab subjects
+                // "3 പിരീഡിനേക്കാൾ കൂടുതലുള്ളവ ഒന്നിൽ കൂടുതൽ വരുന്നെങ്കിൽ അടുപ്പിച്ച പിരീഡായാൽ നല്ലത്"
+                const prevSlot = p > 0 ? currentSchedule[d][p - 1][slot.className] : null;
+                const nextSlot = p < periods - 1 ? currentSchedule[d][p + 1][slot.className] : null;
+                const isAdjacentToSame = (prevSlot && prevSlot.subject === slot.subject) || (nextSlot && nextSlot.subject === slot.subject);
+                const currentSlotHours = Number(slot.hours) || 0;
+
+                if (currentSlotHours > 3 || isConsecutiveSubject(slot.subject)) {
+                    let existingOnDay = 0;
+                    for (let chkP = 0; chkP < periods; chkP++) {
+                        const s = currentSchedule[d][chkP][slot.className];
+                        if (s && s.subject === slot.subject) existingOnDay++;
+                    }
+                    if (existingOnDay > 0) {
+                        if (isAdjacentToSame) {
+                            score += 160; // Strong bonus: multiple periods on same day should be consecutive!
+                        } else {
+                            score -= 90; // Penalize scattering multiple periods on the same day
+                        }
+                    }
+                } else {
+                    // Low-hour subjects (<= 3 hours): prefer spreading across separate days and avoid multiple on Saturday
+                    // "കുറഞ്ഞ പിരീഡുകളുള്ളവ 3ഉം 3 ൽ താഴെയുള്ളതും ശനി യാഴ്ച്ച ദിവസങ്ങളിൽ 1 ൽ കൂടുതൽ പിരീഡുകൾ ഇടരുത്"
+                    let existingOnDay = 0;
+                    for (let chkP = 0; chkP < periods; chkP++) {
+                        const s = currentSchedule[d][chkP][slot.className];
+                        if (s && s.subject === slot.subject) existingOnDay++;
+                    }
+                    if (existingOnDay > 0) {
+                        score -= 80; // Strongly discourage duplicate periods of <= 3h subject on same day
+                    }
+                    const isSatPlacement = (d === 5 || (typeof dayNames !== 'undefined' && dayNames[d] === 'Saturday') || (typeof dayNamesEn !== 'undefined' && dayNamesEn[d] && dayNamesEn[d].toLowerCase().includes('saturday')));
+                    if (isSatPlacement) {
+                        score -= 30; // Mild preference to keep Saturday slots open for higher-hour subjects
                     }
                 }
 
@@ -18244,15 +18314,17 @@
                     unscheduled = stillUnscheduled;
                 }
 
-                // Count consecutive science pairs & dual-campus clustered blocks
+                // Count consecutive pairs for science & subjects > 3h, and penalize Saturday violations
                 let consecutivePairsCount = 0;
+                let satViolationPenalty = 0;
                 for (let d = 0; d < days; d++) {
+                    const isDaySat = (d === 5 || (typeof dayNames !== 'undefined' && dayNames[d] === 'Saturday') || (typeof dayNamesEn !== 'undefined' && dayNamesEn[d] && dayNamesEn[d].toLowerCase().includes('saturday')));
                     for (let p = 0; p < periods - 1; p++) {
                         for (let cls in currentSchedule[d][p]) {
                             const s1 = currentSchedule[d][p][cls];
                             const s2 = currentSchedule[d][p + 1][cls];
-                            if (s1 && s2 && s1.subject === s2.subject && isConsecutiveSubject(s1.subject)) {
-                                consecutivePairsCount += 2; // high weight for science double periods
+                            if (s1 && s2 && s1.subject === s2.subject && (isConsecutiveSubject(s1.subject) || Number(s1.hours) > 3)) {
+                                consecutivePairsCount += 4; // high reward for science or >3h consecutive periods
                             }
                         }
                         // Dual-campus faculty consecutive blocks at same college
@@ -18270,6 +18342,24 @@
                                 }
                                 if (slotAtPNext && slotAtP.college === slotAtPNext.college) {
                                     consecutivePairsCount += 1;
+                                }
+                            }
+                        });
+                    }
+                    if (isDaySat) {
+                        const allClassesToScan = (typeof classesList !== 'undefined' ? classesList : (appState.classesList || classes || []));
+                        allClassesToScan.forEach(cls => {
+                            const className = typeof cls === 'string' ? cls : cls.className;
+                            const satSubjCounts = {};
+                            for (let p = 0; p < periods; p++) {
+                                const sl = currentSchedule[d][p] ? currentSchedule[d][p][className] : null;
+                                if (sl) satSubjCounts[sl.subject] = (satSubjCounts[sl.subject] || 0) + 1;
+                            }
+                            for (let sub in satSubjCounts) {
+                                const classAllot = classes.find(c => c.className === className && c.subject === sub);
+                                const hrs = classAllot ? Number(classAllot.hours || 0) : 0;
+                                if (hrs <= 3 && satSubjCounts[sub] > 1) {
+                                    satViolationPenalty += (satSubjCounts[sub] - 1) * 500;
                                 }
                             }
                         });
@@ -18300,6 +18390,7 @@
                         }
                     });
                 }
+                compactnessScore -= satViolationPenalty;
 
                 // Keep the attempt with the fewest unassigned lessons, then the fewest
                 // internal gaps, then the best science/dual-campus clustering.
