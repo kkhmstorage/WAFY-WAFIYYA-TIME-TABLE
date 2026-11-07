@@ -3077,42 +3077,78 @@
                             <!-- Populated dynamically with grouped Wafy & Wafiyya classes -->
                         </select>
                     </div>
-                    <div>
-                        <label class="block font-bold text-slate-700 mb-1">നൽകേണ്ട വിഷയം തിരഞ്ഞെടുക്കുക (Select Allotted Subject):</label>
-                        <select id="slot-select-subject" onchange="window.onManualSlotSubjectChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                            <!-- Populated with allotted subjects of this class -->
-                        </select>
+
+                    <!-- All Periods & Teachers List of this Class -->
+                    <div class="mt-2 pt-2 border-t border-slate-200">
+                        <div class="flex items-center justify-between mb-1.5">
+                            <label class="font-bold text-slate-800 text-xs flex items-center gap-1.5">
+                                <i class="fas fa-list-check text-emerald-600"></i>
+                                <span>ആ ക്ലാസിലെ മുഴുവൻ പിരീഡുകളും അധ്യാപകരും (All Periods & Teachers):</span>
+                            </label>
+                            <span id="slot-modal-allotments-count" class="text-[10.5px] text-slate-500 font-semibold"></span>
+                        </div>
+                        <div class="relative mb-2">
+                            <i class="fas fa-search absolute left-2.5 top-2.5 text-slate-400 text-xs"></i>
+                            <input type="text" id="slot-modal-allotments-search" placeholder="വിഷയം അല്ലെങ്കിൽ അധ്യാപകനെ തിരയുക (Search subject/faculty)..." oninput="window.filterManualSlotAllotments()" class="w-full bg-slate-50 border border-slate-200 rounded-xl pl-7 pr-3 py-1.5 text-xs focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                        </div>
+                        <div id="slot-modal-allotments-list" class="max-h-52 overflow-y-auto space-y-1.5 pr-1 border border-slate-200/80 rounded-xl p-1.5 bg-slate-50/50">
+                            <!-- Populated dynamically with all class periods & teachers -->
+                        </div>
                     </div>
 
-                    <!-- Teacher Override (Optional) -->
-                    <div>
-                        <div class="flex items-center justify-between mb-1">
-                            <label class="font-bold text-slate-700">അധ്യാപകൻ (Assigned Faculty):</label>
-                            <span class="text-[10px] text-slate-500">ആവശ്യമെങ്കിൽ അധ്യാപകനെ മാറ്റാം</span>
+                    <!-- Selected Subject & Faculty Details -->
+                    <div class="p-2.5 rounded-xl bg-slate-50 border border-slate-200 space-y-2 mt-2">
+                        <div class="text-[10.5px] font-bold text-slate-500 uppercase tracking-wider flex items-center gap-1">
+                            <i class="fas fa-sliders-h text-slate-400"></i> വിശദാംശങ്ങൾ (Selected Details):
                         </div>
-                        <select id="slot-select-teacher" onchange="window.onManualSlotTeacherChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
-                            <!-- Populated dynamically -->
-                        </select>
+                        <div>
+                            <label class="block font-bold text-slate-700 mb-1 text-[11px]">തിരഞ്ഞെടുത്ത വിഷയം (Selected Subject):</label>
+                            <select id="slot-select-subject" onchange="window.onManualSlotSubjectChanged()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <!-- Populated with allotted subjects of this class -->
+                            </select>
+                        </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="font-bold text-slate-700 text-[11px]">അധ്യാപകൻ (Assigned Faculty):</label>
+                                <span class="text-[10px] text-slate-500">ആവശ്യമെങ്കിൽ മാറ്റാം</span>
+                            </div>
+                            <select id="slot-select-teacher" onchange="window.onManualSlotTeacherChanged()" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-medium focus:ring-2 focus:ring-emerald-500 focus:outline-none">
+                                <!-- Populated dynamically -->
+                            </select>
+                        </div>
                     </div>
                 </div>
 
                 <!-- TAB 2: SWAP WITH ANOTHER PERIOD -->
                 <div id="slot-tab-swap-pane" class="space-y-3 hidden">
                     <div>
-                        <div class="flex items-center justify-between mb-1">
+                        <div class="flex items-center justify-between mb-1.5">
                             <label class="block font-bold text-slate-700">
-                                <i class="fas fa-university text-blue-600 mr-1"></i> മാറ്റേണ്ട കോളേജ് & ക്ലാസ് / ഫാക്കൽറ്റി (Target College / Class / Faculty):
+                                <i class="fas fa-exchange-alt text-blue-600 mr-1"></i> സ്വാപ്പ് ചെയ്യേണ്ട രീതി (Swap Target Scope):
                             </label>
-                            <span class="text-[10px] text-slate-500">കോളേജുകൾ തമ്മിൽ മാറ്റാം</span>
+                            <span class="text-[10px] text-slate-500">അധ്യാപകരോ ക്ലാസോ തിരഞ്ഞെടുക്കുക</span>
                         </div>
+                        <!-- Toggle Pills between Faculty and Class -->
+                        <div class="grid grid-cols-2 gap-1.5 bg-slate-100 p-1 rounded-xl mb-2 text-xs font-bold">
+                            <button type="button" id="swap-scope-faculty-btn" onclick="window.setSwapScope('faculty')" class="py-1.5 px-2 rounded-lg bg-white text-blue-800 shadow-xs border border-blue-200 transition flex items-center justify-center gap-1 font-black">
+                                <i class="fas fa-user-tie"></i> അധ്യാപകർ (Faculty)
+                            </button>
+                            <button type="button" id="swap-scope-class-btn" onclick="window.setSwapScope('class')" class="py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1 font-bold">
+                                <i class="fas fa-university"></i> ക്ലാസുകൾ (Classes)
+                            </button>
+                        </div>
+
+                        <label class="block font-bold text-slate-700 mb-1" id="slot-swap-scope-label">
+                            <i class="fas fa-user-tie text-blue-600 mr-1"></i> മാറ്റേണ്ട അധ്യാപകൻ (Target Faculty):
+                        </label>
                         <select id="slot-select-swap-class" onchange="window.onManualSlotSwapClassChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-semibold focus:ring-2 focus:ring-blue-500 focus:outline-none mb-1">
-                            <!-- Populated with faculty schedule option and grouped classes -->
+                            <!-- Populated dynamically with faculty or classes -->
                         </select>
                     </div>
                     <div>
                         <label class="block font-bold text-slate-700 mb-1">മാറ്റേണ്ട മറ്റൊരു പിരീഡ് തിരഞ്ഞെടുക്കുക (Select Period to Swap with):</label>
                         <select id="slot-select-swap-target" onchange="window.onManualSlotSwapTargetChanged()" class="w-full bg-slate-50 border border-slate-300 rounded-xl px-3 py-2 text-xs font-medium focus:ring-2 focus:ring-blue-500 focus:outline-none">
-                            <!-- Populated with all other periods of this class -->
+                            <!-- Populated with all other periods of this faculty/class -->
                         </select>
                     </div>
                     <div id="slot-swap-preview-card" class="bg-blue-50/70 border border-blue-200 rounded-xl p-3 text-xs text-blue-950">
@@ -13945,22 +13981,20 @@
                 }
             }
 
-            // 3. Populate Class dropdowns
+            // 3. Set Swap Scope (default to 'faculty' if effectiveTeacherId is present, else 'class')
+            activeSwapScope = effectiveTeacherId ? 'faculty' : 'class';
+            setSwapScope(activeSwapScope);
+
+            // 4. Populate Class dropdown
             const classSelect = document.getElementById('slot-select-class');
             if (classSelect) {
                 populateClassSelectDropdown(classSelect, className, false);
             }
 
-            const swapClassSelect = document.getElementById('slot-select-swap-class');
-            if (swapClassSelect) {
-                populateClassSelectDropdown(swapClassSelect, effectiveTeacherId ? '__TEACHER_SCHEDULE__' : className, !!effectiveTeacherId);
-            }
-
-            // 4. Populate Subjects for current class
+            // 5. Populate Subjects and Teachers for current class & render full allotments list
             populateManualSlotSubjectSelect();
-
-            // 5. Populate Teachers
             populateManualSlotTeacherSelect();
+            renderManualSlotClassAllotmentsList();
 
             // 6. Populate Swap Target Options
             populateManualSlotSwapTargets();
@@ -13971,6 +14005,216 @@
             // 8. Show Modal
             const modal = document.getElementById('manual-slot-edit-modal');
             if (modal) modal.classList.remove('hidden');
+        }
+
+        // -------------------------------------------------------------
+        // ALL PERIODS & TEACHERS LIST IN CURRENT CLASS (User Request:
+        // "ആ ക്ലാസിലെ മുഴുവൻ പിരീഡുകളും അദ്യാപകരെയും ലിസ്റ്റ് ചെയ്യണം")
+        // -------------------------------------------------------------
+        function renderManualSlotClassAllotmentsList(searchFilter = '') {
+            const container = document.getElementById('slot-modal-allotments-list');
+            const countEl = document.getElementById('slot-modal-allotments-count');
+            if (!container || !activeManualSlotState) return;
+
+            const className = activeManualSlotState.className;
+            const isAdditionalSlot = activeManualSlotState.period >= (parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7);
+
+            // Calculate currently scheduled periods in timetable for this class
+            const scheduledCounts = {};
+            const days = parseInt(appState.settings ? appState.settings.workingDays : appState.days) || 6;
+            const periods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
+            if (appState.timetable) {
+                for (let d = 0; d < days; d++) {
+                    if (!appState.timetable[d]) continue;
+                    for (let p = 0; p < periods; p++) {
+                        const s = (appState.timetable[d][p]) ? appState.timetable[d][p][className] : null;
+                        if (s && s.subject) {
+                            scheduledCounts[s.subject] = (scheduledCounts[s.subject] || 0) + 1;
+                        }
+                    }
+                }
+            }
+
+            let classAllotments = (appState.classes || []).filter(c => c.className === className);
+
+            // Fallback if no specific allotments found for this class
+            if (classAllotments.length === 0) {
+                const uniqueSubjs = [...new Set((appState.classes || []).map(c => c.subject))];
+                classAllotments = uniqueSubjs.map(sb => {
+                    const found = appState.classes.find(c => c.subject === sb);
+                    return {
+                        id: found ? found.id : sb,
+                        className: className,
+                        subject: sb,
+                        teacherId: found ? found.teacherId : '',
+                        hours: found ? found.hours : 3
+                    };
+                });
+            }
+
+            // Special Biology Additional Slot filter
+            if (isAdditionalSlot && isWafiyyaT1Class(className)) {
+                classAllotments = classAllotments.filter(c => isBiologySubject(c.subject));
+                if (classAllotments.length === 0) {
+                    const bioAny = (appState.classes || []).find(c => isBiologySubject(c.subject));
+                    classAllotments = [{
+                        id: 'bio_add',
+                        className: className,
+                        subject: 'Biology',
+                        teacherId: bioAny ? bioAny.teacherId : '',
+                        hours: 3
+                    }];
+                }
+            }
+
+            const q = (searchFilter || '').trim().toLowerCase();
+            let displayList = classAllotments.map(allot => {
+                let teacherNames = [];
+                let teacherShorts = [];
+
+                if (allot.allocationType === 'split' && allot.splitSlots && allot.splitSlots.length > 0) {
+                    allot.splitSlots.forEach(s => {
+                        const t = appState.teachers.find(tch => tch.id === s.teacherId);
+                        if (t) {
+                            teacherNames.push(`${s.subject}: ${t.name}`);
+                            teacherShorts.push(`${s.subject}: ${t.shortName}`);
+                        }
+                    });
+                } else {
+                    const t = appState.teachers.find(tch => tch.id === allot.teacherId);
+                    if (t) {
+                        teacherNames.push(t.name);
+                        teacherShorts.push(t.shortName);
+                    }
+                    if (allot.secondaryTeacherId) {
+                        const secT = appState.teachers.find(tch => tch.id === allot.secondaryTeacherId);
+                        if (secT) {
+                            teacherNames.push(secT.name);
+                            teacherShorts.push(secT.shortName);
+                        }
+                    }
+                }
+
+                const totalHrs = Number(allot.hours || 0);
+                const schedHrs = scheduledCounts[allot.subject] || 0;
+                const remaining = Math.max(0, totalHrs - schedHrs);
+
+                return {
+                    ...allot,
+                    teacherNamesStr: teacherNames.join(' + ') || 'അധ്യാപകൻ നിശ്ചയിച്ചിട്ടില്ല',
+                    teacherShortsStr: teacherShorts.join(' + ') || 'N/A',
+                    totalHrs,
+                    schedHrs,
+                    remaining
+                };
+            });
+
+            if (q) {
+                displayList = displayList.filter(item => 
+                    item.subject.toLowerCase().includes(q) ||
+                    item.teacherNamesStr.toLowerCase().includes(q) ||
+                    item.teacherShortsStr.toLowerCase().includes(q)
+                );
+            }
+
+            // Sort: items with remaining unscheduled hours first, then by remaining desc
+            displayList.sort((a, b) => {
+                if (a.remaining > 0 && b.remaining === 0) return -1;
+                if (b.remaining > 0 && a.remaining === 0) return 1;
+                if (a.remaining !== b.remaining) return b.remaining - a.remaining;
+                return a.subject.localeCompare(b.subject);
+            });
+
+            if (countEl) {
+                countEl.textContent = `ആകെ: ${displayList.length} വിഷയങ്ങൾ`;
+            }
+
+            if (displayList.length === 0) {
+                container.innerHTML = `
+                    <div class="text-center py-4 text-slate-400 italic text-[11px]">
+                        ${q ? 'തിരഞ്ഞ ഫലങ്ങളൊന്നും കണ്ടെത്തിയില്ല.' : 'ഈ ക്ലാസിൽ വിഷയങ്ങൾ അലോക്കേറ്റ് ചെയ്തിട്ടില്ല.'}
+                    </div>
+                `;
+                return;
+            }
+
+            const currentSelectedSub = activeManualSlotState.targetSubject;
+            const currentSelectedTch = activeManualSlotState.targetTeacherId;
+
+            let html = '';
+            displayList.forEach(item => {
+                const isSelected = (item.subject === currentSelectedSub && (!item.teacherId || item.teacherId === currentSelectedTch));
+                const isArabic = /[\u0600-\u06FF]/.test(item.subject);
+
+                let badgeHtml = '';
+                if (item.remaining > 0) {
+                    badgeHtml = `<span class="bg-amber-100 text-amber-900 border border-amber-300 font-black px-1.5 py-0.5 rounded-full text-[9px] inline-flex items-center gap-1 shadow-2xs animate-pulse"><i class="fas fa-exclamation-circle text-amber-600"></i> ${item.remaining} ബാക്കി (Needs Slot)</span>`;
+                } else if (item.schedHrs === item.totalHrs) {
+                    badgeHtml = `<span class="bg-emerald-100 text-emerald-800 border border-emerald-300 font-bold px-1.5 py-0.2 rounded-full text-[8.5px] inline-flex items-center gap-0.5"><i class="fas fa-check-circle text-emerald-600"></i> ${item.schedHrs}/${item.totalHrs} പൂർത്തിയായി</span>`;
+                } else if (item.schedHrs > item.totalHrs) {
+                    badgeHtml = `<span class="bg-purple-100 text-purple-900 border border-purple-300 font-bold px-1.5 py-0.2 rounded-full text-[8.5px] inline-flex items-center gap-0.5">${item.schedHrs}/${item.totalHrs} (കൂടുതൽ)</span>`;
+                }
+
+                html += `
+                    <div onclick="window.selectManualSlotAllotment('${encodeURIComponent(item.subject)}', '${item.teacherId || ''}')"
+                         class="p-2.5 rounded-xl border transition-all cursor-pointer flex items-center justify-between gap-2 text-left ${isSelected ? 'border-emerald-500 bg-emerald-50/80 ring-2 ring-emerald-400/30 shadow-xs' : 'border-slate-200 bg-white hover:bg-slate-50 hover:border-emerald-300'}">
+                        <div class="flex-1 min-w-0">
+                            <div class="flex items-center gap-1.5 flex-wrap">
+                                <span class="font-black text-xs ${isArabic ? 'arabic-subject text-[12px]' : 'text-slate-900'}">${item.subject}</span>
+                                ${badgeHtml}
+                            </div>
+                            <div class="text-[10.5px] text-slate-600 flex items-center gap-1.5 mt-1">
+                                <span class="font-bold text-slate-800 flex items-center gap-1">
+                                    <i class="fas fa-chalkboard-teacher text-emerald-600 text-[10px]"></i>
+                                    <span>${item.teacherNamesStr}</span>
+                                </span>
+                                <span class="text-slate-400 font-mono text-[9.5px]">(${item.teacherShortsStr})</span>
+                            </div>
+                        </div>
+                        <div class="text-right shrink-0 flex flex-col items-end">
+                            <span class="text-[10px] font-extrabold ${item.remaining > 0 ? 'text-amber-800' : 'text-slate-600'}">
+                                ${item.schedHrs}/${item.totalHrs} hrs
+                            </span>
+                            <span class="inline-flex items-center gap-1 mt-1 text-[9.5px] font-bold ${isSelected ? 'text-emerald-700 font-black' : 'text-slate-400'}">
+                                ${isSelected ? '<i class="fas fa-check-circle text-emerald-600"></i> തിരഞ്ഞെടുത്തു' : '<i class="far fa-circle"></i> തിരഞ്ഞെടുക്കുക'}
+                            </span>
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+        }
+
+        function selectManualSlotAllotment(encodedSubject, teacherId) {
+            const subject = decodeURIComponent(encodedSubject);
+            if (!activeManualSlotState) return;
+
+            activeManualSlotState.targetSubject = subject;
+            if (teacherId) {
+                activeManualSlotState.targetTeacherId = teacherId;
+            }
+
+            const subjectSelect = document.getElementById('slot-select-subject');
+            if (subjectSelect) subjectSelect.value = subject;
+
+            populateManualSlotTeacherSelect();
+            if (teacherId) {
+                const teacherSelect = document.getElementById('slot-select-teacher');
+                if (teacherSelect) {
+                    teacherSelect.value = teacherId;
+                    activeManualSlotState.targetTeacherId = teacherId;
+                }
+            }
+
+            const searchInput = document.getElementById('slot-modal-allotments-search');
+            renderManualSlotClassAllotmentsList(searchInput ? searchInput.value : '');
+            validateAndRenderSlotConflicts();
+        }
+
+        function filterManualSlotAllotments() {
+            const searchInput = document.getElementById('slot-modal-allotments-search');
+            renderManualSlotClassAllotmentsList(searchInput ? searchInput.value : '');
         }
 
         function populateManualSlotSubjectSelect() {
@@ -14051,7 +14295,71 @@
 
             populateManualSlotSubjectSelect();
             populateManualSlotTeacherSelect();
+            const searchInput = document.getElementById('slot-modal-allotments-search');
+            renderManualSlotClassAllotmentsList(searchInput ? searchInput.value : '');
             validateAndRenderSlotConflicts();
+        }
+
+        // -------------------------------------------------------------
+        // SWAP SCOPE CONTROLLER (User Request:
+        // "മറ്റ് അധ്യാപകരുടെ പിരീഡും സ്വന്തം പിരീഡും തമ്മിൽ മാറ്റം വരുത്താൻ കഴിയണം")
+        // -------------------------------------------------------------
+        let activeSwapScope = 'faculty';
+
+        function setSwapScope(scope) {
+            activeSwapScope = scope;
+            const btnFaculty = document.getElementById('swap-scope-faculty-btn');
+            const btnClass = document.getElementById('swap-scope-class-btn');
+            const labelEl = document.getElementById('slot-swap-scope-label');
+            const swapClassSelect = document.getElementById('slot-select-swap-class');
+            if (!swapClassSelect || !activeManualSlotState) return;
+
+            if (scope === 'faculty') {
+                if (btnFaculty) btnFaculty.className = 'py-1.5 px-2 rounded-lg bg-white text-blue-800 shadow-xs border border-blue-200 transition flex items-center justify-center gap-1 font-black';
+                if (btnClass) btnClass.className = 'py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1 font-bold';
+                if (labelEl) labelEl.innerHTML = '<i class="fas fa-user-tie text-blue-600 mr-1"></i> മാറ്റേണ്ട അധ്യാപകൻ (Target Faculty):';
+                
+                populateSwapFacultyDropdown(swapClassSelect);
+            } else {
+                if (btnClass) btnClass.className = 'py-1.5 px-2 rounded-lg bg-white text-blue-800 shadow-xs border border-blue-200 transition flex items-center justify-center gap-1 font-black';
+                if (btnFaculty) btnFaculty.className = 'py-1.5 px-2 rounded-lg text-slate-600 hover:text-slate-900 transition flex items-center justify-center gap-1 font-bold';
+                if (labelEl) labelEl.innerHTML = '<i class="fas fa-university text-blue-600 mr-1"></i> മാറ്റേണ്ട കോളേജ് & ക്ലാസ് (Target College & Class):';
+                
+                populateClassSelectDropdown(swapClassSelect, activeManualSlotState.className, false);
+            }
+
+            populateManualSlotSwapTargets();
+            validateAndRenderSlotConflicts();
+        }
+
+        function populateSwapFacultyDropdown(selectEl) {
+            if (!selectEl) return;
+            selectEl.innerHTML = '';
+
+            const currentTchId = activeManualSlotState ? activeManualSlotState.teacherId : null;
+            const currentTch = appState.teachers.find(t => t.id === currentTchId);
+
+            // Group 1: Current teacher's own schedule
+            if (currentTch) {
+                const optOwn = document.createElement('option');
+                optOwn.value = `__TEACHER_${currentTch.id}__`;
+                optOwn.textContent = `★ ${currentTch.name} (${currentTch.shortName}) — സ്വന്തം പിരീഡുകൾ (Own Schedule)`;
+                selectEl.appendChild(optOwn);
+            }
+
+            // Group 2: All other faculty members
+            const otherTeachers = appState.teachers.filter(t => t.id !== currentTchId);
+            if (otherTeachers.length > 0) {
+                const grp = document.createElement('optgroup');
+                grp.label = '👨‍🏫 മറ്റ് അധ്യാപകരുടെ ടൈംടേബിൾ (Other Faculty Schedules)';
+                otherTeachers.forEach(t => {
+                    const opt = document.createElement('option');
+                    opt.value = `__TEACHER_${t.id}__`;
+                    opt.textContent = `👤 ${t.name} (${t.shortName}) [${t.college || 'Both'}]`;
+                    grp.appendChild(opt);
+                });
+                selectEl.appendChild(grp);
+            }
         }
 
         function onManualSlotSwapClassChanged() {
@@ -14091,20 +14399,28 @@
             const swapClassSelect = document.getElementById('slot-select-swap-class');
             if (!swapSelect || !activeManualSlotState) return;
 
-            const targetClassVal = swapClassSelect ? swapClassSelect.value : activeManualSlotState.className;
-            activeManualSlotState.swapTargetClass = targetClassVal;
+            const targetVal = swapClassSelect ? swapClassSelect.value : (activeManualSlotState.swapTargetClass || activeManualSlotState.className);
+            activeManualSlotState.swapTargetClass = targetVal;
             swapSelect.innerHTML = '';
 
             const days = parseInt(appState.settings ? appState.settings.workingDays : appState.days) || 6;
             const periods = parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7;
             let firstTarget = null;
 
-            if (targetClassVal === '__TEACHER_SCHEDULE__' && activeManualSlotState.teacherId) {
-                // List all periods of this teacher across both colleges
-                const teacherId = activeManualSlotState.teacherId;
+            if (targetVal && (targetVal.startsWith('__TEACHER_') || targetVal === '__TEACHER_SCHEDULE__')) {
+                const targetTeacherId = (targetVal === '__TEACHER_SCHEDULE__')
+                    ? activeManualSlotState.teacherId
+                    : targetVal.replace('__TEACHER_', '').replace('__', '');
+
+                const targetTeacher = appState.teachers.find(t => t.id === targetTeacherId);
+                const tName = targetTeacher ? targetTeacher.shortName : 'Faculty';
+
                 for (let d = 0; d < days; d++) {
                     for (let p = 0; p < periods; p++) {
-                        if (d === activeManualSlotState.day && p === activeManualSlotState.period) continue;
+                        if (d === activeManualSlotState.day && p === activeManualSlotState.period && activeManualSlotState.className) {
+                            // Don't swap a slot with itself
+                            continue;
+                        }
                         if (!appState.timetable || !appState.timetable[d] || !appState.timetable[d][p]) continue;
 
                         for (let cls in appState.timetable[d][p]) {
@@ -14112,11 +14428,11 @@
                             if (!s) continue;
                             let matches = false;
                             if (s.allocationType === 'split') {
-                                matches = (s.splitSlots || []).some(x => x.teacherId === teacherId);
+                                matches = (s.splitSlots || []).some(x => x.teacherId === targetTeacherId);
                             } else if (s.allocationType === 'shared') {
-                                matches = (s.teacherId === teacherId || s.secondaryTeacherId === teacherId);
+                                matches = (s.teacherId === targetTeacherId || s.secondaryTeacherId === targetTeacherId);
                             } else {
-                                matches = (s.teacherId === teacherId);
+                                matches = (s.teacherId === targetTeacherId);
                             }
 
                             if (matches) {
@@ -14124,7 +14440,7 @@
                                 opt.value = `${d}_${p}_${cls}`;
                                 const isWafy = (cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya'));
                                 const campusTag = isWafy ? 'Wafy' : 'Wafiyya';
-                                opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: ${s.subject} (${cls} • ${campusTag})`;
+                                opt.textContent = `${dayNamesEn[d]} - Period ${p + 1}: ${s.subject} (${cls} • ${tName} • ${campusTag})`;
                                 if (!firstTarget) firstTarget = { day: d, period: p, className: cls };
                                 swapSelect.appendChild(opt);
                             }
@@ -14135,11 +14451,11 @@
                 if (swapSelect.options.length === 0) {
                     const opt = document.createElement('option');
                     opt.value = '';
-                    opt.textContent = 'ഈ അധ്യാപകന് മാറ്റാൻ മറ്റ് പിരീഡുകൾ ഷെഡ്യൂൾ ചെയ്തിട്ടില്ല';
+                    opt.textContent = `${tName} ന് മാറ്റാൻ മറ്റ് പിരീഡുകൾ ഷെഡ്യൂൾ ചെയ്തിട്ടില്ല (No scheduled periods)`;
                     swapSelect.appendChild(opt);
                 }
             } else {
-                const cls = (targetClassVal && targetClassVal !== '__TEACHER_SCHEDULE__') ? targetClassVal : activeManualSlotState.className;
+                const cls = (targetVal && targetVal !== '__TEACHER_SCHEDULE__') ? targetVal : activeManualSlotState.className;
                 for (let d = 0; d < days; d++) {
                     if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(cls, d)) continue;
 
@@ -14189,26 +14505,37 @@
             const currentSlot = activeManualSlotState.currentSlot;
             const targetSlot = (appState.timetable[tDay] && appState.timetable[tDay][tPeriod]) ? appState.timetable[tDay][tPeriod][tClass] : null;
 
-            const currentSubText = currentSlot ? `${currentSlot.subject} (${srcClass})` : `Free Period (${srcClass})`;
-            const targetSubText = targetSlot ? `${targetSlot.subject} (${tClass})` : `Free Period (${tClass})`;
+            const tA = currentSlot ? appState.teachers.find(t => t.id === currentSlot.teacherId) : null;
+            const tB = targetSlot ? appState.teachers.find(t => t.id === targetSlot.teacherId) : null;
+
+            const currentSubText = currentSlot 
+                ? `${currentSlot.subject} • ${tA ? tA.shortName : ''} (${srcClass})` 
+                : `Free Period (${srcClass})`;
+            const targetSubText = targetSlot 
+                ? `${targetSlot.subject} • ${tB ? tB.shortName : ''} (${tClass})` 
+                : `Free Period (${tClass})`;
 
             const isCrossClass = srcClass !== tClass;
             const srcIsWafy = (srcClass.toLowerCase().includes('wafy') && !srcClass.toLowerCase().includes('wafiyya'));
             const tgtIsWafy = (tClass.toLowerCase().includes('wafy') && !tClass.toLowerCase().includes('wafiyya'));
             const isCrossCollege = srcIsWafy !== tgtIsWafy;
+            const isCrossTeacher = (tA && tB && tA.id !== tB.id);
 
-            let crossBadge = '';
+            let badges = [];
+            if (isCrossTeacher) {
+                badges.push(`<span class="inline-block bg-amber-100 text-amber-900 border border-amber-300 text-[9px] font-black px-2 py-0.5 rounded-full"><i class="fas fa-user-friends mr-1"></i> അധ്യാപകർ തമ്മിലുള്ള മാറ്റം (Faculty Swap): ${tA.shortName} ⇄ ${tB.shortName}</span>`);
+            }
             if (isCrossCollege) {
-                crossBadge = `<span class="inline-block bg-purple-100 text-purple-900 border border-purple-300 text-[9px] font-extrabold px-2 py-0.5 rounded-full mb-1.5"><i class="fas fa-university mr-1"></i> Cross-College Swap: ${srcIsWafy ? 'Wafy' : 'Wafiyya'} ⇄ ${tgtIsWafy ? 'Wafy' : 'Wafiyya'}</span>`;
+                badges.push(`<span class="inline-block bg-purple-100 text-purple-900 border border-purple-300 text-[9px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-university mr-1"></i> Cross-College: ${srcIsWafy ? 'Wafy' : 'Wafiyya'} ⇄ ${tgtIsWafy ? 'Wafy' : 'Wafiyya'}</span>`);
             } else if (isCrossClass) {
-                crossBadge = `<span class="inline-block bg-blue-100 text-blue-900 border border-blue-300 text-[9px] font-extrabold px-2 py-0.5 rounded-full mb-1.5"><i class="fas fa-exchange-alt mr-1"></i> Cross-Class Swap: ${srcClass} ⇄ ${tClass}</span>`;
+                badges.push(`<span class="inline-block bg-blue-100 text-blue-900 border border-blue-300 text-[9px] font-extrabold px-2 py-0.5 rounded-full"><i class="fas fa-exchange-alt mr-1"></i> Cross-Class: ${srcClass} ⇄ ${tClass}</span>`);
             }
 
             previewCard.innerHTML = `
                 <div class="font-extrabold text-blue-900 mb-1 flex items-center justify-between">
                     <span class="flex items-center gap-1.5"><i class="fas fa-random text-blue-600"></i> സ്വാപ്പ് ചെയ്യുമ്പോൾ സംഭവിക്കുന്നത് (Swap Outcome):</span>
                 </div>
-                ${crossBadge}
+                ${badges.length > 0 ? `<div class="flex flex-wrap gap-1 mb-1.5">${badges.join(' ')}</div>` : ''}
                 <div class="grid grid-cols-2 gap-2 mt-1 text-[11px]">
                     <div class="bg-white p-2 rounded-lg border border-blue-200 shadow-2xs">
                         <span class="text-[9px] font-bold text-slate-400 block uppercase">${dayNamesEn[activeManualSlotState.day]} P${activeManualSlotState.period + 1} (${srcClass}) ലേക്ക്:</span>
@@ -14253,6 +14580,8 @@
             if (tab === 'assign') {
                 if (btnAssign) btnAssign.className = 'py-2 px-2 rounded-lg bg-white text-emerald-800 shadow-sm transition';
                 if (paneAssign) paneAssign.classList.remove('hidden');
+                const searchInput = document.getElementById('slot-modal-allotments-search');
+                renderManualSlotClassAllotmentsList(searchInput ? searchInput.value : '');
             } else if (tab === 'swap') {
                 if (btnSwap) btnSwap.className = 'py-2 px-2 rounded-lg bg-white text-blue-800 shadow-sm transition';
                 if (paneSwap) paneSwap.classList.remove('hidden');
@@ -14770,11 +15099,16 @@
                 }
 
                 const isCrossClass = srcClass !== tgtClass;
+                const isCrossTeacher = (slotA && slotB && slotA.teacherId !== slotB.teacherId);
+                const tA = slotA ? appState.teachers.find(t => t.id === slotA.teacherId) : null;
+                const tB = slotB ? appState.teachers.find(t => t.id === slotB.teacherId) : null;
+                const tInfo = isCrossTeacher && tA && tB ? ` [${tA.shortName} ⇄ ${tB.shortName}]` : '';
+
                 showAlert(
                     "സ്വാപ്പ് വിജയകരം", 
                     isCrossClass
-                        ? `<b>${srcClass}</b> (${dayNamesEn[day]} P${period + 1}) ഉം <b>${tgtClass}</b> (${dayNamesEn[tDay]} P${tPeriod + 1}) ഉം പരസ്പരം വിജയകരമായി മാറ്റി (Cross-Class / Cross-College Swap).`
-                        : `${srcClass} ലെ ${dayNamesEn[day]} P${period + 1} ഉം ${dayNamesEn[tDay]} P${tPeriod + 1} ഉം പരസ്പരം വിജയകരമായി മാറ്റി.`
+                        ? `<b>${srcClass}</b> (${dayNamesEn[day]} P${period + 1}) ഉം <b>${tgtClass}</b> (${dayNamesEn[tDay]} P${tPeriod + 1}) ഉം പരസ്പരം വിജയകരമായി മാറ്റി${tInfo}.`
+                        : `${srcClass} ലെ ${dayNamesEn[day]} P${period + 1} ഉം ${dayNamesEn[tDay]} P${tPeriod + 1} ഉം പരസ്പരം വിജയകരമായി മാറ്റി${tInfo}.`
                 );
             }
 
@@ -23130,6 +23464,10 @@
         window.openTeacherFreeSlotEditor = openTeacherFreeSlotEditor;
         window.closeManualSlotEditor = closeManualSlotEditor;
         window.setSlotActionTab = setSlotActionTab;
+        window.setSwapScope = setSwapScope;
+        window.selectManualSlotAllotment = selectManualSlotAllotment;
+        window.filterManualSlotAllotments = filterManualSlotAllotments;
+        window.renderManualSlotClassAllotmentsList = renderManualSlotClassAllotmentsList;
         window.onManualSlotClassChanged = onManualSlotClassChanged;
         window.onManualSlotSwapClassChanged = onManualSlotSwapClassChanged;
         window.onManualSlotSubjectChanged = onManualSlotSubjectChanged;
