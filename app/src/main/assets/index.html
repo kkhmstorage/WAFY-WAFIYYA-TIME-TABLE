@@ -10446,8 +10446,19 @@
                 classSel.innerHTML = '<option value="all">All Classes</option>';
                 let filteredClasses = appState.classesList;
                 if(collegeVal !== 'all') {
+                    const isWafyFilter = collegeVal.toLowerCase().includes('wafy') && !collegeVal.toLowerCase().includes('wafiyya');
                     filteredClasses = filteredClasses.filter(cls => {
-                        return appState.classes.some(c => c.className === cls && c.college === collegeVal) || cls.toLowerCase().includes(collegeVal.toLowerCase());
+                        const isExplicitWafy = cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya');
+                        const isExplicitWafiyya = cls.toLowerCase().includes('wafiyya');
+                        if (isWafyFilter) {
+                            if (isExplicitWafiyya) return false;
+                            if (isExplicitWafy) return true;
+                            return appState.classes.some(c => c.className === cls && c.college === collegeVal);
+                        } else {
+                            if (isExplicitWafy) return false;
+                            if (isExplicitWafiyya) return true;
+                            return appState.classes.some(c => c.className === cls && c.college === collegeVal) || cls.toLowerCase().includes(collegeVal.toLowerCase());
+                        }
                     });
                 }
                 filteredClasses.forEach(cls => {
@@ -10589,8 +10600,19 @@
             // Filter classes
             let classesToShow = appState.classesList;
             if(targetCollege !== 'all') {
+                const isWafyFilter = targetCollege.toLowerCase().includes('wafy') && !targetCollege.toLowerCase().includes('wafiyya');
                 classesToShow = classesToShow.filter(cls => {
-                    return appState.classes.some(c => c.className === cls && c.college === targetCollege) || cls.toLowerCase().includes(targetCollege.toLowerCase());
+                    const isExplicitWafy = cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya');
+                    const isExplicitWafiyya = cls.toLowerCase().includes('wafiyya');
+                    if (isWafyFilter) {
+                        if (isExplicitWafiyya) return false;
+                        if (isExplicitWafy) return true;
+                        return appState.classes.some(c => c.className === cls && c.college === targetCollege);
+                    } else {
+                        if (isExplicitWafy) return false;
+                        if (isExplicitWafiyya) return true;
+                        return appState.classes.some(c => c.className === cls && c.college === targetCollege) || cls.toLowerCase().includes(targetCollege.toLowerCase());
+                    }
                 });
             }
             if(targetClass !== 'all') {
@@ -13183,10 +13205,15 @@
 
                 // Find classes belonging to this college
                 let collegeClasses = appState.classesList.filter(cls => {
+                    const isExplicitWafy = cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya');
+                    const isExplicitWafiyya = cls.toLowerCase().includes('wafiyya');
                     if (isWafy) {
-                        return cls.toLowerCase().includes('wafy') && !cls.toLowerCase().includes('wafiyya');
+                        if (isExplicitWafiyya) return false;
+                        if (isExplicitWafy) return true;
+                        return appState.classes && appState.classes.some(c => c.className === cls && c.college && c.college.toLowerCase().includes('wafy') && !c.college.toLowerCase().includes('wafiyya'));
                     } else {
-                        if (cls.toLowerCase().includes('wafiyya') || cls.toLowerCase().includes('al-gaith') || cls.toLowerCase().includes('gaith')) return true;
+                        if (isExplicitWafy) return false;
+                        if (isExplicitWafiyya || cls.toLowerCase().includes('al-gaith') || cls.toLowerCase().includes('gaith')) return true;
                         if (appState.classes && appState.classes.some(c => c.className === cls && c.college && (c.college.toLowerCase().includes('wafiyya') || c.college.toLowerCase().includes('al-gaith')))) return true;
                         return !cls.toLowerCase().includes('wafy');
                     }
