@@ -3116,6 +3116,15 @@
                                 <!-- Populated dynamically -->
                             </select>
                         </div>
+                        <div>
+                            <div class="flex items-center justify-between mb-1">
+                                <label class="font-bold text-slate-700 text-[11px]">
+                                    <i class="fas fa-clock text-indigo-600 mr-1"></i> പിരീഡ് സമയം (Period Timing / സപ്രേറ്റ് സമയം):
+                                </label>
+                                <span class="text-[10px] text-slate-500">ഈ പിരീഡിന് പ്രത്യേക സമയം നൽകാം</span>
+                            </div>
+                            <input type="text" id="slot-input-timing" placeholder="03:30 - 04:15" class="w-full bg-white border border-slate-300 rounded-lg px-2.5 py-1.5 text-xs font-mono font-bold text-slate-800 focus:ring-2 focus:ring-indigo-500 focus:outline-none">
+                        </div>
                     </div>
                 </div>
 
@@ -8072,13 +8081,19 @@
         }
         window.isConsecutiveSubject = isConsecutiveSubject;
 
-        function getPeriodTiming(periodIndex, dayIndex = null) {
+        function getPeriodTiming(periodIndex, dayIndex = null, slot = null) {
+            if (slot && slot.timing && String(slot.timing).trim()) {
+                return String(slot.timing).trim();
+            }
             if (dayIndex !== null && dayIndex !== undefined && appState.dayPeriodTimings && appState.dayPeriodTimings[dayIndex]) {
                 const val = appState.dayPeriodTimings[dayIndex][periodIndex];
                 if (val && val.trim()) return val.trim();
             }
             if (appState.periodTimings && appState.periodTimings[periodIndex]) {
                 return appState.periodTimings[periodIndex];
+            }
+            if (periodIndex === 8) {
+                return '03:30 - 04:15';
             }
             return 'Period ' + (periodIndex + 1);
         }
@@ -9500,6 +9515,8 @@
         function ensureDataStructures() {
             if(!appState.deletedTeachers) appState.deletedTeachers = [];
             if(!appState.dayPeriodTimings) appState.dayPeriodTimings = {};
+            if(!appState.periodTimings) appState.periodTimings = [];
+            if(!appState.periodTimings[8]) appState.periodTimings[8] = '03:30 - 04:15';
             if(appState.maxTeacherDailyPeriods === undefined) appState.maxTeacherDailyPeriods = 5;
             if(appState.preserveManualSlots === undefined) appState.preserveManualSlots = true;
             if(!appState.specialTimetables) appState.specialTimetables = [];
@@ -12777,11 +12794,14 @@
                 const manualBadge = slot.isManualOverride 
                     ? '<span class="inline-block bg-amber-400 text-slate-950 font-black text-[7px] px-1 py-0.2 rounded shadow-2xs mb-0.5 tracking-tight"><i class="fas fa-edit text-[6px]"></i> Manual</span>' 
                     : '';
+                const timingBadge = slot.timing 
+                    ? `<span class="inline-block text-[7.5px] font-mono font-bold text-indigo-800 bg-indigo-100/90 border border-indigo-200 px-1.5 py-0.2 rounded mt-0.5 shadow-2xs">${slot.timing}</span>` 
+                    : '';
 
                 return `
                     <div class="flex flex-col items-center justify-center text-center w-full h-full gap-0.5 py-0.5 rounded-lg border border-indigo-400 bg-gradient-to-b from-indigo-50/95 via-purple-50/90 to-white shadow-xs">
                         <span class="inline-flex items-center gap-1 bg-gradient-to-r from-indigo-700 via-purple-700 to-indigo-800 text-white font-black text-[7px] px-2 py-0.5 rounded-full uppercase tracking-wider shadow-xs mb-0.5">
-                            <i class="fas fa-dna text-[6.5px] text-pink-300"></i> അഡീഷണൽ • BIOLOGY
+                            <i class="fas fa-plus-circle text-[6.5px] text-pink-300"></i> Period 9 • സ്പെഷ്യൽ
                         </span>
                         ${manualBadge}
                         <div class="subject-title font-black text-indigo-950 text-center leading-tight ${isArabic ? 'text-[11.5px] sm:text-[12px] arabic-subject' : 'text-[10.5px] sm:text-[11.5px] uppercase tracking-tight english-subject'}" ${isArabic ? 'dir="rtl"' : ''}>
@@ -12793,6 +12813,7 @@
                         <div class="flex items-center justify-center text-center mt-0.5">
                             <span class="inline-block bg-indigo-100 text-indigo-900 border border-indigo-300 font-mono font-black text-[8px] px-1.5 py-0.2 rounded shadow-2xs uppercase tracking-wider">${teacher ? teacher.shortName : ''}</span>
                         </div>
+                        ${timingBadge}
                     </div>
                 `;
             }
@@ -12849,14 +12870,7 @@
 
             let html = mobileHint;
             teachersToRender.forEach(teacher => {
-                const teacherHasAdditionalSlot = WAFIYYA_T1_ADDITIONAL_DAYS.some(d => {
-                    if (!timetable || !timetable[d] || !timetable[d][periods]) return false;
-                    for (let c in timetable[d][periods]) {
-                        const s = timetable[d][periods][c];
-                        if (s && (s.teacherId === teacher.id || s.secondaryTeacherId === teacher.id || (s.splitSlots && s.splitSlots.some(ss => ss.teacherId === teacher.id)))) return true;
-                    }
-                    return false;
-                });
+                const teacherHasAdditionalSlot = true; // Always allow Period 9 viewing & editing
 
                 // Calculate teacher weekly total teaching periods
                 let weeklyHours = 0;
@@ -12876,10 +12890,10 @@
                             }
                         }
                     }
-                    if (teacherHasAdditionalSlot && WAFIYYA_T1_ADDITIONAL_DAYS.includes(d) && timetable && timetable[d] && timetable[d][periods]) {
+                    if (timetable && timetable[d] && timetable[d][periods]) {
                         for (let cls in timetable[d][periods]) {
                             const s = timetable[d][periods][cls];
-                            if (s && (s.teacherId === teacher.id || s.secondaryTeacherId === teacher.id)) { weeklyHours++; break; }
+                            if (s && (s.teacherId === teacher.id || s.secondaryTeacherId === teacher.id || (s.splitSlots && s.splitSlots.some(ss => ss.teacherId === teacher.id)))) { weeklyHours++; break; }
                         }
                     }
                 }
@@ -13009,10 +13023,10 @@
 
                     if (teacherHasAdditionalSlot) {
                         let addSlotForTeacher = null;
-                        if (WAFIYYA_T1_ADDITIONAL_DAYS.includes(d) && timetable && timetable[d] && timetable[d][periods]) {
+                        if (timetable && timetable[d] && timetable[d][periods]) {
                             for (let cls in timetable[d][periods]) {
                                 const s = timetable[d][periods][cls];
-                                if (s && (s.teacherId === teacher.id || s.secondaryTeacherId === teacher.id)) {
+                                if (s && (s.teacherId === teacher.id || s.secondaryTeacherId === teacher.id || (s.splitSlots && s.splitSlots.some(ss => ss.teacherId === teacher.id)))) {
                                     addSlotForTeacher = { ...s, className: cls };
                                     break;
                                 }
@@ -13024,8 +13038,13 @@
                                 ? 'cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:shadow-md transition' 
                                 : '';
                             const addOnClick = isAdminLoggedIn 
-                                ? `onclick="window.openManualSlotEditor(${d}, ${periods}, '${addSlotForTeacher.className}', '${teacher.id}')" title="ക്ലിക്ക് ചെയ്ത് അഡീഷണൽ പിരീഡിൽ മാറ്റം വരുത്തുക / സ്വാപ്പ് ചെയ്യുക"` 
+                                ? `onclick="window.openManualSlotEditor(${d}, ${periods}, '${addSlotForTeacher.className}', '${teacher.id}')" title="ക്ലിക്ക് ചെയ്ത് 9-ാം പിരീഡിൽ മാറ്റം വരുത്തുക / സ്വാപ്പ് ചെയ്യുക"` 
                                 : '';
+                            const isWafy = (addSlotForTeacher.className.toLowerCase().includes('wafy') && !addSlotForTeacher.className.toLowerCase().includes('wafiyya'));
+                            const campusBadge = isWafy ? 'bg-emerald-100 text-emerald-900 border border-emerald-200' : 'bg-purple-100 text-purple-900 border border-purple-200';
+                            const campusName = isWafy ? 'Wafy Campus' : 'Wafiyya Campus';
+                            const pTiming = addSlotForTeacher.timing || getPeriodTiming(periods, d) || '03:30 - 04:15';
+
                             html += `
                                 <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminAddInteractive}" ${addOnClick}>
                                     <div class="flex flex-col items-center justify-center text-center w-full h-full py-0.5 gap-0.5">
@@ -13034,11 +13053,12 @@
                                         </span>
                                         <div class="subject-title font-black text-indigo-950 leading-tight text-xs">${addSlotForTeacher.subject}</div>
                                         <div class="text-[9.5px] sm:text-[10px] text-indigo-900 font-extrabold leading-tight mt-0.5">${addSlotForTeacher.className}</div>
-                                        <span class="inline-block text-[7.5px] sm:text-[8px] px-1.5 py-0.5 rounded font-bold mt-0.5 leading-none bg-indigo-200 text-indigo-900">Wafiyya Campus</span>
+                                        <span class="inline-block text-[7.5px] sm:text-[8px] px-1.5 py-0.2 rounded font-bold mt-0.5 leading-none ${campusBadge}">${campusName}</span>
+                                        <span class="text-[7.5px] font-mono text-indigo-600 mt-0.5">${pTiming}</span>
                                     </div>
                                 </td>
                             `;
-                        } else if (WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
+                        } else {
                             const freeAddInteractive = isAdminLoggedIn 
                                 ? 'cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition' 
                                 : '';
@@ -13046,8 +13066,6 @@
                                 ? `onclick="window.openTeacherFreeSlotEditor(${d}, ${periods}, '${teacher.id}')" title="ക്ലിക്ക് ചെയ്ത് 9-ാം പിരീഡ് നൽകുക / മാറ്റുക (Admin Slot Edit)"` 
                                 : '';
                             html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/20 ${freeAddInteractive}" ${freeAddOnClick}>-</td>`;
-                        } else {
-                            html += `<td class="border border-slate-200 p-1 text-slate-300 italic text-xs text-center align-middle bg-slate-50/50">—</td>`;
                         }
                     }
                     html += `</tr>`;
@@ -13113,14 +13131,12 @@
                                             <div class="text-[9px] text-slate-400 font-normal mt-0.5 tracking-tight">${appState.periodTimings[i] || ''}</div>
                                         </th>
                                     `).join('')}
-                                    ${isT1 ? `
-                                        <th class="px-2 py-1.5 border border-purple-300 bg-purple-100 text-purple-950 min-w-[105px] sm:min-w-[115px] text-center align-middle shadow-2xs">
-                                            <div class="font-black text-xs flex items-center justify-center gap-1 text-purple-950">
-                                                <i class="fas fa-dna text-purple-700"></i> അഡീഷണൽ പിരീഡ്
-                                            </div>
-                                            <div class="text-[8.5px] text-purple-700 font-bold mt-0.5 tracking-tight">Biology Only • Mon, Wed, Fri</div>
-                                        </th>
-                                    ` : ''}
+                                    <th class="px-2 py-1.5 border border-purple-300 bg-purple-100 text-purple-950 min-w-[105px] sm:min-w-[115px] text-center align-middle shadow-2xs">
+                                        <div class="font-black text-xs flex items-center justify-center gap-1 text-purple-950">
+                                            <i class="fas fa-plus-circle text-purple-700"></i> Period 9
+                                        </div>
+                                        <div class="text-[8.5px] text-purple-700 font-bold mt-0.5 tracking-tight">${getPeriodTiming(periods, null) || '03:30 - 04:15'}</div>
+                                    </th>
                                 </tr>
                             </thead>
                             <tbody class="divide-y divide-slate-200 text-xs bg-white">
@@ -13133,7 +13149,7 @@
 
                 if (!isActiveDay) {
                     html += `
-                        <td colspan="${periods + (isT1 ? 1 : 0)}" class="border border-slate-200 p-2 text-center align-middle bg-slate-50/60 text-slate-400">
+                        <td colspan="${periods + 1}" class="border border-slate-200 p-2 text-center align-middle bg-slate-50/60 text-slate-400">
                             <span class="inline-flex items-center gap-1.5 px-3 py-0.5 rounded-full bg-slate-100 text-slate-500 font-semibold text-xs border border-slate-200">
                                 <i class="fas fa-bed text-[11px] text-slate-400"></i>
                                 <span>ക്ലാസുകളില്ല (Off Day / No Classes Scheduled)</span>
@@ -13144,9 +13160,10 @@
                     continue;
                 }
 
+                const isWafy = targetClass.toLowerCase().includes('wafy') && !targetClass.toLowerCase().includes('wafiyya');
+
                 for (let p = 0; p < periods; p++) {
                     const slot = (timetable && timetable[d] && timetable[d][p]) ? timetable[d][p][targetClass] : null;
-                    const isWafy = targetClass.toLowerCase().includes('wafy') && !targetClass.toLowerCase().includes('wafiyya');
                     const bg = isWafy ? 'bg-emerald-50/90 text-emerald-950 border border-emerald-200' : 'bg-purple-50/90 text-purple-950 border border-purple-200';
 
                     const adminInteractiveAttr = isAdminLoggedIn 
@@ -13167,34 +13184,32 @@
                     }
                 }
 
-                if (isT1) {
-                    if (WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
-                        const addSlot = (timetable && timetable[d] && timetable[d][periods]) ? timetable[d][periods][targetClass] : null;
-                        const adminInteractiveAttr = isAdminLoggedIn 
-                            ? `cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:shadow-md transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അഡീഷണൽ പിരീഡിൽ മാറ്റം വരുത്തുക (Admin Slot Edit)` 
-                            : '';
-                        if (addSlot) {
-                            html += `
-                                <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
-                                    ${getTimetableCellHtml(addSlot, false)}
-                                </td>
-                            `;
-                        } else {
-                            const adminFreeInteractive = isAdminLoggedIn 
-                                ? `cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അസൈൻ ചെയ്യുക (Admin Slot Edit)` 
-                                : '';
-                            html += `
-                                <td class="border border-purple-200 p-1.5 text-center align-middle bg-purple-50/30 ${adminFreeInteractive}">
-                                    <div class="flex flex-col items-center justify-center text-center py-1 opacity-70">
-                                        <i class="fas fa-plus text-[9px] mb-0.5 text-purple-400"></i>
-                                        <span class="text-[8px] font-bold uppercase tracking-wider text-purple-700">Period 9</span>
-                                    </div>
-                                </td>
-                            `;
-                        }
-                    } else {
-                        html += `<td class="border border-slate-200 p-1.5 text-slate-300 italic text-[11px] text-center align-middle bg-slate-50/50">—</td>`;
-                    }
+                // Period 9 for ALL Classes
+                const addSlot = (timetable && timetable[d] && timetable[d][periods]) ? timetable[d][periods][targetClass] : null;
+                const pTiming = (addSlot && addSlot.timing) ? addSlot.timing : (getPeriodTiming(periods, d) || '03:30 - 04:15');
+
+                if (addSlot) {
+                    const adminInteractiveAttr = isAdminLoggedIn 
+                        ? `cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:shadow-md transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് 9-ാം പിരീഡിൽ മാറ്റം വരുത്തുക / സപ്രേറ്റ് സമയം നൽകുക (Admin Slot Edit)` 
+                        : '';
+                    html += `
+                        <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
+                            ${getTimetableCellHtml(addSlot, isWafy)}
+                        </td>
+                    `;
+                } else {
+                    const adminFreeInteractive = isAdminLoggedIn 
+                        ? `cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${targetClass}')" title="ക്ലിക്ക് ചെയ്ത് 9-ാം പിരീഡ് നൽകുക (Admin Slot Edit)` 
+                        : '';
+                    html += `
+                        <td class="border border-purple-200 p-1.5 text-center align-middle bg-purple-50/30 ${adminFreeInteractive}">
+                            <div class="flex flex-col items-center justify-center text-center py-1 opacity-70">
+                                <i class="fas fa-plus text-[9px] mb-0.5 text-purple-400"></i>
+                                <span class="text-[8px] font-bold uppercase tracking-wider text-purple-700">Period 9</span>
+                                <span class="text-[7.5px] font-mono text-purple-500 mt-0.5">${pTiming}</span>
+                            </div>
+                        </td>
+                    `;
                 }
 
                 html += `</tr>`;
@@ -13339,13 +13354,11 @@
                                                 <div class="font-extrabold tracking-wide text-xs">Period ${i + 1}</div>
                                             </th>
                                         `).join('')}
-                                        ${hasWafiyyaT1InCollege ? `
-                                            <th class="px-2 py-2 border border-purple-800 bg-purple-950 min-w-[105px] sm:min-w-[115px] text-white text-center align-middle shadow-inner">
-                                                <div class="font-black tracking-wide text-xs text-amber-300 flex items-center justify-center gap-1">
-                                                    <i class="fas fa-dna text-[11px] text-pink-400"></i> Additional (T1/T2)
-                                                </div>
-                                            </th>
-                                        ` : ''}
+                                        <th class="px-2 py-2 border border-purple-800 bg-purple-950 min-w-[105px] sm:min-w-[115px] text-white text-center align-middle shadow-inner">
+                                            <div class="font-black tracking-wide text-xs text-amber-300 flex items-center justify-center gap-1">
+                                                <i class="fas fa-plus-circle text-[11px] text-pink-400"></i> Period 9 (Special)
+                                            </div>
+                                        </th>
                                     </tr>
                                 </thead>
                 `;
@@ -13387,16 +13400,14 @@
                                     </th>
                                 `;
                             }).join('')}
-                            ${hasWafiyyaT1InCollege ? `
-                                <th class="px-2 py-1.5 border border-purple-800 bg-purple-950 text-center align-middle min-w-[105px] sm:min-w-[115px]">
-                                    <div class="font-black text-[10.5px] text-amber-300 flex items-center justify-center gap-1">
-                                        <i class="fas fa-plus-circle text-pink-400"></i> Period 9
-                                    </div>
-                                    <div class="text-[9.5px] text-purple-200 font-mono font-bold mt-0.5 tracking-tight">
-                                        ${WAFIYYA_T1_ADDITIONAL_DAYS.includes(d) ? (getPeriodTiming(periods, d) || '03:30 - 04:15') : '—'}
-                                    </div>
-                                </th>
-                            ` : ''}
+                            <th class="px-2 py-1.5 border border-purple-800 bg-purple-950 text-center align-middle min-w-[105px] sm:min-w-[115px]">
+                                <div class="font-black text-[10.5px] text-amber-300 flex items-center justify-center gap-1">
+                                    <i class="fas fa-plus-circle text-pink-400"></i> Period 9
+                                </div>
+                                <div class="text-[9.5px] text-purple-200 font-mono font-bold mt-0.5 tracking-tight">
+                                    ${getPeriodTiming(periods, d) || '03:30 - 04:15'}
+                                </div>
+                            </th>
                         </tr>
                     `;
                     collegeClasses.forEach((cls, rIdx) => {
@@ -13410,7 +13421,7 @@
 
                         if (!isActiveDay) {
                             html += `
-                                <td colspan="${periods + (hasWafiyyaT1InCollege ? 1 : 0)}" class="border border-slate-300 p-2 text-center align-middle bg-slate-50/80 text-slate-400">
+                                <td colspan="${periods + 1}" class="border border-slate-300 p-2 text-center align-middle bg-slate-50/80 text-slate-400">
                                     <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-500 bg-slate-100 px-2.5 py-0.5 rounded-full border border-slate-200">
                                         <i class="fas fa-bed text-[10px] text-slate-400"></i> ക്ലാസുകളില്ല (Off Day)
                                     </span>
@@ -13448,34 +13459,32 @@
                             }
                         }
 
-                        if (hasWafiyyaT1InCollege) {
-                            if (isWafiyyaT1Class(cls) && WAFIYYA_T1_ADDITIONAL_DAYS.includes(d)) {
-                                const addSlot = (timetable && timetable[d] && timetable[d][periods]) ? timetable[d][periods][cls] : null;
-                                const adminInteractiveAttr = isAdminLoggedIn 
-                                    ? `cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:shadow-md transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അഡീഷണൽ പിരീഡിൽ മാറ്റം വരുത്തുക (Admin Slot Edit)` 
-                                    : '';
-                                if (addSlot) {
-                                    html += `
-                                        <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
-                                            ${getTimetableCellHtml(addSlot, false)}
-                                        </td>
-                                    `;
-                                } else {
-                                    const adminFreeInteractive = isAdminLoggedIn 
-                                        ? `cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് ബയോളജി അസൈൻ ചെയ്യുക (Admin Slot Edit)` 
-                                        : '';
-                                    html += `
-                                        <td class="border border-purple-200 p-1 text-center align-middle bg-purple-50/30 ${adminFreeInteractive}">
-                                            <div class="flex flex-col items-center justify-center text-center py-1 opacity-70">
-                                                <i class="fas fa-plus text-[9px] mb-0.5 text-purple-400"></i>
-                                                <span class="text-[8px] font-bold uppercase tracking-wider text-purple-700">Period 9</span>
-                                            </div>
-                                        </td>
-                                    `;
-                                }
-                            } else {
-                                html += `<td class="border border-slate-200 p-1.5 text-slate-300 text-[11px] text-center align-middle bg-slate-50/50 font-mono select-none">—</td>`;
-                            }
+                        // Period 9 for this class
+                        const addSlot = (timetable && timetable[d] && timetable[d][periods]) ? timetable[d][periods][cls] : null;
+                        const pTiming = (addSlot && addSlot.timing) ? addSlot.timing : (getPeriodTiming(periods, d) || '03:30 - 04:15');
+
+                        if (addSlot) {
+                            const adminInteractiveAttr = isAdminLoggedIn 
+                                ? `cursor-pointer hover:ring-2 hover:ring-indigo-500 hover:shadow-md transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് 9-ാം പിരീഡിൽ മാറ്റം വരുത്തുക / സപ്രേറ്റ് സമയം നൽകുക (Admin Slot Edit)` 
+                                : '';
+                            html += `
+                                <td class="border border-purple-300 p-1 sm:p-1.5 period-cell bg-indigo-50/90 text-center align-middle ${adminInteractiveAttr}">
+                                    ${getTimetableCellHtml(addSlot, isWafy)}
+                                </td>
+                            `;
+                        } else {
+                            const adminFreeInteractive = isAdminLoggedIn 
+                                ? `cursor-pointer hover:bg-purple-100 hover:ring-2 hover:ring-purple-400 hover:shadow-sm transition" onclick="window.openManualSlotEditor(${d}, ${periods}, '${cls}')" title="ക്ലിക്ക് ചെയ്ത് 9-ാം പിരീഡ് നൽകുക (Admin Slot Edit)` 
+                                : '';
+                            html += `
+                                <td class="border border-purple-200 p-1 text-center align-middle bg-purple-50/30 ${adminFreeInteractive}">
+                                    <div class="flex flex-col items-center justify-center text-center py-1 opacity-70">
+                                        <i class="fas fa-plus text-[9px] mb-0.5 text-purple-400"></i>
+                                        <span class="text-[8px] font-bold uppercase tracking-wider text-purple-700">Period 9</span>
+                                        <span class="text-[7.5px] font-mono text-purple-500 mt-0.5">${pTiming}</span>
+                                    </div>
+                                </td>
+                            `;
                         }
 
                         html += `</tr>`;
@@ -14000,13 +14009,13 @@
                 return;
             }
 
-            if (!appState.timetable || !appState.timetable[dayIndex] || !appState.timetable[dayIndex][periodIndex]) {
-                showAlert("ശ്രദ്ധിക്കുക", "ടൈം ടേബിൾ ഇതുവരെ ജനറേറ്റ് ചെയ്തിട്ടില്ല. ആദ്യം 'Generate Timetable' ചെയ്യുക.");
-                return;
-            }
+            // Safe auto-initialization of timetable structures so regeneration is never required
+            if (!appState.timetable) appState.timetable = {};
+            if (!appState.timetable[dayIndex]) appState.timetable[dayIndex] = {};
+            if (!appState.timetable[dayIndex][periodIndex]) appState.timetable[dayIndex][periodIndex] = {};
 
             // Find first class this teacher is allotted to
-            const teacherAllotments = appState.classes.filter(c => c.teacherId === teacherId || c.secondaryTeacherId === teacherId);
+            const teacherAllotments = (appState.classes || []).filter(c => c.teacherId === teacherId || c.secondaryTeacherId === teacherId);
             const defaultClass = teacherAllotments.length > 0 ? teacherAllotments[0].className : (appState.classesList[0] || 'Wafy Thanawiyya T1');
 
             openManualSlotEditor(dayIndex, periodIndex, defaultClass, teacherId);
@@ -14018,10 +14027,10 @@
                 return;
             }
 
-            if (!appState.timetable || !appState.timetable[dayIndex] || !appState.timetable[dayIndex][periodIndex]) {
-                showAlert("ശ്രദ്ധിക്കുക", "ടൈം ടേബിൾ ഇതുവരെ ജനറേറ്റ് ചെയ്തിട്ടില്ല. ആദ്യം 'Generate Timetable' ചെയ്യുക.");
-                return;
-            }
+            // Safe auto-initialization of timetable structures so regeneration is never required
+            if (!appState.timetable) appState.timetable = {};
+            if (!appState.timetable[dayIndex]) appState.timetable[dayIndex] = {};
+            if (!appState.timetable[dayIndex][periodIndex]) appState.timetable[dayIndex][periodIndex] = {};
 
             const currentSlot = appState.timetable[dayIndex][periodIndex][className] || null;
             const effectiveTeacherId = teacherId || (currentSlot ? currentSlot.teacherId : null);
@@ -14058,16 +14067,23 @@
                 }
             }
             if (classNameEl) classNameEl.textContent = className;
+            const activeTiming = (currentSlot && currentSlot.timing) 
+                ? currentSlot.timing 
+                : (getPeriodTiming(periodIndex, dayIndex) || (isAdditionalSlot ? '03:30 - 04:15' : ''));
+
             if (timingEl) {
-                timingEl.textContent = isAdditionalSlot 
-                    ? 'Special Additional Hour (ബയോളജി)' 
-                    : ((appState.periodTimings && appState.periodTimings[periodIndex]) ? appState.periodTimings[periodIndex] : '');
+                timingEl.textContent = activeTiming || (isAdditionalSlot ? '03:30 - 04:15' : '');
             }
 
-            // Toggle Wafiyya T1 Additional Notice Banner
+            const timingInput = document.getElementById('slot-input-timing');
+            if (timingInput) {
+                timingInput.value = activeTiming;
+            }
+
+            // Toggle Additional Notice Banner for Period 9 (any class)
             const addBanner = document.getElementById('slot-modal-additional-banner');
             if (addBanner) {
-                if (isAdditionalSlot && isWafiyyaT1Class(className)) {
+                if (isAdditionalSlot) {
                     addBanner.classList.remove('hidden');
                 } else {
                     addBanner.classList.add('hidden');
@@ -14398,7 +14414,7 @@
             const isAdditionalSlot = activeManualSlotState.period >= (parseInt(appState.settings ? appState.settings.periodsPerDay : appState.periods) || 7);
             const addBanner = document.getElementById('slot-modal-additional-banner');
             if (addBanner) {
-                if (isAdditionalSlot && isWafiyyaT1Class(newClass)) {
+                if (isAdditionalSlot) {
                     addBanner.classList.remove('hidden');
                 } else {
                     addBanner.classList.add('hidden');
@@ -14887,14 +14903,12 @@
                 }
             }
 
-            // Rule 6: Consecutive Period Restriction
-            // "3 പിരീഡിനേക്കാൾ കൂടുതലുള്ളവ ഒന്നിൽ കൂടുതൽ വരുന്നെങ്കിൽ അടുപ്പിച്ച പിരീഡായാൽ നല്ലത്"
-            // Science lab subjects OR subjects with > 3 weekly hours CAN be scheduled consecutively.
-            // Low-hour subjects (<= 3 hours, non-science) should NOT be scheduled consecutively.
+            // Rule 6: Consecutive Period Restriction (Skipped for Period 9 / Additional Special Hours)
+            const isAdditionalPeriod = (period >= maxPeriods);
             const classAllot = (appState.classes || []).find(c => c.className === className && c.subject === proposedSubject);
             const subjectWeeklyHours = classAllot ? Number(classAllot.hours || 0) : 0;
             const isProposedConsecutiveAllowed = (typeof isConsecutiveSubject === 'function' && isConsecutiveSubject(proposedSubject)) || (subjectWeeklyHours > 3);
-            if (!isProposedConsecutiveAllowed) {
+            if (!isAdditionalPeriod && !isProposedConsecutiveAllowed) {
                 const adjacentSameClass = [period - 1, period + 1];
                 for (let adjP of adjacentSameClass) {
                     if (adjP >= 0 && adjP < maxPeriods) {
@@ -14912,10 +14926,9 @@
                 }
             }
 
-            // Rule 7: Saturday Restriction for Low-Hour Subjects (<= 3 hours/week: max 1 period on Saturday)
-            // "കുറഞ്ഞ പിരീഡുകളുള്ളവ 3ഉം 3 ൽ താഴെയുള്ളതും ശനി യാഴ്ച്ച ദിവസങ്ങളിൽ 1 ൽ കൂടുതൽ പിരീഡുകൾ ഇടരുത് ലീവിൽ മിസ്സായാൽ കൂടുതൽ പിരീഡുകൾ മിസ്സാവും"
+            // Rule 7: Saturday Restriction for Low-Hour Subjects (Skipped for Period 9 / Additional Special Hours)
             const isSaturdayConflict = (day === 5 || (dayNamesEn[day] && dayNamesEn[day].toLowerCase().includes('saturday')));
-            if (isSaturdayConflict && subjectWeeklyHours > 0 && subjectWeeklyHours <= 3) {
+            if (!isAdditionalPeriod && isSaturdayConflict && subjectWeeklyHours > 0 && subjectWeeklyHours <= 3) {
                 let satCount = 0;
                 for (let p = 0; p < maxPeriods; p++) {
                     if (p === period) continue;
@@ -15137,6 +15150,9 @@
                     ? (appState.institutions[0] || "KKHM ISLAMIC & ARTS COLLEGE ( WAFY )")
                     : (appState.institutions[1] || "AL-GAITH ISLAMIC & ARTS COLLEGE FOR GIRLS ( WAFIYYA)");
 
+                const customTimingInput = document.getElementById('slot-input-timing');
+                const customTiming = (customTimingInput ? customTimingInput.value : '').trim();
+
                 const newSlot = {
                     id: 'manual_' + Date.now(),
                     allocationType: 'standard',
@@ -15144,6 +15160,7 @@
                     className: newClass,
                     subject: sub,
                     teacherId: tch,
+                    timing: customTiming || (isAdditionalSlot ? (getPeriodTiming(period, day) || '03:30 - 04:15') : undefined),
                     isManualOverride: true,
                     isAdditional: isAdditionalSlot,
                     isBiologyAdditional: (isAdditionalSlot && isBiologySubject(sub)),
@@ -15153,6 +15170,14 @@
                 if (!currentTimetable[day]) currentTimetable[day] = {};
                 if (!currentTimetable[day][period]) currentTimetable[day][period] = {};
                 currentTimetable[day][period][newClass] = newSlot;
+
+                if (customTiming && isAdditionalSlot) {
+                    if (!appState.dayPeriodTimings) appState.dayPeriodTimings = {};
+                    if (!appState.dayPeriodTimings[day]) {
+                        appState.dayPeriodTimings[day] = [...(appState.periodTimings || [])];
+                    }
+                    appState.dayPeriodTimings[day][period] = customTiming;
+                }
 
                 const periodTitle = isAdditionalSlot ? 'അഡീഷണൽ പിരീഡ്' : `Period ${period + 1}`;
                 showAlert(
@@ -15535,13 +15560,18 @@
 
             container.innerHTML = '';
             const dayIdx = selectedSettingsTimingDay === 'default' ? null : Number(selectedSettingsTimingDay);
+            const totalPeriods = (appState.periods || 8) + 1;
 
-            for (let p = 0; p < appState.periods; p++) {
+            for (let p = 0; p < totalPeriods; p++) {
+                const isP9 = (p >= (appState.periods || 8));
                 const current = getPeriodTiming(p, dayIdx);
                 const div = document.createElement('div');
+                if (isP9) div.className = 'col-span-full sm:col-span-2 bg-purple-50/60 p-2 rounded-xl border border-purple-200 mt-1';
                 div.innerHTML = `
-                    <label class="block text-[11px] text-slate-500 font-medium mb-0.5">P${p + 1} Time</label>
-                    <input type="text" value="${current}" onchange="window.updatePeriodTiming(${p}, this.value)" class="w-full border border-slate-300 rounded-lg p-1.5 text-xs outline-none focus:border-emerald-500">
+                    <label class="block text-[11px] ${isP9 ? 'text-purple-900 font-bold' : 'text-slate-500 font-medium'} mb-0.5">
+                        ${isP9 ? '<i class="fas fa-plus-circle text-purple-600 mr-1"></i>' : ''}P${p + 1} Time ${isP9 ? '(Period 9 / സ്പെഷ്യൽ)' : ''}
+                    </label>
+                    <input type="text" value="${current}" onchange="window.updatePeriodTiming(${p}, this.value)" class="w-full border ${isP9 ? 'border-purple-300 font-bold' : 'border-slate-300'} rounded-lg p-1.5 text-xs outline-none focus:border-emerald-500 font-mono">
                 `;
                 container.appendChild(div);
             }
@@ -15644,25 +15674,31 @@
             if (!modal || !grid) return;
 
             if (titleEl) titleEl.innerText = `${dayName} - Timings Customization`;
-            if (subEl) subEl.innerText = `${dayName} ദിവസത്തെ ഓരോ പിരീഡിന്റെയും സമയക്രമം മാറ്റുക`;
+            if (subEl) subEl.innerText = `${dayName} ദിവസത്തെ ഓരോ പിരീഡിന്റെയും (Period 1 to 9) സമയക്രമം മാറ്റുക`;
 
             const hasCustom = appState.dayPeriodTimings && appState.dayPeriodTimings[activeDayTimingModalDay];
+            const totalPeriods = (appState.periods || 8) + 1; // Periods 1 to 9
             if (statusLabel) {
-                statusLabel.innerHTML = `<span>Period Timings (${appState.periods || 6} Periods)</span> ${hasCustom ? '<span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full text-[10px] ml-1.5 font-bold">Custom Timings Active</span>' : '<span class="text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full text-[10px] ml-1.5 font-bold">Using Default Timings</span>'}`;
+                statusLabel.innerHTML = `<span>Period Timings (${totalPeriods} Periods)</span> ${hasCustom ? '<span class="text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-full text-[10px] ml-1.5 font-bold">Custom Timings Active</span>' : '<span class="text-slate-500 bg-slate-100 px-2 py-0.5 rounded-full text-[10px] ml-1.5 font-bold">Using Default Timings</span>'}`;
             }
 
             grid.innerHTML = '';
-            const totalPeriods = appState.periods || 6;
             for (let p = 0; p < totalPeriods; p++) {
+                const isP9 = (p >= (appState.periods || 8));
                 const val = getPeriodTiming(p, activeDayTimingModalDay);
                 const col = document.createElement('div');
-                col.className = 'bg-slate-50 border border-slate-200 rounded-xl p-2.5';
+                col.className = isP9 
+                    ? 'col-span-full sm:col-span-2 bg-purple-50/70 border border-purple-300 rounded-xl p-2.5 shadow-2xs' 
+                    : 'bg-slate-50 border border-slate-200 rounded-xl p-2.5';
                 col.innerHTML = `
                     <div class="flex justify-between items-center mb-1">
-                        <label class="text-xs font-bold text-slate-700">Period ${p + 1}</label>
-                        <span class="text-[10px] text-slate-400 font-mono">P${p + 1}</span>
+                        <label class="text-xs font-bold ${isP9 ? 'text-purple-950 flex items-center gap-1 font-black' : 'text-slate-700'}">
+                            ${isP9 ? '<i class="fas fa-plus-circle text-purple-600"></i>' : ''}
+                            Period ${p + 1} ${isP9 ? '(Additional / സ്പെഷ്യൽ)' : ''}
+                        </label>
+                        <span class="text-[10px] ${isP9 ? 'text-purple-700 font-bold bg-purple-100 px-1.5 py-0.2 rounded font-mono' : 'text-slate-400 font-mono'}">P${p + 1}</span>
                     </div>
-                    <input type="text" id="day-timing-input-p${p}" value="${val}" placeholder="07:30 - 08:15" class="w-full border border-slate-300 rounded-lg p-2 text-xs font-medium outline-none focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 bg-white">
+                    <input type="text" id="day-timing-input-p${p}" value="${val}" placeholder="${isP9 ? '03:30 - 04:15' : '07:30 - 08:15'}" class="w-full border ${isP9 ? 'border-purple-300 focus:ring-purple-500 focus:border-purple-500 font-bold' : 'border-slate-300 focus:ring-emerald-500 focus:border-emerald-500'} rounded-lg p-2 text-xs font-medium outline-none focus:ring-2 bg-white font-mono">
                 `;
                 grid.appendChild(col);
             }
@@ -15682,11 +15718,11 @@
         window.closeDayTimingModal = closeDayTimingModal;
 
         function copyDefaultTimingsToDayModal() {
-            const totalPeriods = appState.periods || 6;
+            const totalPeriods = (appState.periods || 8) + 1;
             for (let p = 0; p < totalPeriods; p++) {
                 const inp = document.getElementById(`day-timing-input-p${p}`);
                 if (inp) {
-                    inp.value = appState.periodTimings[p] || ('Period ' + (p + 1));
+                    inp.value = appState.periodTimings[p] || (p === (appState.periods || 8) ? '03:30 - 04:15' : ('Period ' + (p + 1)));
                 }
             }
             showToast("Copied", "Default timings filled into inputs. Click Save to apply.");
@@ -15709,12 +15745,12 @@
         window.resetDayTimingModal = resetDayTimingModal;
 
         function saveDayTimingModal() {
-            const totalPeriods = appState.periods || 6;
+            const totalPeriods = (appState.periods || 8) + 1;
             if (!appState.dayPeriodTimings) appState.dayPeriodTimings = {};
             const newTimings = [];
             for (let p = 0; p < totalPeriods; p++) {
                 const inp = document.getElementById(`day-timing-input-p${p}`);
-                newTimings.push(inp ? inp.value.trim() : (appState.periodTimings[p] || ''));
+                newTimings.push(inp ? inp.value.trim() : (appState.periodTimings[p] || (p === (appState.periods || 8) ? '03:30 - 04:15' : '')));
             }
             appState.dayPeriodTimings[activeDayTimingModalDay] = newTimings;
             saveStateToLocal();
