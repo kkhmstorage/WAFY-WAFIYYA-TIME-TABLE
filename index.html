@@ -1011,7 +1011,7 @@
                             <label class="block text-xs font-bold text-slate-700 mb-1">
                                 <i class="fas fa-user-edit text-emerald-600 mr-1"></i> Reported By (Leader / Admin)
                             </label>
-                            <input type="text" id="audit-leader-name" placeholder="e.g. Class Leader Name" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
+                            <input type="text" id="audit-leader-name" oninput="window.triggerAuditAutoSave()" placeholder="e.g. Class Leader Name" class="w-full border border-slate-300 rounded-xl px-3 py-2 text-xs focus:ring-2 focus:ring-emerald-500 outline-none">
                         </div>
                     </div>
 
@@ -9127,7 +9127,11 @@
             // Setup Online / Offline event listeners for instant cloud synchronization
             window.addEventListener('online', () => {
                 setDbStatus('syncing', 'Reconnecting...', 'Internet connection restored, syncing with Firestore...');
-                loadAcademicYear(currentYear);
+                if (isAdminLoggedIn || isLeaderLoggedIn) {
+                    saveToCloud(false, true);
+                } else {
+                    loadAcademicYear(currentYear);
+                }
             });
             window.addEventListener('offline', () => {
                 setDbStatus('offline', 'Offline Mode', 'Internet disconnected. Changes saved locally in browser cache.');
@@ -9706,9 +9710,18 @@
             initSemestersData();
         }
 
-        async function saveToCloud(isAuditOnly = false) {
+        function sanitizeForFirestore(obj) {
+            if (obj === undefined) return null;
+            return JSON.parse(JSON.stringify(obj, (key, value) => {
+                return value === undefined ? null : value;
+            }));
+        }
+
+        let cloudSyncRetryTimeout = null;
+
+        async function saveToCloud(isAuditOnly = false, silent = false) {
             if(!isAdminLoggedIn && !isLeaderLoggedIn) {
-                showAlert("Access Denied", "Only administrators and class leaders can save changes to cloud database.");
+                if (!silent) showAlert("Access Denied", "Only administrators and class leaders can save changes to cloud database.");
                 return;
             }
             isSaving = true;
@@ -9722,54 +9735,68 @@
             try {
                 localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
 
-                // If saved by a Class Leader (not admin), only sync dailyAudits to cloud!
-                if (isLeaderLoggedIn && !isAdminLoggedIn) {
-                    await setDoc(yearDocRef, {
-                        dailyAudits: appState.dailyAudits || {},
-                        lastUpdated: serverTimestamp()
-                    }, { merge: true });
+                // If isAuditOnly or saved by a Class Leader (not admin), sync dailyAudits to cloud directly!
+                if (isAuditOnly || (isLeaderLoggedIn && !isAdminLoggedIn)) {
+                    const auditPayload = sanitizeForFirestore({
+                        dailyAudits: appState.dailyAudits || {}
+                    });
+                    auditPayload.lastUpdated = serverTimestamp();
+                    await setDoc(yearDocRef, auditPayload, { merge: true });
 
                     dbState.lastSyncTime = new Date();
+                    dbState.lastSyncError = null;
                     setDbStatus('connected', 'Cloud Live', 'Daily audit report safely synced to cloud.');
-                    showToast("Audit Cloud Synced", 'Daily audit for ' + currentYear + ' updated in Firestore.');
+                    if (!silent) showToast("Audit Cloud Synced", 'Daily audit for ' + currentYear + ' updated in Firestore.');
                     updateDatabaseModalStats();
+                    if (cloudSyncRetryTimeout) { clearTimeout(cloudSyncRetryTimeout); cloudSyncRetryTimeout = null; }
                     return;
                 }
 
                 // Serialize timetable matrix to JSON string to strictly avoid Firestore nested array restriction
                 const timetableJSON = appState.timetable ? JSON.stringify(appState.timetable) : null;
 
-                await setDoc(yearDocRef, {
-                    institutions: appState.institutions,
-                    days: appState.days,
-                    periods: appState.periods,
-                    enableTravelBuffer: appState.enableTravelBuffer,
+                const payload = sanitizeForFirestore({
+                    institutions: appState.institutions || [],
+                    days: appState.days || 6,
+                    periods: appState.periods || 8,
+                    enableTravelBuffer: !!appState.enableTravelBuffer,
                     preserveManualSlots: appState.preserveManualSlots !== false,
                     maxTeacherDailyPeriods: appState.maxTeacherDailyPeriods || 5,
                     totalWorkingDays: appState.totalWorkingDays || 200,
                     semesters: appState.semesters || null,
-                    classesList: appState.classesList,
+                    classesList: appState.classesList || [],
                     classWorkingDays: appState.classWorkingDays || {},
-                    periodTimings: appState.periodTimings,
-                    teachers: appState.teachers,
+                    periodTimings: appState.periodTimings || [],
+                    teachers: appState.teachers || [],
                     deletedTeachers: appState.deletedTeachers || [],
-                    classes: appState.classes,
+                    classes: appState.classes || [],
                     timetableJSON: timetableJSON,
                     timetable: null, // Avoid sending nested array directly to Firestore
                     specialTimetables: appState.specialTimetables || [],
-                    dailyAudits: appState.dailyAudits || {},
-                    lastUpdated: serverTimestamp()
-                }, { merge: true });
+                    dailyAudits: appState.dailyAudits || {}
+                });
+                payload.lastUpdated = serverTimestamp();
+
+                await setDoc(yearDocRef, payload, { merge: true });
 
                 dbState.lastSyncTime = new Date();
+                dbState.lastSyncError = null;
                 setDbStatus('connected', 'Cloud Live', 'All changes safely synced to cloud.');
-                showToast("Cloud Synced", 'Timetable for ' + currentYear + ' updated in Firestore.');
+                if (!silent) showToast("Cloud Synced", 'Timetable for ' + currentYear + ' updated in Firestore.');
                 updateDatabaseModalStats();
+                if (cloudSyncRetryTimeout) { clearTimeout(cloudSyncRetryTimeout); cloudSyncRetryTimeout = null; }
             } catch(err) {
                 console.error("Cloud save failed:", err);
                 dbState.lastSyncError = err.message;
                 setDbStatus('offline', 'Saved Locally', 'Saved in browser cache (Firestore: ' + (err.message || 'offline') + ')');
-                showToast("Saved Locally", "Saved in browser cache (Cloud sync pending).");
+                if (!silent) showToast("Saved Locally", "Saved in browser cache (Cloud sync pending).");
+                // Schedule automatic background retry in 4 seconds
+                if (!cloudSyncRetryTimeout) {
+                    cloudSyncRetryTimeout = setTimeout(() => {
+                        cloudSyncRetryTimeout = null;
+                        saveToCloud(isAuditOnly, true);
+                    }, 4000);
+                }
             } finally {
                 isSaving = false;
                 setTimeout(() => { isSavingLocally = false; }, 600);
@@ -11215,6 +11242,7 @@
                 customInput.classList.add('hidden');
                 if (autoPick) customInput.value = '';
             }
+            triggerAuditAutoSave();
         }
 
         function onSplitSubstituteTeacherDropdownChanged(periodIndex, splitIndex, targetClass, defaultSlotSubject) {
@@ -11241,6 +11269,7 @@
                 customInput.classList.add('hidden');
                 if (autoPick) customInput.value = '';
             }
+            triggerAuditAutoSave();
         }
 
         function handleSubstituteSubjectCustom(periodIndex) {
@@ -11254,6 +11283,7 @@
             } else {
                 customInput.classList.add('hidden');
             }
+            triggerAuditAutoSave();
         }
 
         function handleSplitSubstituteSubjectCustom(periodIndex, splitIndex) {
@@ -11267,6 +11297,7 @@
             } else {
                 customInput.classList.add('hidden');
             }
+            triggerAuditAutoSave();
         }
 
         function loadAuditForSelectedClass() {
@@ -11498,7 +11529,7 @@
                                     ${batchInfos.map((bi, idx) => `
                                         <div id="split-missed-details-${p}-${idx}" class="${bi.status === 'missed' ? 'space-y-1' : 'hidden'}">
                                             <div class="text-[9.5px] font-bold text-rose-700">${bi.label} Missed:</div>
-                                            <select id="missed-reason-${p}-${idx}" class="w-full border border-rose-300 rounded p-1 text-[10px] bg-white text-slate-800 outline-none">
+                                            <select id="missed-reason-${p}-${idx}" onchange="window.triggerAuditAutoSave()" class="w-full border border-rose-300 rounded p-1 text-[10px] bg-white text-slate-800 outline-none">
                                                 <option value="Teacher on Leave" ${bi.reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
                                                 <option value="Subject Swapped / Other Subject Taken" ${bi.reason === 'Subject Swapped / Other Subject Taken' ? 'selected' : ''}>വിഷയം മാറ്റി എടുത്തു (Subject Swapped)</option>
                                                 <option value="College Event / Program" ${bi.reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
@@ -11507,7 +11538,7 @@
                                                 <option value="Weather / Hartal / Emergency" ${bi.reason === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
                                                 <option value="Other Reason" ${bi.reason === 'Other Reason' || !bi.reason ? 'selected' : ''}>Other Reason</option>
                                             </select>
-                                            <input type="text" id="missed-remarks-${p}-${idx}" value="${bi.remarks}" placeholder="Remarks for ${bi.label}..." class="w-full border border-slate-300 rounded p-1 text-[10px] outline-none">
+                                            <input type="text" id="missed-remarks-${p}-${idx}" oninput="window.triggerAuditAutoSave()" value="${bi.remarks}" placeholder="Remarks for ${bi.label}..." class="w-full border border-slate-300 rounded p-1 text-[10px] outline-none">
                                             <div class="pt-1 border-t border-rose-200/60 mt-1">
                                                 <label class="block text-[9px] font-bold text-slate-600 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-0.5"></i>പകരം ക്ലാസെടുത്തത്:</label>
                                                 <select id="missed-split-substitute-${p}-${idx}" onchange="window.onSplitSubstituteTeacherDropdownChanged(${p}, ${idx}, '${targetClass}', '${(bi.slot.subject || '').replace(/'/g, "\\'")}')" class="w-full border border-indigo-200 rounded p-1 text-[10px] bg-indigo-50/50 text-slate-800 outline-none">
@@ -11523,7 +11554,7 @@
                                                     <select id="missed-split-substitute-subject-${p}-${idx}" onchange="window.handleSplitSubstituteSubjectCustom(${p}, ${idx})" class="w-full border border-purple-200 rounded p-1 text-[10px] bg-purple-50/40 text-slate-800 outline-none">
                                                         ${getSubstituteSubjectOptionsHtml(targetClass, bi.substituteTeacherId || '', bi.substituteSubject || '', bi.slot.subject || '')}
                                                     </select>
-                                                    <input type="text" id="missed-split-substitute-custom-subject-${p}-${idx}" value="${bi.substituteSubject || ''}" placeholder="Custom subject..." class="${(bi.substituteSubject && isSubjectCustom(targetClass, bi.substituteSubject)) ? 'mt-0.5 w-full border border-purple-300 rounded p-1 text-[10px] outline-none bg-white' : 'hidden mt-0.5 w-full border border-purple-300 rounded p-1 text-[10px] outline-none bg-white'}">
+                                                    <input type="text" id="missed-split-substitute-custom-subject-${p}-${idx}" oninput="window.triggerAuditAutoSave()" value="${bi.substituteSubject || ''}" placeholder="Custom subject..." class="${(bi.substituteSubject && isSubjectCustom(targetClass, bi.substituteSubject)) ? 'mt-0.5 w-full border border-purple-300 rounded p-1 text-[10px] outline-none bg-white' : 'hidden mt-0.5 w-full border border-purple-300 rounded p-1 text-[10px] outline-none bg-white'}">
                                                 </div>
                                             </div>
                                         </div>
@@ -11608,7 +11639,7 @@
                             </td>
                             <td class="px-3 py-2.5">
                                 <div id="missed-details-${p}" class="${status === 'missed' ? 'space-y-1.5' : 'hidden'} text-left">
-                                    <select id="missed-reason-${p}" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
+                                    <select id="missed-reason-${p}" onchange="window.triggerAuditAutoSave()" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
                                         <option value="Teacher on Leave" ${reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
                                         <option value="Subject Swapped / Other Subject Taken" ${reason === 'Subject Swapped / Other Subject Taken' ? 'selected' : ''}>വിഷയം മാറ്റി എടുത്തു (Subject Swapped)</option>
                                         <option value="College Event / Program" ${reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
@@ -11617,7 +11648,7 @@
                                         <option value="Weather / Hartal / Emergency" ${reason === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
                                         <option value="Other Reason" ${reason === 'Other Reason' || !reason ? 'selected' : ''}>Other Reason</option>
                                     </select>
-                                    <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
+                                    <input type="text" id="missed-remarks-${p}" oninput="window.triggerAuditAutoSave()" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
                                     <div class="pt-1.5 border-t border-rose-200 mt-1">
                                         <label class="block text-[10px] font-bold text-slate-700 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-1"></i>പകരം ക്ലാസെടുത്തത് (Substitute Faculty):</label>
                                         <select id="missed-substitute-${p}" onchange="window.onSubstituteTeacherDropdownChanged(${p}, '${targetClass}', '${(slot.subject || '').replace(/'/g, "\\'")}')" class="w-full border border-indigo-200 rounded-lg p-1 text-[11px] bg-indigo-50/50 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
@@ -11633,7 +11664,7 @@
                                             <select id="missed-substitute-subject-${p}" onchange="window.handleSubstituteSubjectCustom(${p})" class="w-full border border-purple-200 rounded-lg p-1 text-[11px] bg-purple-50/40 text-slate-800 outline-none focus:ring-1 focus:ring-purple-500">
                                                 ${getSubstituteSubjectOptionsHtml(targetClass, existingPeriodAudit ? existingPeriodAudit.substituteTeacherId : '', existingPeriodAudit ? existingPeriodAudit.substituteSubject : '', slot ? slot.subject : '')}
                                             </select>
-                                            <input type="text" id="missed-substitute-custom-subject-${p}" value="${(existingPeriodAudit && existingPeriodAudit.substituteSubject) || ''}" placeholder="Enter custom subject name..." class="${(existingPeriodAudit && existingPeriodAudit.substituteSubject && isSubjectCustom(targetClass, existingPeriodAudit.substituteSubject)) ? 'mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white' : 'hidden mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white'}">
+                                            <input type="text" id="missed-substitute-custom-subject-${p}" oninput="window.triggerAuditAutoSave()" value="${(existingPeriodAudit && existingPeriodAudit.substituteSubject) || ''}" placeholder="Enter custom subject name..." class="${(existingPeriodAudit && existingPeriodAudit.substituteSubject && isSubjectCustom(targetClass, existingPeriodAudit.substituteSubject)) ? 'mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white' : 'hidden mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white'}">
                                         </div>
                                     </div>
                                 </div>
@@ -11642,7 +11673,7 @@
                                         <i class="fas fa-user-check text-emerald-600"></i>
                                         <span>ക്ലാസ്സെടുത്തത് (Taken by):</span>
                                     </div>
-                                    <select id="shared-taken-by-${p}" class="w-full border border-slate-300 rounded-lg p-1 text-[11px] bg-white text-slate-800 outline-none">
+                                    <select id="shared-taken-by-${p}" onchange="window.triggerAuditAutoSave()" class="w-full border border-slate-300 rounded-lg p-1 text-[11px] bg-white text-slate-800 outline-none">
                                         <option value="both" ${existingTakenBy === 'both' ? 'selected' : ''}>ഇരു അധ്യാപകരും (Both Teachers)</option>
                                         <option value="teacher1" ${existingTakenBy === 'teacher1' ? 'selected' : ''}>${t1 ? t1.name + ' (' + t1.shortName + ')' : 'Teacher 1'}</option>
                                         <option value="teacher2" ${existingTakenBy === 'teacher2' ? 'selected' : ''}>${t2 ? t2.name + ' (' + t2.shortName + ')' : 'Teacher 2'}</option>
@@ -11741,7 +11772,7 @@
                             </td>
                             <td class="px-3 py-2.5">
                                 <div id="missed-details-${p}" class="${status === 'missed' ? 'space-y-1.5' : 'hidden'}">
-                                    <select id="missed-reason-${p}" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
+                                    <select id="missed-reason-${p}" onchange="window.triggerAuditAutoSave()" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
                                         <option value="Teacher on Leave" ${reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
                                         <option value="Subject Swapped / Other Subject Taken" ${reason === 'Subject Swapped / Other Subject Taken' ? 'selected' : ''}>വിഷയം മാറ്റി എടുത്തു (Subject Swapped)</option>
                                         <option value="College Event / Program" ${reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
@@ -11750,7 +11781,7 @@
                                         <option value="Weather / Hartal / Emergency" ${reason === 'Weather / Hartal / Emergency' ? 'selected' : ''}>Weather / Hartal / Emergency</option>
                                         <option value="Other Reason" ${reason === 'Other Reason' || !reason ? 'selected' : ''}>Other Reason</option>
                                     </select>
-                                    <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
+                                    <input type="text" id="missed-remarks-${p}" oninput="window.triggerAuditAutoSave()" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
                                     <div class="pt-1.5 border-t border-rose-200 mt-1">
                                         <label class="block text-[10px] font-bold text-slate-700 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-1"></i>പകരം ക്ലാസെടുത്തത് (Substitute Faculty):</label>
                                         <select id="missed-substitute-${p}" onchange="window.onSubstituteTeacherDropdownChanged(${p}, '${targetClass}', '${(slot ? slot.subject : '').replace(/'/g, "\\'")}')" class="w-full border border-indigo-200 rounded-lg p-1 text-[11px] bg-indigo-50/50 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
@@ -11766,7 +11797,7 @@
                                             <select id="missed-substitute-subject-${p}" onchange="window.handleSubstituteSubjectCustom(${p})" class="w-full border border-purple-200 rounded-lg p-1 text-[11px] bg-purple-50/40 text-slate-800 outline-none focus:ring-1 focus:ring-purple-500">
                                                 ${getSubstituteSubjectOptionsHtml(targetClass, existingPeriodAudit ? existingPeriodAudit.substituteTeacherId : '', existingPeriodAudit ? existingPeriodAudit.substituteSubject : '', slot ? slot.subject : '')}
                                             </select>
-                                            <input type="text" id="missed-substitute-custom-subject-${p}" value="${(existingPeriodAudit && existingPeriodAudit.substituteSubject) || ''}" placeholder="Enter custom subject name..." class="${(existingPeriodAudit && existingPeriodAudit.substituteSubject && isSubjectCustom(targetClass, existingPeriodAudit.substituteSubject)) ? 'mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white' : 'hidden mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white'}">
+                                            <input type="text" id="missed-substitute-custom-subject-${p}" oninput="window.triggerAuditAutoSave()" value="${(existingPeriodAudit && existingPeriodAudit.substituteSubject) || ''}" placeholder="Enter custom subject name..." class="${(existingPeriodAudit && existingPeriodAudit.substituteSubject && isSubjectCustom(targetClass, existingPeriodAudit.substituteSubject)) ? 'mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white' : 'hidden mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white'}">
                                         </div>
                                     </div>
                                 </div>
@@ -11841,6 +11872,15 @@
             }
         }
 
+        let auditAutoSaveTimer = null;
+        function triggerAuditAutoSave() {
+            if (!isAdminLoggedIn && !isLeaderLoggedIn) return;
+            clearTimeout(auditAutoSaveTimer);
+            auditAutoSaveTimer = setTimeout(() => {
+                saveClassAuditReport(true);
+            }, 350);
+        }
+
         function setAuditRowStatus(periodIndex, newStatus) {
             if (!isAdminLoggedIn && !isLeaderLoggedIn) {
                 showToast("Access Restricted", "Only Class Leaders and Admins can record period status.");
@@ -11865,6 +11905,7 @@
                 if (condDiv) condDiv.classList.add('hidden');
                 if (row) row.className = "bg-rose-50/50";
             }
+            triggerAuditAutoSave();
         }
 
         function setAuditSplitRowStatus(periodIndex, splitIndex, newStatus) {
@@ -11901,6 +11942,7 @@
             if (row) {
                 row.className = anyMiss ? 'bg-rose-50/50' : 'bg-white';
             }
+            triggerAuditAutoSave();
         }
 
         function markAllAuditPeriods(conducted) {
@@ -11919,12 +11961,13 @@
                     }
                 }
             }
+            triggerAuditAutoSave();
             showToast("Updated", "All periods marked as " + (conducted ? "conducted." : "missed."));
         }
 
-        function saveClassAuditReport() {
+        function saveClassAuditReport(silent = false) {
             if (!isAdminLoggedIn && !isLeaderLoggedIn) {
-                showAlert("Access Restricted", "ദൈനംദിന ഓഡിറ്റ് രേഖപ്പെടുത്താൻ സാധ്യമല്ല. Daily period audit recording is restricted to Class Leaders and Administrators only.");
+                if (!silent) showAlert("Access Restricted", "ദൈനംദിന ഓഡിറ്റ് രേഖപ്പെടുത്താൻ സാധ്യമല്ല. Daily period audit recording is restricted to Class Leaders and Administrators only.");
                 return;
             }
             const dateInput = document.getElementById('audit-date-picker');
@@ -11995,10 +12038,10 @@
                             substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
                             substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
                             substituteSubject: isMissed ? subSubject : '',
-                            isCompensated: isMissed ? (prevSA ? !!prevSA.isCompensated : false) : false,
-                            compensatedDate: isMissed ? (prevSA ? prevSA.compensatedDate : null) : null,
-                            compensationType: isMissed ? (prevSA ? prevSA.compensationType : null) : null,
-                            compensatedNote: isMissed ? (prevSA ? prevSA.compensatedNote : '') : ''
+                            isCompensated: isMissed ? (prevSA && prevSA.isCompensated ? true : false) : false,
+                            compensatedDate: isMissed ? (prevSA && prevSA.compensatedDate ? prevSA.compensatedDate : null) : null,
+                            compensationType: isMissed ? (prevSA && prevSA.compensationType ? prevSA.compensationType : null) : null,
+                            compensatedNote: isMissed ? (prevSA && prevSA.compensatedNote ? prevSA.compensatedNote : '') : ''
                         });
                     });
 
@@ -12040,7 +12083,7 @@
                         subject: slot.subject,
                         college: slot.college || (targetClass.toLowerCase().includes('wafiyya') ? 'Wafiyya' : 'Wafy'),
                         teacherId: slot.teacherId,
-                        secondaryTeacherId: slot.secondaryTeacherId,
+                        secondaryTeacherId: (slot && slot.secondaryTeacherId) ? slot.secondaryTeacherId : '',
                         teacherName: (t1 ? t1.name : '') + ' / ' + (t2 ? t2.name : ''),
                         teacherShort: (t1 ? t1.shortName : '') + ' / ' + (t2 ? t2.shortName : ''),
                         status: isMissed ? 'missed' : 'conducted',
@@ -12052,10 +12095,10 @@
                         substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
                         substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
                         substituteSubject: isMissed ? subSubject : '',
-                        isCompensated: isMissed ? (prevP ? !!prevP.isCompensated : false) : false,
-                        compensatedDate: isMissed ? (prevP ? prevP.compensatedDate : null) : null,
-                        compensationType: isMissed ? (prevP ? prevP.compensationType : null) : null,
-                        compensatedNote: isMissed ? (prevP ? prevP.compensatedNote : '') : '',
+                        isCompensated: isMissed ? (prevP && prevP.isCompensated ? true : false) : false,
+                        compensatedDate: isMissed ? (prevP && prevP.compensatedDate ? prevP.compensatedDate : null) : null,
+                        compensationType: isMissed ? (prevP && prevP.compensationType ? prevP.compensationType : null) : null,
+                        compensatedNote: isMissed ? (prevP && prevP.compensatedNote ? prevP.compensatedNote : '') : '',
                         auditTimestamp: new Date().toISOString()
                     });
                 } else {
@@ -12092,10 +12135,10 @@
                         substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
                         substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
                         substituteSubject: isMissed ? subSubject : '',
-                        isCompensated: isMissed ? (prevP ? !!prevP.isCompensated : false) : false,
-                        compensatedDate: isMissed ? (prevP ? prevP.compensatedDate : null) : null,
-                        compensationType: isMissed ? (prevP ? prevP.compensationType : null) : null,
-                        compensatedNote: isMissed ? (prevP ? prevP.compensatedNote : '') : '',
+                        isCompensated: isMissed ? (prevP && prevP.isCompensated ? true : false) : false,
+                        compensatedDate: isMissed ? (prevP && prevP.compensatedDate ? prevP.compensatedDate : null) : null,
+                        compensationType: isMissed ? (prevP && prevP.compensationType ? prevP.compensationType : null) : null,
+                        compensatedNote: isMissed ? (prevP && prevP.compensatedNote ? prevP.compensatedNote : '') : '',
                         auditTimestamp: new Date().toISOString()
                     });
                 }
@@ -12125,9 +12168,11 @@
             // Run auto-compensation with credits across all teachers
             const autoCount = processAutoCompensationWithCredits();
 
-            saveToCloud(true);
+            saveToCloud(true, silent);
 
-            showToast("Report Saved!", targetClass + ' daily 3:30 PM period audit recorded successfully.' + (autoCount > 0 ? ` (${autoCount} missed period(s) auto-compensated via substitution credits!)` : ''));
+            if (!silent) {
+                showToast("Report Saved!", targetClass + ' daily 3:30 PM period audit recorded successfully.' + (autoCount > 0 ? ` (${autoCount} missed period(s) auto-compensated via substitution credits!)` : ''));
+            }
         }
 
         function renderDailyAuditStatusGrid() {
@@ -24770,6 +24815,7 @@
         window.onSplitSubstituteTeacherDropdownChanged = onSplitSubstituteTeacherDropdownChanged;
         window.handleSubstituteSubjectCustom = handleSubstituteSubjectCustom;
         window.handleSplitSubstituteSubjectCustom = handleSplitSubstituteSubjectCustom;
+        window.triggerAuditAutoSave = triggerAuditAutoSave;
 
         // Missed Tracker Window Handlers
         window.renderMissedSection = renderMissedSection;
