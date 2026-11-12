@@ -11136,6 +11136,139 @@
             onAuditDateChange();
         }
 
+        function isSubjectCustom(targetClass, subjectName) {
+            if (!subjectName) return false;
+            const classAllotments = (appState.classes || []).filter(c => c.className === targetClass);
+            return !classAllotments.some(c => c.subject === subjectName);
+        }
+
+        function getSubstituteSubjectOptionsHtml(targetClass, teacherId, selectedSubject, defaultSlotSubject) {
+            const classAllotments = (appState.classes || []).filter(c => c.className === targetClass);
+            const teacher = teacherId ? (appState.teachers || []).find(t => t.id === teacherId) : null;
+
+            let teacherSubjects = [];
+            if (teacherId) {
+                teacherSubjects = [...new Set(classAllotments.filter(c => c.teacherId === teacherId).map(c => c.subject))];
+            }
+
+            let otherSubjects = [];
+            if (teacherId) {
+                otherSubjects = [...new Set(classAllotments.filter(c => c.teacherId !== teacherId).map(c => c.subject))];
+            } else {
+                otherSubjects = [...new Set(classAllotments.map(c => c.subject))];
+            }
+
+            const allKnown = [...new Set(classAllotments.map(c => c.subject))];
+            const isCustom = selectedSubject && !allKnown.includes(selectedSubject);
+            const effectiveSelected = selectedSubject || '';
+
+            let html = `<option value="">-- വിഷയം തിരഞ്ഞെടുക്കുക (Select Subject) --</option>`;
+
+            if (teacherSubjects.length > 0) {
+                const tLabel = teacher ? (teacher.shortName || teacher.name) : 'Faculty';
+                html += `<optgroup label="അധ്യാപകൻ്റെ വിഷയങ്ങൾ (${tLabel})">`;
+                teacherSubjects.forEach(s => {
+                    const isSel = (effectiveSelected === s);
+                    const isCurrent = (defaultSlotSubject && s === defaultSlotSubject);
+                    html += `<option value="${s}" ${isSel ? 'selected' : ''}>${s}${isCurrent ? ' (Scheduled)' : ' ★'}</option>`;
+                });
+                html += `</optgroup>`;
+            }
+
+            if (otherSubjects.length > 0) {
+                html += `<optgroup label="ക്ലാസിലെ മറ്റു വിഷയങ്ങൾ (Other Class Subjects)">`;
+                otherSubjects.forEach(s => {
+                    const isSel = (effectiveSelected === s);
+                    html += `<option value="${s}" ${isSel ? 'selected' : ''}>${s}</option>`;
+                });
+                html += `</optgroup>`;
+            }
+
+            html += `<optgroup label="മറ്റുള്ളവ (Other / Custom)">`;
+            html += `<option value="__custom__" ${isCustom ? 'selected' : ''}>+ പുതിയ വിഷയം ടൈപ്പ് ചെയ്യുക (Custom Subject)...</option>`;
+            html += `</optgroup>`;
+
+            return html;
+        }
+
+        function onSubstituteTeacherDropdownChanged(periodIndex, targetClass, defaultSlotSubject) {
+            const selTch = document.getElementById('missed-substitute-' + periodIndex);
+            const subSubjectEl = document.getElementById('missed-substitute-subject-' + periodIndex);
+            const customInput = document.getElementById('missed-substitute-custom-subject-' + periodIndex);
+            if (!subSubjectEl) return;
+
+            const teacherId = selTch ? selTch.value : '';
+            let autoPick = '';
+            if (teacherId) {
+                const classAllotments = (appState.classes || []).filter(c => c.className === targetClass && c.teacherId === teacherId);
+                const subjects = [...new Set(classAllotments.map(c => c.subject))];
+                const alternate = subjects.find(s => s !== defaultSlotSubject);
+                if (alternate) {
+                    autoPick = alternate;
+                } else if (subjects.length === 1) {
+                    autoPick = subjects[0];
+                }
+            }
+
+            subSubjectEl.innerHTML = getSubstituteSubjectOptionsHtml(targetClass, teacherId, autoPick, defaultSlotSubject);
+            if (customInput) {
+                customInput.classList.add('hidden');
+                if (autoPick) customInput.value = '';
+            }
+        }
+
+        function onSplitSubstituteTeacherDropdownChanged(periodIndex, splitIndex, targetClass, defaultSlotSubject) {
+            const selTch = document.getElementById(`missed-split-substitute-${periodIndex}-${splitIndex}`);
+            const subSubjectEl = document.getElementById(`missed-split-substitute-subject-${periodIndex}-${splitIndex}`);
+            const customInput = document.getElementById(`missed-split-substitute-custom-subject-${periodIndex}-${splitIndex}`);
+            if (!subSubjectEl) return;
+
+            const teacherId = selTch ? selTch.value : '';
+            let autoPick = '';
+            if (teacherId) {
+                const classAllotments = (appState.classes || []).filter(c => c.className === targetClass && c.teacherId === teacherId);
+                const subjects = [...new Set(classAllotments.map(c => c.subject))];
+                const alternate = subjects.find(s => s !== defaultSlotSubject);
+                if (alternate) {
+                    autoPick = alternate;
+                } else if (subjects.length === 1) {
+                    autoPick = subjects[0];
+                }
+            }
+
+            subSubjectEl.innerHTML = getSubstituteSubjectOptionsHtml(targetClass, teacherId, autoPick, defaultSlotSubject);
+            if (customInput) {
+                customInput.classList.add('hidden');
+                if (autoPick) customInput.value = '';
+            }
+        }
+
+        function handleSubstituteSubjectCustom(periodIndex) {
+            const subSubjectEl = document.getElementById('missed-substitute-subject-' + periodIndex);
+            const customInput = document.getElementById('missed-substitute-custom-subject-' + periodIndex);
+            if (!subSubjectEl || !customInput) return;
+
+            if (subSubjectEl.value === '__custom__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
+        function handleSplitSubstituteSubjectCustom(periodIndex, splitIndex) {
+            const subSubjectEl = document.getElementById(`missed-split-substitute-subject-${periodIndex}-${splitIndex}`);
+            const customInput = document.getElementById(`missed-split-substitute-custom-subject-${periodIndex}-${splitIndex}`);
+            if (!subSubjectEl || !customInput) return;
+
+            if (subSubjectEl.value === '__custom__') {
+                customInput.classList.remove('hidden');
+                customInput.focus();
+            } else {
+                customInput.classList.add('hidden');
+            }
+        }
+
         function loadAuditForSelectedClass() {
             const dateInput = document.getElementById('audit-date-picker');
             const dateStr = dateInput ? dateInput.value : getTodayDateStr();
@@ -11308,6 +11441,7 @@
                         const subTchId = prevAud ? (prevAud.substituteTeacherId || '') : '';
                         const subTchName = prevAud ? (prevAud.substituteTeacherName || '') : '';
                         const subTchShort = prevAud ? (prevAud.substituteTeacherShort || '') : '';
+                        const subSubject = prevAud ? (prevAud.substituteSubject || '') : '';
                         return {
                             slot: s,
                             teacher: t,
@@ -11319,6 +11453,7 @@
                             substituteTeacherId: subTchId,
                             substituteTeacherName: subTchName,
                             substituteTeacherShort: subTchShort,
+                            substituteSubject: subSubject,
                             colors: batchColors[idx % batchColors.length]
                         };
                     });
@@ -11365,6 +11500,7 @@
                                             <div class="text-[9.5px] font-bold text-rose-700">${bi.label} Missed:</div>
                                             <select id="missed-reason-${p}-${idx}" class="w-full border border-rose-300 rounded p-1 text-[10px] bg-white text-slate-800 outline-none">
                                                 <option value="Teacher on Leave" ${bi.reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
+                                                <option value="Subject Swapped / Other Subject Taken" ${bi.reason === 'Subject Swapped / Other Subject Taken' ? 'selected' : ''}>വിഷയം മാറ്റി എടുത്തു (Subject Swapped)</option>
                                                 <option value="College Event / Program" ${bi.reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
                                                 <option value="Special Prayer / Assembly" ${bi.reason === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
                                                 <option value="Examination / Test" ${bi.reason === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
@@ -11374,7 +11510,7 @@
                                             <input type="text" id="missed-remarks-${p}-${idx}" value="${bi.remarks}" placeholder="Remarks for ${bi.label}..." class="w-full border border-slate-300 rounded p-1 text-[10px] outline-none">
                                             <div class="pt-1 border-t border-rose-200/60 mt-1">
                                                 <label class="block text-[9px] font-bold text-slate-600 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-0.5"></i>പകരം ക്ലാസെടുത്തത്:</label>
-                                                <select id="missed-split-substitute-${p}-${idx}" class="w-full border border-indigo-200 rounded p-1 text-[10px] bg-indigo-50/50 text-slate-800 outline-none">
+                                                <select id="missed-split-substitute-${p}-${idx}" onchange="window.onSplitSubstituteTeacherDropdownChanged(${p}, ${idx}, '${targetClass}', '${(bi.slot.subject || '').replace(/'/g, "\\'")}')" class="w-full border border-indigo-200 rounded p-1 text-[10px] bg-indigo-50/50 text-slate-800 outline-none">
                                                     <option value="">-- ആരും എടുത്തില്ല (None) --</option>
                                                     ${appState.teachers.map(tch => `
                                                         <option value="${tch.id}" ${(bi.substituteTeacherId === tch.id) ? 'selected' : ''}>
@@ -11382,6 +11518,13 @@
                                                         </option>
                                                     `).join('')}
                                                 </select>
+                                                <div class="mt-1">
+                                                    <label class="block text-[9px] font-bold text-slate-600 mb-0.5"><i class="fas fa-book-open text-purple-600 mr-0.5"></i>പകരമെടുത്ത വിഷയം:</label>
+                                                    <select id="missed-split-substitute-subject-${p}-${idx}" onchange="window.handleSplitSubstituteSubjectCustom(${p}, ${idx})" class="w-full border border-purple-200 rounded p-1 text-[10px] bg-purple-50/40 text-slate-800 outline-none">
+                                                        ${getSubstituteSubjectOptionsHtml(targetClass, bi.substituteTeacherId || '', bi.substituteSubject || '', bi.slot.subject || '')}
+                                                    </select>
+                                                    <input type="text" id="missed-split-substitute-custom-subject-${p}-${idx}" value="${bi.substituteSubject || ''}" placeholder="Custom subject..." class="${(bi.substituteSubject && isSubjectCustom(targetClass, bi.substituteSubject)) ? 'mt-0.5 w-full border border-purple-300 rounded p-1 text-[10px] outline-none bg-white' : 'hidden mt-0.5 w-full border border-purple-300 rounded p-1 text-[10px] outline-none bg-white'}">
+                                                </div>
                                             </div>
                                         </div>
                                         <div id="split-conducted-note-${p}-${idx}" class="${bi.status === 'conducted' ? 'text-slate-500 text-[10px]' : 'hidden'}">
@@ -11423,7 +11566,7 @@
                                 ` : `
                                     <div class="space-y-1 text-left">
                                         ${batchInfos.map(bi => `
-                                            <div><b>${bi.label}:</b> ${bi.status === 'missed' ? `<span class="text-rose-600 font-bold">${bi.reason || 'Missed'}</span>${(bi.hasSubstitute && bi.substituteTeacherName) ? ` <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1 py-0.2 rounded text-[9px] font-semibold"><i class="fas fa-user-check"></i> Proxy: ${bi.substituteTeacherShort || bi.substituteTeacherName}</span>` : ''}` : '<span class="text-emerald-700">Conducted</span>'}</div>
+                                            <div><b>${bi.label}:</b> ${bi.status === 'missed' ? `<span class="text-rose-600 font-bold">${bi.reason || 'Missed'}</span>${(bi.hasSubstitute || bi.substituteSubject || bi.substituteTeacherName) ? ((bi.substituteTeacherId && bi.slot && bi.substituteTeacherId === bi.slot.teacherId) ? ` <span class="bg-amber-50 text-amber-800 border border-amber-200 px-1 py-0.2 rounded text-[9px] font-semibold"><i class="fas fa-sync-alt text-amber-600"></i> Swapped: ${bi.substituteSubject || 'Other Subject'}</span>` : ` <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1 py-0.2 rounded text-[9px] font-semibold"><i class="fas fa-user-check"></i> Proxy: ${bi.substituteTeacherShort || bi.substituteTeacherName || ''}${bi.substituteSubject ? ` (${bi.substituteSubject})` : ''}</span>`) : ''}` : '<span class="text-emerald-700">Conducted</span>'}</div>
                                         `).join('')}
                                     </div>
                                 `}
@@ -11467,6 +11610,7 @@
                                 <div id="missed-details-${p}" class="${status === 'missed' ? 'space-y-1.5' : 'hidden'} text-left">
                                     <select id="missed-reason-${p}" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
                                         <option value="Teacher on Leave" ${reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
+                                        <option value="Subject Swapped / Other Subject Taken" ${reason === 'Subject Swapped / Other Subject Taken' ? 'selected' : ''}>വിഷയം മാറ്റി എടുത്തു (Subject Swapped)</option>
                                         <option value="College Event / Program" ${reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
                                         <option value="Special Prayer / Assembly" ${reason === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
                                         <option value="Examination / Test" ${reason === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
@@ -11476,7 +11620,7 @@
                                     <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
                                     <div class="pt-1.5 border-t border-rose-200 mt-1">
                                         <label class="block text-[10px] font-bold text-slate-700 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-1"></i>പകരം ക്ലാസെടുത്തത് (Substitute Faculty):</label>
-                                        <select id="missed-substitute-${p}" class="w-full border border-indigo-200 rounded-lg p-1 text-[11px] bg-indigo-50/50 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
+                                        <select id="missed-substitute-${p}" onchange="window.onSubstituteTeacherDropdownChanged(${p}, '${targetClass}', '${(slot.subject || '').replace(/'/g, "\\'")}')" class="w-full border border-indigo-200 rounded-lg p-1 text-[11px] bg-indigo-50/50 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
                                             <option value="">-- ആരും എടുത്തില്ല (No Substitute / Free) --</option>
                                             ${appState.teachers.map(tch => `
                                                 <option value="${tch.id}" ${(existingPeriodAudit && existingPeriodAudit.substituteTeacherId === tch.id) ? 'selected' : ''}>
@@ -11484,6 +11628,13 @@
                                                 </option>
                                             `).join('')}
                                         </select>
+                                        <div class="mt-1.5">
+                                            <label class="block text-[10px] font-bold text-slate-700 mb-0.5"><i class="fas fa-book-open text-purple-600 mr-1"></i>പകരമെടുത്ത വിഷയം (Subject Taken Instead):</label>
+                                            <select id="missed-substitute-subject-${p}" onchange="window.handleSubstituteSubjectCustom(${p})" class="w-full border border-purple-200 rounded-lg p-1 text-[11px] bg-purple-50/40 text-slate-800 outline-none focus:ring-1 focus:ring-purple-500">
+                                                ${getSubstituteSubjectOptionsHtml(targetClass, existingPeriodAudit ? existingPeriodAudit.substituteTeacherId : '', existingPeriodAudit ? existingPeriodAudit.substituteSubject : '', slot ? slot.subject : '')}
+                                            </select>
+                                            <input type="text" id="missed-substitute-custom-subject-${p}" value="${(existingPeriodAudit && existingPeriodAudit.substituteSubject) || ''}" placeholder="Enter custom subject name..." class="${(existingPeriodAudit && existingPeriodAudit.substituteSubject && isSubjectCustom(targetClass, existingPeriodAudit.substituteSubject)) ? 'mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white' : 'hidden mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white'}">
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="conducted-note-${p}" class="${status === 'conducted' ? 'space-y-1' : 'hidden'} text-left">
@@ -11537,9 +11688,17 @@
                                             <i class="fas fa-exclamation-circle text-[10px]"></i> ${reason || 'Period Missed'}
                                         </div>
                                         ${remarks ? `<div class="text-[11px] text-slate-600 italic">"${remarks}"</div>` : ''}
-                                        ${(existingPeriodAudit && existingPeriodAudit.hasSubstitute && existingPeriodAudit.substituteTeacherName) ? `
-                                            <div class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-1.5 py-0.5 rounded inline-flex items-center gap-1 mt-0.5">
-                                                <i class="fas fa-user-check text-indigo-600"></i> പകരം എടുത്തത്: ${existingPeriodAudit.substituteTeacherName} (${existingPeriodAudit.substituteTeacherShort})
+                                        ${(existingPeriodAudit && existingPeriodAudit.hasSubstitute) ? `
+                                            <div class="mt-0.5">
+                                                ${(existingPeriodAudit.substituteTeacherId && (existingPeriodAudit.substituteTeacherId === slot.teacherId || existingPeriodAudit.substituteTeacherId === slot.secondaryTeacherId)) ? `
+                                                    <span class="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded text-[10px] font-semibold inline-flex items-center gap-1">
+                                                        <i class="fas fa-sync-alt text-amber-600"></i> വിഷയം മാറ്റി എടുത്തു: <b>${existingPeriodAudit.substituteSubject || 'Other Subject'}</b>
+                                                    </span>
+                                                ` : `
+                                                    <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-semibold inline-flex items-center gap-1">
+                                                        <i class="fas fa-user-check text-indigo-600"></i> പകരം എടുത്തത്: ${existingPeriodAudit.substituteTeacherName ? `${existingPeriodAudit.substituteTeacherName} (${existingPeriodAudit.substituteTeacherShort})` : ''}${existingPeriodAudit.substituteSubject ? ` - <i>${existingPeriodAudit.substituteSubject}</i>` : ''}
+                                                    </span>
+                                                `}
                                             </div>
                                         ` : ''}
                                     </div>
@@ -11584,6 +11743,7 @@
                                 <div id="missed-details-${p}" class="${status === 'missed' ? 'space-y-1.5' : 'hidden'}">
                                     <select id="missed-reason-${p}" class="w-full border border-rose-300 rounded-lg p-1.5 text-[11px] bg-white text-slate-800 outline-none">
                                         <option value="Teacher on Leave" ${reason === 'Teacher on Leave' ? 'selected' : ''}>Teacher on Leave</option>
+                                        <option value="Subject Swapped / Other Subject Taken" ${reason === 'Subject Swapped / Other Subject Taken' ? 'selected' : ''}>വിഷയം മാറ്റി എടുത്തു (Subject Swapped)</option>
                                         <option value="College Event / Program" ${reason === 'College Event / Program' ? 'selected' : ''}>College Event / Program</option>
                                         <option value="Special Prayer / Assembly" ${reason === 'Special Prayer / Assembly' ? 'selected' : ''}>Special Prayer / Assembly</option>
                                         <option value="Examination / Test" ${reason === 'Examination / Test' ? 'selected' : ''}>Examination / Test</option>
@@ -11593,7 +11753,7 @@
                                     <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
                                     <div class="pt-1.5 border-t border-rose-200 mt-1">
                                         <label class="block text-[10px] font-bold text-slate-700 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-1"></i>പകരം ക്ലാസെടുത്തത് (Substitute Faculty):</label>
-                                        <select id="missed-substitute-${p}" class="w-full border border-indigo-200 rounded-lg p-1 text-[11px] bg-indigo-50/50 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
+                                        <select id="missed-substitute-${p}" onchange="window.onSubstituteTeacherDropdownChanged(${p}, '${targetClass}', '${(slot ? slot.subject : '').replace(/'/g, "\\'")}')" class="w-full border border-indigo-200 rounded-lg p-1 text-[11px] bg-indigo-50/50 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
                                             <option value="">-- ആരും എടുത്തില്ല (No Substitute / Free) --</option>
                                             ${appState.teachers.map(tch => `
                                                 <option value="${tch.id}" ${(existingPeriodAudit && existingPeriodAudit.substituteTeacherId === tch.id) ? 'selected' : ''}>
@@ -11601,6 +11761,13 @@
                                                 </option>
                                             `).join('')}
                                         </select>
+                                        <div class="mt-1.5">
+                                            <label class="block text-[10px] font-bold text-slate-700 mb-0.5"><i class="fas fa-book-open text-purple-600 mr-1"></i>പകരമെടുത്ത വിഷയം (Subject Taken Instead):</label>
+                                            <select id="missed-substitute-subject-${p}" onchange="window.handleSubstituteSubjectCustom(${p})" class="w-full border border-purple-200 rounded-lg p-1 text-[11px] bg-purple-50/40 text-slate-800 outline-none focus:ring-1 focus:ring-purple-500">
+                                                ${getSubstituteSubjectOptionsHtml(targetClass, existingPeriodAudit ? existingPeriodAudit.substituteTeacherId : '', existingPeriodAudit ? existingPeriodAudit.substituteSubject : '', slot ? slot.subject : '')}
+                                            </select>
+                                            <input type="text" id="missed-substitute-custom-subject-${p}" value="${(existingPeriodAudit && existingPeriodAudit.substituteSubject) || ''}" placeholder="Enter custom subject name..." class="${(existingPeriodAudit && existingPeriodAudit.substituteSubject && isSubjectCustom(targetClass, existingPeriodAudit.substituteSubject)) ? 'mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white' : 'hidden mt-1 w-full border border-purple-300 rounded-lg p-1 text-[11px] outline-none bg-white'}">
+                                        </div>
                                     </div>
                                 </div>
                                 <div id="conducted-note-${p}" class="${status === 'conducted' ? 'text-slate-400 italic text-[11px]' : 'hidden'}">
@@ -11646,9 +11813,17 @@
                                             <i class="fas fa-exclamation-circle text-[10px]"></i> ${reason || 'Period Missed'}
                                         </div>
                                         ${remarks ? `<div class="text-[11px] text-slate-600 italic">"${remarks}"</div>` : ''}
-                                        ${(existingPeriodAudit && existingPeriodAudit.hasSubstitute && existingPeriodAudit.substituteTeacherName) ? `
-                                            <div class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-1.5 py-0.5 rounded inline-flex items-center gap-1 mt-0.5">
-                                                <i class="fas fa-user-check text-indigo-600"></i> പകരം എടുത്തത്: ${existingPeriodAudit.substituteTeacherName} (${existingPeriodAudit.substituteTeacherShort})
+                                        ${(existingPeriodAudit && existingPeriodAudit.hasSubstitute) ? `
+                                            <div class="mt-0.5">
+                                                ${(existingPeriodAudit.substituteTeacherId && (existingPeriodAudit.substituteTeacherId === slot.teacherId || existingPeriodAudit.substituteTeacherId === slot.secondaryTeacherId)) ? `
+                                                    <span class="bg-amber-50 text-amber-800 border border-amber-200 px-1.5 py-0.5 rounded text-[10px] font-semibold inline-flex items-center gap-1">
+                                                        <i class="fas fa-sync-alt text-amber-600"></i> വിഷയം മാറ്റി എടുത്തു: <b>${existingPeriodAudit.substituteSubject || 'Other Subject'}</b>
+                                                    </span>
+                                                ` : `
+                                                    <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1.5 py-0.5 rounded text-[10px] font-semibold inline-flex items-center gap-1">
+                                                        <i class="fas fa-user-check text-indigo-600"></i> പകരം എടുത്തത്: ${existingPeriodAudit.substituteTeacherName ? `${existingPeriodAudit.substituteTeacherName} (${existingPeriodAudit.substituteTeacherShort})` : ''}${existingPeriodAudit.substituteSubject ? ` - <i>${existingPeriodAudit.substituteSubject}</i>` : ''}
+                                                    </span>
+                                                `}
                                             </div>
                                         ` : ''}
                                     </div>
@@ -11792,6 +11967,16 @@
                         const bLabel = subSlot.batchLabel || (subSlot.subject ? subSlot.subject + ' Batch' : ('Batch ' + (sIdx + 1)));
                         const subTchId = document.getElementById(`missed-split-substitute-${p}-${sIdx}`)?.value || '';
                         const subTch = subTchId ? appState.teachers.find(tch => tch.id === subTchId) : null;
+                        const subSubjEl = document.getElementById(`missed-split-substitute-subject-${p}-${sIdx}`);
+                        const customSubjEl = document.getElementById(`missed-split-substitute-custom-subject-${p}-${sIdx}`);
+                        let subSubject = '';
+                        if (subSubjEl) {
+                            if (subSubjEl.value === '__custom__') {
+                                subSubject = customSubjEl ? customSubjEl.value.trim() : '';
+                            } else {
+                                subSubject = subSubjEl.value.trim();
+                            }
+                        }
                         const prevSA = prevSplits[sIdx];
 
                         if (isMissed) anyMissed = true;
@@ -11805,10 +11990,11 @@
                             status: isMissed ? 'missed' : 'conducted',
                             reason: isMissed ? reason : '',
                             remarks: isMissed ? remarks : '',
-                            hasSubstitute: isMissed && !!subTch,
+                            hasSubstitute: isMissed && (!!subTch || !!subSubject),
                             substituteTeacherId: (isMissed && subTch) ? subTch.id : '',
                             substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
                             substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
+                            substituteSubject: isMissed ? subSubject : '',
                             isCompensated: isMissed ? (prevSA ? !!prevSA.isCompensated : false) : false,
                             compensatedDate: isMissed ? (prevSA ? prevSA.compensatedDate : null) : null,
                             compensationType: isMissed ? (prevSA ? prevSA.compensationType : null) : null,
@@ -11833,6 +12019,16 @@
                     const takenByEl = document.getElementById('shared-taken-by-' + p);
                     const subTchId = document.getElementById('missed-substitute-' + p)?.value || '';
                     const subTch = subTchId ? appState.teachers.find(tch => tch.id === subTchId) : null;
+                    const subSubjEl = document.getElementById('missed-substitute-subject-' + p);
+                    const customSubjEl = document.getElementById('missed-substitute-custom-subject-' + p);
+                    let subSubject = '';
+                    if (subSubjEl) {
+                        if (subSubjEl.value === '__custom__') {
+                            subSubject = customSubjEl ? customSubjEl.value.trim() : '';
+                        } else {
+                            subSubject = subSubjEl.value.trim();
+                        }
+                    }
 
                     const t1 = appState.teachers.find(t => t.id === slot.teacherId);
                     const t2 = appState.teachers.find(t => t.id === slot.secondaryTeacherId);
@@ -11851,10 +12047,11 @@
                         takenBy: takenBy,
                         reason: isMissed ? (reasonEl ? reasonEl.value : 'Other Reason') : '',
                         remarks: isMissed ? (remarksEl ? remarksEl.value.trim() : '') : '',
-                        hasSubstitute: isMissed && !!subTch,
+                        hasSubstitute: isMissed && (!!subTch || !!subSubject),
                         substituteTeacherId: (isMissed && subTch) ? subTch.id : '',
                         substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
                         substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
+                        substituteSubject: isMissed ? subSubject : '',
                         isCompensated: isMissed ? (prevP ? !!prevP.isCompensated : false) : false,
                         compensatedDate: isMissed ? (prevP ? prevP.compensatedDate : null) : null,
                         compensationType: isMissed ? (prevP ? prevP.compensationType : null) : null,
@@ -11869,6 +12066,16 @@
                     const teacher = slot ? appState.teachers.find(t => t.id === slot.teacherId) : null;
                     const subTchId = document.getElementById('missed-substitute-' + p)?.value || '';
                     const subTch = subTchId ? appState.teachers.find(tch => tch.id === subTchId) : null;
+                    const subSubjEl = document.getElementById('missed-substitute-subject-' + p);
+                    const customSubjEl = document.getElementById('missed-substitute-custom-subject-' + p);
+                    let subSubject = '';
+                    if (subSubjEl) {
+                        if (subSubjEl.value === '__custom__') {
+                            subSubject = customSubjEl ? customSubjEl.value.trim() : '';
+                        } else {
+                            subSubject = subSubjEl.value.trim();
+                        }
+                    }
 
                     periodResults.push({
                         period: p,
@@ -11880,10 +12087,11 @@
                         status: isMissed ? 'missed' : 'conducted',
                         reason: isMissed ? (reasonEl ? reasonEl.value : 'Other Reason') : '',
                         remarks: isMissed ? (remarksEl ? remarksEl.value.trim() : '') : '',
-                        hasSubstitute: isMissed && !!subTch,
+                        hasSubstitute: isMissed && (!!subTch || !!subSubject),
                         substituteTeacherId: (isMissed && subTch) ? subTch.id : '',
                         substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
                         substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
+                        substituteSubject: isMissed ? subSubject : '',
                         isCompensated: isMissed ? (prevP ? !!prevP.isCompensated : false) : false,
                         compensatedDate: isMissed ? (prevP ? prevP.compensatedDate : null) : null,
                         compensationType: isMissed ? (prevP ? prevP.compensationType : null) : null,
@@ -12047,6 +12255,7 @@
                                         isCompensated: !!sa.isCompensated,
                                         compensatedDate: sa.compensatedDate || null,
                                         hasSubstitute: !!sa.hasSubstitute,
+                                        substituteSubject: sa.substituteSubject || '',
                                         substituteTeacherId: sa.substituteTeacherId || null,
                                         substituteTeacherName: sa.substituteTeacherName || '',
                                         substituteTeacherShort: sa.substituteTeacherShort || '',
@@ -12073,6 +12282,7 @@
                                 isCompensated: !!p.isCompensated,
                                 compensatedDate: p.compensatedDate || null,
                                 hasSubstitute: !!p.hasSubstitute,
+                                substituteSubject: p.substituteSubject || '',
                                 substituteTeacherId: p.substituteTeacherId || null,
                                 substituteTeacherName: p.substituteTeacherName || '',
                                 substituteTeacherShort: p.substituteTeacherShort || '',
@@ -12153,11 +12363,27 @@
                     <td class="px-4 py-3">
                         <div class="font-bold text-slate-800 text-xs">${m.subject}</div>
                         <div class="text-[11px] text-slate-500">${m.teacherName} (${m.teacherShort})</div>
-                        ${(m.hasSubstitute && m.substituteTeacherName) ? `
+                        ${((m.hasSubstitute && m.substituteTeacherName) || m.substituteSubject) ? `
                             <div class="mt-1">
-                                <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200/80 px-1.5 py-0.5 rounded text-[10px] font-semibold">
-                                    <i class="fas fa-user-check text-indigo-500"></i> Proxy: ${m.substituteTeacherName} (${m.substituteTeacherShort})
-                                </span>
+                                ${(m.substituteTeacherId && m.teacherId && m.substituteTeacherId === m.teacherId) ? `
+                                    <span class="inline-flex items-center gap-1 bg-amber-50 text-amber-800 border border-amber-300 px-2 py-0.5 rounded text-[10px] font-semibold" title="ഒരേ അധ്യാപകൻ മറ്റൊരു വിഷയം എടുത്തു">
+                                        <i class="fas fa-exchange-alt text-amber-600"></i>
+                                        <span>വിഷയം മാറ്റി എടുത്തു: <strong class="text-amber-950">${m.substituteSubject || 'Other Subject'}</strong></span>
+                                    </span>
+                                ` : `
+                                    <div class="flex flex-col gap-0.5">
+                                        ${m.substituteTeacherName ? `
+                                            <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200/80 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                                                <i class="fas fa-user-check text-indigo-500"></i> Proxy: ${m.substituteTeacherName} (${m.substituteTeacherShort})
+                                            </span>
+                                        ` : ''}
+                                        ${m.substituteSubject ? `
+                                            <span class="inline-flex items-center gap-1 bg-purple-50 text-purple-700 border border-purple-200 px-1.5 py-0.5 rounded text-[9.5px] font-medium">
+                                                <i class="fas fa-book-open text-purple-500"></i> പകരമെടുത്ത വിഷയം: <b>${m.substituteSubject}</b>
+                                            </span>
+                                        ` : ''}
+                                    </div>
+                                `}
                             </div>
                         ` : ''}
                     </td>
@@ -12456,7 +12682,7 @@
                                         });
                                     }
                                 }
-                                if (sa.hasSubstitute && sa.substituteTeacherId && teacherData[sa.substituteTeacherId]) {
+                                if (sa.hasSubstitute && sa.substituteTeacherId && sa.substituteTeacherId !== sa.teacherId && teacherData[sa.substituteTeacherId]) {
                                     teacherData[sa.substituteTeacherId].credits.push({
                                         id: mId + '_credit',
                                         date: date,
@@ -12482,7 +12708,7 @@
                                     });
                                 }
                             }
-                            if (p.hasSubstitute && p.substituteTeacherId && teacherData[p.substituteTeacherId]) {
+                            if (p.hasSubstitute && p.substituteTeacherId && p.substituteTeacherId !== p.teacherId && teacherData[p.substituteTeacherId]) {
                                 teacherData[p.substituteTeacherId].credits.push({
                                     id: mId + '_credit',
                                     date: date,
@@ -12588,19 +12814,24 @@
                                         }
                                     }
                                 }
-                                if (sa.hasSubstitute && sa.substituteTeacherId) {
-                                    totalProxyCredits++;
-                                    if (teacherStats[sa.substituteTeacherId]) {
-                                        teacherStats[sa.substituteTeacherId].proxyCreditsEarned++;
+                                if (sa.hasSubstitute && (sa.substituteTeacherId || sa.substituteSubject)) {
+                                    const isSelfSwap = sa.substituteTeacherId && sa.teacherId && sa.substituteTeacherId === sa.teacherId;
+                                    if (!isSelfSwap && sa.substituteTeacherId) {
+                                        totalProxyCredits++;
+                                        if (teacherStats[sa.substituteTeacherId]) {
+                                            teacherStats[sa.substituteTeacherId].proxyCreditsEarned++;
+                                        }
                                     }
                                     subLogs.push({
                                         date: date,
                                         className: cls,
                                         period: p.period,
                                         subject: sa.subject,
+                                        subSubject: sa.substituteSubject || '',
                                         origTeacher: sa.teacherName + ' (' + sa.teacherShort + ')',
-                                        subTeacher: sa.substituteTeacherName + ' (' + sa.substituteTeacherShort + ')',
-                                        subTeacherId: sa.substituteTeacherId
+                                        subTeacher: sa.substituteTeacherName ? (sa.substituteTeacherName + ' (' + sa.substituteTeacherShort + ')') : (isSelfSwap ? 'Self (' + (sa.teacherShort || 'Faculty') + ')' : '-'),
+                                        subTeacherId: sa.substituteTeacherId,
+                                        isSelfSwap: isSelfSwap
                                     });
                                 }
                             });
@@ -12616,19 +12847,24 @@
                                     }
                                 }
                             }
-                            if (p.hasSubstitute && p.substituteTeacherId) {
-                                totalProxyCredits++;
-                                if (teacherStats[p.substituteTeacherId]) {
-                                    teacherStats[p.substituteTeacherId].proxyCreditsEarned++;
+                            if (p.hasSubstitute && (p.substituteTeacherId || p.substituteSubject)) {
+                                const isSelfSwap = p.substituteTeacherId && p.teacherId && p.substituteTeacherId === p.teacherId;
+                                if (!isSelfSwap && p.substituteTeacherId) {
+                                    totalProxyCredits++;
+                                    if (teacherStats[p.substituteTeacherId]) {
+                                        teacherStats[p.substituteTeacherId].proxyCreditsEarned++;
+                                    }
                                 }
                                 subLogs.push({
                                     date: date,
                                     className: cls,
                                     period: p.period,
                                     subject: p.subject,
+                                    subSubject: p.substituteSubject || '',
                                     origTeacher: p.teacherName + ' (' + p.teacherShort + ')',
-                                    subTeacher: p.substituteTeacherName + ' (' + p.substituteTeacherShort + ')',
-                                    subTeacherId: p.substituteTeacherId
+                                    subTeacher: p.substituteTeacherName ? (p.substituteTeacherName + ' (' + p.substituteTeacherShort + ')') : (isSelfSwap ? 'Self (' + (p.teacherShort || 'Faculty') + ')' : '-'),
+                                    subTeacherId: p.substituteTeacherId,
+                                    isSelfSwap: isSelfSwap
                                 });
                             }
                         }
@@ -12713,14 +12949,20 @@
                             <td class="px-3 py-2.5 font-bold text-slate-800 whitespace-nowrap">${lg.date}</td>
                             <td class="px-3 py-2.5 whitespace-nowrap">
                                 <span class="font-bold text-slate-800">${lg.className}</span>
-                                <span class="text-[10px] text-slate-500 block font-mono">Period ${lg.period + 1} (${lg.subject})</span>
+                                <span class="text-[10px] text-slate-500 block font-mono">Period ${lg.period + 1} (${lg.subject}${lg.subSubject ? ` &rarr; <b class="text-indigo-950">${lg.subSubject}</b>` : ''})</span>
                             </td>
                             <td class="px-3 py-2.5 text-slate-700">${lg.origTeacher}</td>
-                            <td class="px-3 py-2.5 font-bold text-indigo-700">${lg.subTeacher}</td>
+                            <td class="px-3 py-2.5 font-bold ${lg.isSelfSwap ? 'text-amber-700' : 'text-indigo-700'}">${lg.subTeacher}</td>
                             <td class="px-3 py-2.5 text-center">
-                                <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
-                                    <i class="fas fa-award mr-1"></i>+1 Credit Earned
-                                </span>
+                                ${lg.isSelfSwap ? `
+                                    <span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                        <i class="fas fa-sync-alt"></i> Subject Swap
+                                    </span>
+                                ` : `
+                                    <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full inline-flex items-center gap-1">
+                                        <i class="fas fa-award mr-1"></i>+1 Credit Earned
+                                    </span>
+                                `}
                             </td>
                         `;
                         logTbody.appendChild(tr);
@@ -24522,6 +24764,12 @@
         window.markAllAuditPeriods = markAllAuditPeriods;
         window.saveClassAuditReport = saveClassAuditReport;
         window.printDailyAuditSlip = printDailyAuditSlip;
+        window.isSubjectCustom = isSubjectCustom;
+        window.getSubstituteSubjectOptionsHtml = getSubstituteSubjectOptionsHtml;
+        window.onSubstituteTeacherDropdownChanged = onSubstituteTeacherDropdownChanged;
+        window.onSplitSubstituteTeacherDropdownChanged = onSplitSubstituteTeacherDropdownChanged;
+        window.handleSubstituteSubjectCustom = handleSubstituteSubjectCustom;
+        window.handleSplitSubstituteSubjectCustom = handleSplitSubstituteSubjectCustom;
 
         // Missed Tracker Window Handlers
         window.renderMissedSection = renderMissedSection;
