@@ -1178,6 +1178,12 @@
                         <button id="btn-missed-delete-selected" onclick="window.deleteSelectedMissedPeriods()" class="hidden bg-rose-600 hover:bg-rose-700 text-white font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 text-xs shadow-sm" title="Delete Selected">
                             <i class="fas fa-trash-alt"></i> <span id="btn-missed-delete-selected-text">Delete Selected</span>
                         </button>
+                        <button onclick="window.openSubstitutionLedgerModal()" class="bg-indigo-50 hover:bg-indigo-100 text-indigo-700 border border-indigo-200 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 text-xs shadow-sm" title="View Substitution & Proxy Credits Ledger">
+                            <i class="fas fa-award text-indigo-600"></i> <span>Proxy Credits</span>
+                        </button>
+                        <button onclick="window.runManualAutoCompensation()" class="bg-purple-50 hover:bg-purple-100 text-purple-700 border border-purple-200 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 text-xs shadow-sm" title="Recalculate & Auto-Compensate using available credits">
+                            <i class="fas fa-magic text-purple-600"></i> <span>Auto-Compensate</span>
+                        </button>
                         <button onclick="window.openClearMissedModal()" class="bg-rose-50 hover:bg-rose-100 text-rose-700 border border-rose-200 font-bold px-3 py-1.5 rounded-xl transition flex items-center gap-1.5 text-xs shadow-sm" title="Clear / Delete Missed Periods History">
                             <i class="fas fa-trash-alt text-rose-600"></i> <span>Clear History</span>
                         </button>
@@ -2438,6 +2444,106 @@
             </div>
             <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end">
                 <button onclick="window.closeClearMissedModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-1.5 rounded-xl text-xs transition">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- SUBSTITUTION & PROXY CREDITS LEDGER MODAL -->
+    <div id="substitution-ledger-modal" class="fixed inset-0 bg-slate-900/60 backdrop-blur-sm hidden items-center justify-center z-50 p-3 sm:p-4 no-print">
+        <div class="bg-white rounded-2xl max-w-4xl w-full shadow-2xl border border-slate-200 overflow-hidden flex flex-col max-h-[90vh]">
+            <div class="bg-gradient-to-r from-indigo-950 via-slate-900 to-purple-950 text-white p-4 flex justify-between items-center shrink-0">
+                <div class="flex items-center gap-2.5">
+                    <div class="w-9 h-9 rounded-xl bg-indigo-500/20 border border-indigo-400/40 flex items-center justify-center text-indigo-300 text-base shadow-inner">
+                        <i class="fas fa-award"></i>
+                    </div>
+                    <div>
+                        <h3 class="font-bold text-sm text-white">Substitution & Proxy Credit Ledger</h3>
+                        <p class="text-[11px] text-indigo-200/80">പകരം ക്ലാസുകളും ഓട്ടോ-കോമ്പൻസേഷൻ ക്രെഡിറ്റുകളും</p>
+                    </div>
+                </div>
+                <div class="flex items-center gap-2">
+                    <button onclick="window.runManualAutoCompensation()" class="bg-purple-600 hover:bg-purple-700 text-white font-bold text-xs px-3 py-1.5 rounded-xl transition shadow flex items-center gap-1.5">
+                        <i class="fas fa-sync-alt"></i> Re-Sync Credits
+                    </button>
+                    <button onclick="window.closeSubstitutionLedgerModal()" class="text-indigo-200 hover:text-white p-1">
+                        <i class="fas fa-times text-base"></i>
+                    </button>
+                </div>
+            </div>
+            <div class="p-4 sm:p-5 overflow-y-auto space-y-5 text-xs">
+                <!-- Summary KPI Row -->
+                <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+                    <div class="bg-indigo-50/70 border border-indigo-200 rounded-xl p-3 text-center">
+                        <div class="text-[10px] font-bold text-indigo-700 uppercase tracking-wider">Total Proxy Taken</div>
+                        <div class="text-xl font-black text-indigo-950 mt-0.5" id="sub-kpi-total-credits">0</div>
+                    </div>
+                    <div class="bg-emerald-50/70 border border-emerald-200 rounded-xl p-3 text-center">
+                        <div class="text-[10px] font-bold text-emerald-700 uppercase tracking-wider">Compensated via Credit</div>
+                        <div class="text-xl font-black text-emerald-950 mt-0.5" id="sub-kpi-consumed-credits">0</div>
+                    </div>
+                    <div class="bg-purple-50/70 border border-purple-200 rounded-xl p-3 text-center">
+                        <div class="text-[10px] font-bold text-purple-700 uppercase tracking-wider">Active Unused Credits</div>
+                        <div class="text-xl font-black text-purple-950 mt-0.5" id="sub-kpi-active-credits">0</div>
+                    </div>
+                    <div class="bg-amber-50/70 border border-amber-200 rounded-xl p-3 text-center">
+                        <div class="text-[10px] font-bold text-amber-700 uppercase tracking-wider">Pending Missed Periods</div>
+                        <div class="text-xl font-black text-amber-950 mt-0.5" id="sub-kpi-pending-missed">0</div>
+                    </div>
+                </div>
+
+                <!-- Faculty Credit Table -->
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+                    <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-200 font-bold text-slate-800 text-xs flex justify-between items-center">
+                        <span class="flex items-center gap-1.5"><i class="fas fa-users text-indigo-600"></i> Faculty Credit Summary</span>
+                        <span class="text-[11px] text-slate-500 font-normal">തത്സമയ ക്രെഡിറ്റ് കണക്കുകൾ</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200 text-xs">
+                            <thead class="bg-slate-50/80 text-slate-600 font-bold text-[11px] uppercase">
+                                <tr>
+                                    <th class="px-4 py-2.5 text-left">Faculty</th>
+                                    <th class="px-3 py-2.5 text-center">Proxy Taken (+)</th>
+                                    <th class="px-3 py-2.5 text-center">Missed Classes (-)</th>
+                                    <th class="px-3 py-2.5 text-center">Settled via Credit</th>
+                                    <th class="px-3 py-2.5 text-center">Available Credit</th>
+                                    <th class="px-3 py-2.5 text-center">Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="substitution-faculty-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+
+                <!-- Substitution Event History Log -->
+                <div class="bg-white rounded-xl border border-slate-200 overflow-hidden shadow-xs">
+                    <div class="bg-slate-50 px-4 py-2.5 border-b border-slate-200 font-bold text-slate-800 text-xs flex justify-between items-center">
+                        <span class="flex items-center gap-1.5"><i class="fas fa-history text-purple-600"></i> Substitution Classes Log</span>
+                        <span class="text-[11px] text-slate-500 font-normal">പകരം ക്ലാസെടുത്തതിന്റെ ഹിസ്റ്ററി</span>
+                    </div>
+                    <div class="overflow-x-auto">
+                        <table class="min-w-full divide-y divide-slate-200 text-xs">
+                            <thead class="bg-slate-50/80 text-slate-600 font-bold text-[11px] uppercase">
+                                <tr>
+                                    <th class="px-3 py-2.5 text-left">Date</th>
+                                    <th class="px-3 py-2.5 text-left">Class & Period</th>
+                                    <th class="px-3 py-2.5 text-left">Original Faculty</th>
+                                    <th class="px-3 py-2.5 text-left">Substitute Faculty</th>
+                                    <th class="px-3 py-2.5 text-center">Credit Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="substitution-log-tbody" class="divide-y divide-slate-100">
+                                <!-- Populated dynamically -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+            <div class="bg-slate-50 px-5 py-3 border-t border-slate-200 flex justify-end">
+                <button onclick="window.closeSubstitutionLedgerModal()" class="bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold px-4 py-1.5 rounded-xl text-xs transition">
                     Close
                 </button>
             </div>
@@ -11198,6 +11304,10 @@
                         const subStatus = prevAud ? prevAud.status : (existingPeriodAudit ? existingPeriodAudit.status : 'conducted');
                         const subReason = prevAud ? (prevAud.reason || '') : '';
                         const subRemarks = prevAud ? (prevAud.remarks || '') : '';
+                        const subHasSub = prevAud ? !!prevAud.hasSubstitute : false;
+                        const subTchId = prevAud ? (prevAud.substituteTeacherId || '') : '';
+                        const subTchName = prevAud ? (prevAud.substituteTeacherName || '') : '';
+                        const subTchShort = prevAud ? (prevAud.substituteTeacherShort || '') : '';
                         return {
                             slot: s,
                             teacher: t,
@@ -11205,6 +11315,10 @@
                             status: subStatus,
                             reason: subReason,
                             remarks: subRemarks,
+                            hasSubstitute: subHasSub,
+                            substituteTeacherId: subTchId,
+                            substituteTeacherName: subTchName,
+                            substituteTeacherShort: subTchShort,
                             colors: batchColors[idx % batchColors.length]
                         };
                     });
@@ -11258,6 +11372,17 @@
                                                 <option value="Other Reason" ${bi.reason === 'Other Reason' || !bi.reason ? 'selected' : ''}>Other Reason</option>
                                             </select>
                                             <input type="text" id="missed-remarks-${p}-${idx}" value="${bi.remarks}" placeholder="Remarks for ${bi.label}..." class="w-full border border-slate-300 rounded p-1 text-[10px] outline-none">
+                                            <div class="pt-1 border-t border-rose-200/60 mt-1">
+                                                <label class="block text-[9px] font-bold text-slate-600 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-0.5"></i>പകരം ക്ലാസെടുത്തത്:</label>
+                                                <select id="missed-split-substitute-${p}-${idx}" class="w-full border border-indigo-200 rounded p-1 text-[10px] bg-indigo-50/50 text-slate-800 outline-none">
+                                                    <option value="">-- ആരും എടുത്തില്ല (None) --</option>
+                                                    ${appState.teachers.map(tch => `
+                                                        <option value="${tch.id}" ${(bi.substituteTeacherId === tch.id) ? 'selected' : ''}>
+                                                            ${tch.name} (${tch.shortName})
+                                                        </option>
+                                                    `).join('')}
+                                                </select>
+                                            </div>
                                         </div>
                                         <div id="split-conducted-note-${p}-${idx}" class="${bi.status === 'conducted' ? 'text-slate-500 text-[10px]' : 'hidden'}">
                                             <i class="fas fa-check-circle text-emerald-500 mr-0.5"></i> ${bi.label}: Conducted
@@ -11298,7 +11423,7 @@
                                 ` : `
                                     <div class="space-y-1 text-left">
                                         ${batchInfos.map(bi => `
-                                            <div><b>${bi.label}:</b> ${bi.status === 'missed' ? `<span class="text-rose-600 font-bold">${bi.reason || 'Missed'}</span>` : '<span class="text-emerald-700">Conducted</span>'}</div>
+                                            <div><b>${bi.label}:</b> ${bi.status === 'missed' ? `<span class="text-rose-600 font-bold">${bi.reason || 'Missed'}</span>${(bi.hasSubstitute && bi.substituteTeacherName) ? ` <span class="bg-indigo-50 text-indigo-700 border border-indigo-200 px-1 py-0.2 rounded text-[9px] font-semibold"><i class="fas fa-user-check"></i> Proxy: ${bi.substituteTeacherShort || bi.substituteTeacherName}</span>` : ''}` : '<span class="text-emerald-700">Conducted</span>'}</div>
                                         `).join('')}
                                     </div>
                                 `}
@@ -11349,6 +11474,17 @@
                                         <option value="Other Reason" ${reason === 'Other Reason' || !reason ? 'selected' : ''}>Other Reason</option>
                                     </select>
                                     <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
+                                    <div class="pt-1.5 border-t border-rose-200 mt-1">
+                                        <label class="block text-[10px] font-bold text-slate-700 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-1"></i>പകരം ക്ലാസെടുത്തത് (Substitute Faculty):</label>
+                                        <select id="missed-substitute-${p}" class="w-full border border-indigo-200 rounded-lg p-1 text-[11px] bg-indigo-50/50 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
+                                            <option value="">-- ആരും എടുത്തില്ല (No Substitute / Free) --</option>
+                                            ${appState.teachers.map(tch => `
+                                                <option value="${tch.id}" ${(existingPeriodAudit && existingPeriodAudit.substituteTeacherId === tch.id) ? 'selected' : ''}>
+                                                    ${tch.name} (${tch.shortName})
+                                                </option>
+                                            `).join('')}
+                                        </select>
+                                    </div>
                                 </div>
                                 <div id="conducted-note-${p}" class="${status === 'conducted' ? 'space-y-1' : 'hidden'} text-left">
                                     <div class="flex items-center gap-1 text-[10.5px] font-bold text-slate-700">
@@ -11401,6 +11537,11 @@
                                             <i class="fas fa-exclamation-circle text-[10px]"></i> ${reason || 'Period Missed'}
                                         </div>
                                         ${remarks ? `<div class="text-[11px] text-slate-600 italic">"${remarks}"</div>` : ''}
+                                        ${(existingPeriodAudit && existingPeriodAudit.hasSubstitute && existingPeriodAudit.substituteTeacherName) ? `
+                                            <div class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-1.5 py-0.5 rounded inline-flex items-center gap-1 mt-0.5">
+                                                <i class="fas fa-user-check text-indigo-600"></i> പകരം എടുത്തത്: ${existingPeriodAudit.substituteTeacherName} (${existingPeriodAudit.substituteTeacherShort})
+                                            </div>
+                                        ` : ''}
                                     </div>
                                 ` : `
                                     <div class="text-slate-600 text-[11px] flex items-center gap-1">
@@ -11450,6 +11591,17 @@
                                         <option value="Other Reason" ${reason === 'Other Reason' || !reason ? 'selected' : ''}>Other Reason</option>
                                     </select>
                                     <input type="text" id="missed-remarks-${p}" value="${remarks}" placeholder="Enter specific remarks..." class="w-full border border-slate-300 rounded-lg p-1 text-[11px] outline-none">
+                                    <div class="pt-1.5 border-t border-rose-200 mt-1">
+                                        <label class="block text-[10px] font-bold text-slate-700 mb-0.5"><i class="fas fa-user-plus text-indigo-600 mr-1"></i>പകരം ക്ലാസെടുത്തത് (Substitute Faculty):</label>
+                                        <select id="missed-substitute-${p}" class="w-full border border-indigo-200 rounded-lg p-1 text-[11px] bg-indigo-50/50 text-slate-800 outline-none focus:ring-1 focus:ring-indigo-500">
+                                            <option value="">-- ആരും എടുത്തില്ല (No Substitute / Free) --</option>
+                                            ${appState.teachers.map(tch => `
+                                                <option value="${tch.id}" ${(existingPeriodAudit && existingPeriodAudit.substituteTeacherId === tch.id) ? 'selected' : ''}>
+                                                    ${tch.name} (${tch.shortName})
+                                                </option>
+                                            `).join('')}
+                                        </select>
+                                    </div>
                                 </div>
                                 <div id="conducted-note-${p}" class="${status === 'conducted' ? 'text-slate-400 italic text-[11px]' : 'hidden'}">
                                     <i class="fas fa-check-circle text-emerald-500 mr-1"></i> Conducted normally
@@ -11494,6 +11646,11 @@
                                             <i class="fas fa-exclamation-circle text-[10px]"></i> ${reason || 'Period Missed'}
                                         </div>
                                         ${remarks ? `<div class="text-[11px] text-slate-600 italic">"${remarks}"</div>` : ''}
+                                        ${(existingPeriodAudit && existingPeriodAudit.hasSubstitute && existingPeriodAudit.substituteTeacherName) ? `
+                                            <div class="text-[10px] font-semibold text-indigo-700 bg-indigo-50 border border-indigo-200/70 px-1.5 py-0.5 rounded inline-flex items-center gap-1 mt-0.5">
+                                                <i class="fas fa-user-check text-indigo-600"></i> പകരം എടുത്തത്: ${existingPeriodAudit.substituteTeacherName} (${existingPeriodAudit.substituteTeacherShort})
+                                            </div>
+                                        ` : ''}
                                     </div>
                                 ` : `
                                     <div class="text-slate-500 italic text-[11px] flex items-center gap-1">
@@ -11605,6 +11762,8 @@
 
             const scheduleRes = getActiveScheduleForDate(dateStr);
             const { periods } = appState;
+            const existingClassAudit = appState.dailyAudits && appState.dailyAudits[dateStr] && appState.dailyAudits[dateStr].classes && appState.dailyAudits[dateStr].classes[targetClass];
+            const existingPeriods = existingClassAudit ? (existingClassAudit.periods || []) : [];
             let periodResults = [];
 
             for (let p = 0; p < periods; p++) {
@@ -11617,8 +11776,11 @@
                     slot = scheduleRes.periods[p] ? scheduleRes.periods[p][targetClass] : null;
                 }
 
+                const prevP = existingPeriods.find(ep => ep.period === p);
+
                 if (slot && slot.allocationType === 'split') {
                     const splitSlots = (slot.splitSlots && slot.splitSlots.length) ? slot.splitSlots : [];
+                    const prevSplits = (prevP && prevP.splitAudits) ? prevP.splitAudits : [];
                     let splitAudits = [];
                     let anyMissed = false;
 
@@ -11628,6 +11790,9 @@
                         const reason = document.getElementById(`missed-reason-${p}-${sIdx}`)?.value || 'Teacher on Leave';
                         const remarks = (document.getElementById(`missed-remarks-${p}-${sIdx}`)?.value || '').trim();
                         const bLabel = subSlot.batchLabel || (subSlot.subject ? subSlot.subject + ' Batch' : ('Batch ' + (sIdx + 1)));
+                        const subTchId = document.getElementById(`missed-split-substitute-${p}-${sIdx}`)?.value || '';
+                        const subTch = subTchId ? appState.teachers.find(tch => tch.id === subTchId) : null;
+                        const prevSA = prevSplits[sIdx];
 
                         if (isMissed) anyMissed = true;
 
@@ -11639,7 +11804,15 @@
                             teacherShort: t ? t.shortName : '',
                             status: isMissed ? 'missed' : 'conducted',
                             reason: isMissed ? reason : '',
-                            remarks: isMissed ? remarks : ''
+                            remarks: isMissed ? remarks : '',
+                            hasSubstitute: isMissed && !!subTch,
+                            substituteTeacherId: (isMissed && subTch) ? subTch.id : '',
+                            substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
+                            substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
+                            isCompensated: isMissed ? (prevSA ? !!prevSA.isCompensated : false) : false,
+                            compensatedDate: isMissed ? (prevSA ? prevSA.compensatedDate : null) : null,
+                            compensationType: isMissed ? (prevSA ? prevSA.compensationType : null) : null,
+                            compensatedNote: isMissed ? (prevSA ? prevSA.compensatedNote : '') : ''
                         });
                     });
 
@@ -11658,6 +11831,8 @@
                     const reasonEl = document.getElementById('missed-reason-' + p);
                     const remarksEl = document.getElementById('missed-remarks-' + p);
                     const takenByEl = document.getElementById('shared-taken-by-' + p);
+                    const subTchId = document.getElementById('missed-substitute-' + p)?.value || '';
+                    const subTch = subTchId ? appState.teachers.find(tch => tch.id === subTchId) : null;
 
                     const t1 = appState.teachers.find(t => t.id === slot.teacherId);
                     const t2 = appState.teachers.find(t => t.id === slot.secondaryTeacherId);
@@ -11676,6 +11851,14 @@
                         takenBy: takenBy,
                         reason: isMissed ? (reasonEl ? reasonEl.value : 'Other Reason') : '',
                         remarks: isMissed ? (remarksEl ? remarksEl.value.trim() : '') : '',
+                        hasSubstitute: isMissed && !!subTch,
+                        substituteTeacherId: (isMissed && subTch) ? subTch.id : '',
+                        substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
+                        substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
+                        isCompensated: isMissed ? (prevP ? !!prevP.isCompensated : false) : false,
+                        compensatedDate: isMissed ? (prevP ? prevP.compensatedDate : null) : null,
+                        compensationType: isMissed ? (prevP ? prevP.compensationType : null) : null,
+                        compensatedNote: isMissed ? (prevP ? prevP.compensatedNote : '') : '',
                         auditTimestamp: new Date().toISOString()
                     });
                 } else {
@@ -11684,6 +11867,8 @@
                     const reasonEl = document.getElementById('missed-reason-' + p);
                     const remarksEl = document.getElementById('missed-remarks-' + p);
                     const teacher = slot ? appState.teachers.find(t => t.id === slot.teacherId) : null;
+                    const subTchId = document.getElementById('missed-substitute-' + p)?.value || '';
+                    const subTch = subTchId ? appState.teachers.find(tch => tch.id === subTchId) : null;
 
                     periodResults.push({
                         period: p,
@@ -11695,6 +11880,14 @@
                         status: isMissed ? 'missed' : 'conducted',
                         reason: isMissed ? (reasonEl ? reasonEl.value : 'Other Reason') : '',
                         remarks: isMissed ? (remarksEl ? remarksEl.value.trim() : '') : '',
+                        hasSubstitute: isMissed && !!subTch,
+                        substituteTeacherId: (isMissed && subTch) ? subTch.id : '',
+                        substituteTeacherName: (isMissed && subTch) ? subTch.name : '',
+                        substituteTeacherShort: (isMissed && subTch) ? subTch.shortName : '',
+                        isCompensated: isMissed ? (prevP ? !!prevP.isCompensated : false) : false,
+                        compensatedDate: isMissed ? (prevP ? prevP.compensatedDate : null) : null,
+                        compensationType: isMissed ? (prevP ? prevP.compensationType : null) : null,
+                        compensatedNote: isMissed ? (prevP ? prevP.compensatedNote : '') : '',
                         auditTimestamp: new Date().toISOString()
                     });
                 }
@@ -11720,9 +11913,13 @@
             localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
             updateWorkingDaysDisplay();
             renderDailyAuditStatusGrid();
+
+            // Run auto-compensation with credits across all teachers
+            const autoCount = processAutoCompensationWithCredits();
+
             saveToCloud(true);
 
-            showToast("Report Saved!", targetClass + ' daily 3:30 PM period audit recorded successfully.');
+            showToast("Report Saved!", targetClass + ' daily 3:30 PM period audit recorded successfully.' + (autoCount > 0 ? ` (${autoCount} missed period(s) auto-compensated via substitution credits!)` : ''));
         }
 
         function renderDailyAuditStatusGrid() {
@@ -11848,7 +12045,13 @@
                                         remarks: sa.remarks || '',
                                         leaderName: clAudit.leaderName || 'Leader',
                                         isCompensated: !!sa.isCompensated,
-                                        compensatedDate: sa.compensatedDate || null
+                                        compensatedDate: sa.compensatedDate || null,
+                                        hasSubstitute: !!sa.hasSubstitute,
+                                        substituteTeacherId: sa.substituteTeacherId || null,
+                                        substituteTeacherName: sa.substituteTeacherName || '',
+                                        substituteTeacherShort: sa.substituteTeacherShort || '',
+                                        compensationType: sa.compensationType || (sa.isCompensated ? 'manual' : null),
+                                        compensatedNote: sa.compensatedNote || ''
                                     });
                                 }
                             });
@@ -11868,7 +12071,13 @@
                                 remarks: p.remarks || '',
                                 leaderName: clAudit.leaderName || 'Leader',
                                 isCompensated: !!p.isCompensated,
-                                compensatedDate: p.compensatedDate || null
+                                compensatedDate: p.compensatedDate || null,
+                                hasSubstitute: !!p.hasSubstitute,
+                                substituteTeacherId: p.substituteTeacherId || null,
+                                substituteTeacherName: p.substituteTeacherName || '',
+                                substituteTeacherShort: p.substituteTeacherShort || '',
+                                compensationType: p.compensationType || (p.isCompensated ? 'manual' : null),
+                                compensatedNote: p.compensatedNote || ''
                             });
                         }
                     });
@@ -11881,6 +12090,7 @@
 
         function renderMissedSection() {
             populateMissedFilterDropdowns();
+            processAutoCompensationWithCredits();
 
             const allMissed = getAllMissedPeriods();
             const total = allMissed.length;
@@ -11943,6 +12153,13 @@
                     <td class="px-4 py-3">
                         <div class="font-bold text-slate-800 text-xs">${m.subject}</div>
                         <div class="text-[11px] text-slate-500">${m.teacherName} (${m.teacherShort})</div>
+                        ${(m.hasSubstitute && m.substituteTeacherName) ? `
+                            <div class="mt-1">
+                                <span class="inline-flex items-center gap-1 bg-indigo-50 text-indigo-700 border border-indigo-200/80 px-1.5 py-0.5 rounded text-[10px] font-semibold">
+                                    <i class="fas fa-user-check text-indigo-500"></i> Proxy: ${m.substituteTeacherName} (${m.substituteTeacherShort})
+                                </span>
+                            </div>
+                        ` : ''}
                     </td>
                     <td class="px-4 py-3">
                         <span class="inline-block bg-rose-100 text-rose-800 px-2 py-0.5 rounded text-[10px] font-semibold">${m.reason}</span>
@@ -11950,7 +12167,14 @@
                     </td>
                     <td class="px-4 py-3 text-center whitespace-nowrap">
                         ${m.isCompensated ? 
-                            `<span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold"><i class="fas fa-check mr-1"></i> Compensated (${m.compensatedDate || 'Resolved'})</span>` : 
+                            (m.compensationType === 'substitution_credit' ? `
+                                <span class="bg-indigo-100 text-indigo-900 border border-indigo-200 px-2.5 py-0.5 rounded-full text-[10px] font-bold inline-flex items-center gap-1" title="${m.compensatedNote || 'Auto-compensated via proxy credit'}">
+                                    <i class="fas fa-exchange-alt text-indigo-600"></i> Auto-Compensated (Credit)
+                                </span>
+                                ${m.compensatedNote ? `<div class="text-[9.5px] text-indigo-700 font-medium mt-0.5 max-w-[210px] truncate mx-auto" title="${m.compensatedNote}">${m.compensatedNote}</div>` : ''}
+                            ` : `
+                                <span class="bg-emerald-100 text-emerald-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold"><i class="fas fa-check mr-1"></i> Compensated (${m.compensatedDate || 'Resolved'})</span>
+                            `) : 
                             `<span class="bg-amber-100 text-amber-800 px-2.5 py-0.5 rounded-full text-[10px] font-bold"><i class="fas fa-hourglass-start mr-1"></i> Pending Compensation</span>`
                         }
                     </td>
@@ -12196,6 +12420,339 @@
             const deleted = performDeleteMissedIds(allMissed.map(m => m.id));
             closeClearMissedModal();
             showToast("Cleared", `All ${deleted} missed period records cleared.`);
+        }
+
+        function processAutoCompensationWithCredits() {
+            let autoCompensatedCount = 0;
+            const audits = appState.dailyAudits || {};
+
+            // 1. Collect all substitution credits and all missed periods per teacher
+            const teacherData = {};
+            (appState.teachers || []).forEach(t => {
+                teacherData[t.id] = {
+                    credits: [], // classes this teacher took as substitute
+                    missed: []   // classes this teacher missed
+                };
+            });
+
+            for (let date in audits) {
+                const dayAud = audits[date];
+                const classes = dayAud.classes || {};
+                for (let cls in classes) {
+                    const clAud = classes[cls];
+                    (clAud.periods || []).forEach(p => {
+                        if (p.allocationType === 'split' && p.splitAudits) {
+                            p.splitAudits.forEach((sa, saIdx) => {
+                                const mId = `${date}_${cls}_${p.period}_split_${saIdx}`;
+                                if (sa.status === 'missed') {
+                                    if (teacherData[sa.teacherId]) {
+                                        teacherData[sa.teacherId].missed.push({
+                                            id: mId,
+                                            date: date,
+                                            className: cls,
+                                            period: p.period,
+                                            ref: sa,
+                                            parentPeriod: p
+                                        });
+                                    }
+                                }
+                                if (sa.hasSubstitute && sa.substituteTeacherId && teacherData[sa.substituteTeacherId]) {
+                                    teacherData[sa.substituteTeacherId].credits.push({
+                                        id: mId + '_credit',
+                                        date: date,
+                                        className: cls,
+                                        period: p.period,
+                                        origTeacherId: sa.teacherId,
+                                        origTeacherName: sa.teacherName,
+                                        origTeacherShort: sa.teacherShort,
+                                        ref: sa
+                                    });
+                                }
+                            });
+                        } else {
+                            const mId = `${date}_${cls}_${p.period}`;
+                            if (p.status === 'missed') {
+                                if (teacherData[p.teacherId]) {
+                                    teacherData[p.teacherId].missed.push({
+                                        id: mId,
+                                        date: date,
+                                        className: cls,
+                                        period: p.period,
+                                        ref: p
+                                    });
+                                }
+                            }
+                            if (p.hasSubstitute && p.substituteTeacherId && teacherData[p.substituteTeacherId]) {
+                                teacherData[p.substituteTeacherId].credits.push({
+                                    id: mId + '_credit',
+                                    date: date,
+                                    className: cls,
+                                    period: p.period,
+                                    origTeacherId: p.teacherId,
+                                    origTeacherName: p.teacherName,
+                                    origTeacherShort: p.teacherShort,
+                                    ref: p
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+
+            // 2. Process matching for each teacher
+            (appState.teachers || []).forEach(t => {
+                const data = teacherData[t.id];
+                if (!data) return;
+
+                // Sort chronologically (oldest date first)
+                data.credits.sort((a, b) => a.date.localeCompare(b.date));
+                data.missed.sort((a, b) => a.date.localeCompare(b.date));
+
+                let availableCredits = [...data.credits];
+
+                data.missed.forEach(m => {
+                    const item = m.ref;
+                    // If already compensated manually or via special timetable, do not touch
+                    if (item.isCompensated && item.compensationType !== 'substitution_credit') {
+                        return;
+                    }
+
+                    if (availableCredits.length > 0) {
+                        const cred = availableCredits.shift();
+                        item.isCompensated = true;
+                        item.compensationType = 'substitution_credit';
+                        item.compensatedDate = cred.date;
+                        item.compensatedNote = `Auto-compensated via proxy class on ${cred.date} (${cred.className} P${cred.period + 1} for ${cred.origTeacherShort || cred.origTeacherName || 'Faculty'})`;
+                        item.compensatedSubId = cred.id;
+                        autoCompensatedCount++;
+                    } else {
+                        if (item.compensationType === 'substitution_credit') {
+                            item.isCompensated = false;
+                            item.compensationType = null;
+                            item.compensatedDate = null;
+                            item.compensatedNote = '';
+                            item.compensatedSubId = null;
+                        }
+                    }
+
+                    if (m.parentPeriod && m.parentPeriod.splitAudits) {
+                        const allComp = m.parentPeriod.splitAudits.every(sa => sa.status !== 'missed' || sa.isCompensated);
+                        m.parentPeriod.isCompensated = allComp;
+                    }
+                });
+            });
+
+            return autoCompensatedCount;
+        }
+
+        function openSubstitutionLedgerModal() {
+            processAutoCompensationWithCredits();
+
+            const audits = appState.dailyAudits || {};
+            const teachers = appState.teachers || [];
+
+            let totalProxyCredits = 0;
+            let totalConsumedCredits = 0;
+            let totalPendingMissed = 0;
+
+            const teacherStats = {};
+            const subLogs = [];
+
+            teachers.forEach(t => {
+                teacherStats[t.id] = {
+                    id: t.id,
+                    name: t.name,
+                    shortName: t.shortName,
+                    proxyCreditsEarned: 0,
+                    missedClasses: 0,
+                    settledViaCredit: 0
+                };
+            });
+
+            for (let date in audits) {
+                const dayAud = audits[date];
+                const classes = dayAud.classes || {};
+                for (let cls in classes) {
+                    const clAud = classes[cls];
+                    (clAud.periods || []).forEach(p => {
+                        if (p.allocationType === 'split' && p.splitAudits) {
+                            p.splitAudits.forEach(sa => {
+                                if (sa.status === 'missed') {
+                                    if (teacherStats[sa.teacherId]) {
+                                        teacherStats[sa.teacherId].missedClasses++;
+                                        if (sa.isCompensated && sa.compensationType === 'substitution_credit') {
+                                            teacherStats[sa.teacherId].settledViaCredit++;
+                                            totalConsumedCredits++;
+                                        } else if (!sa.isCompensated) {
+                                            totalPendingMissed++;
+                                        }
+                                    }
+                                }
+                                if (sa.hasSubstitute && sa.substituteTeacherId) {
+                                    totalProxyCredits++;
+                                    if (teacherStats[sa.substituteTeacherId]) {
+                                        teacherStats[sa.substituteTeacherId].proxyCreditsEarned++;
+                                    }
+                                    subLogs.push({
+                                        date: date,
+                                        className: cls,
+                                        period: p.period,
+                                        subject: sa.subject,
+                                        origTeacher: sa.teacherName + ' (' + sa.teacherShort + ')',
+                                        subTeacher: sa.substituteTeacherName + ' (' + sa.substituteTeacherShort + ')',
+                                        subTeacherId: sa.substituteTeacherId
+                                    });
+                                }
+                            });
+                        } else {
+                            if (p.status === 'missed') {
+                                if (teacherStats[p.teacherId]) {
+                                    teacherStats[p.teacherId].missedClasses++;
+                                    if (p.isCompensated && p.compensationType === 'substitution_credit') {
+                                        teacherStats[p.teacherId].settledViaCredit++;
+                                        totalConsumedCredits++;
+                                    } else if (!p.isCompensated) {
+                                        totalPendingMissed++;
+                                    }
+                                }
+                            }
+                            if (p.hasSubstitute && p.substituteTeacherId) {
+                                totalProxyCredits++;
+                                if (teacherStats[p.substituteTeacherId]) {
+                                    teacherStats[p.substituteTeacherId].proxyCreditsEarned++;
+                                }
+                                subLogs.push({
+                                    date: date,
+                                    className: cls,
+                                    period: p.period,
+                                    subject: p.subject,
+                                    origTeacher: p.teacherName + ' (' + p.teacherShort + ')',
+                                    subTeacher: p.substituteTeacherName + ' (' + p.substituteTeacherShort + ')',
+                                    subTeacherId: p.substituteTeacherId
+                                });
+                            }
+                        }
+                    });
+                }
+            }
+
+            const activeCredits = Math.max(0, totalProxyCredits - totalConsumedCredits);
+
+            // Update KPI elements
+            const kpiTot = document.getElementById('sub-kpi-total-credits');
+            if (kpiTot) kpiTot.innerText = totalProxyCredits;
+            const kpiCon = document.getElementById('sub-kpi-consumed-credits');
+            if (kpiCon) kpiCon.innerText = totalConsumedCredits;
+            const kpiAct = document.getElementById('sub-kpi-active-credits');
+            if (kpiAct) kpiAct.innerText = activeCredits;
+            const kpiPen = document.getElementById('sub-kpi-pending-missed');
+            if (kpiPen) kpiPen.innerText = totalPendingMissed;
+
+            // Render Faculty Table
+            const tbody = document.getElementById('substitution-faculty-tbody');
+            if (tbody) {
+                tbody.innerHTML = '';
+                const sortedTeachers = [...teachers].sort((a, b) => {
+                    const stA = teacherStats[a.id] || {};
+                    const stB = teacherStats[b.id] || {};
+                    const scoreA = (stA.proxyCreditsEarned || 0) + (stA.missedClasses || 0);
+                    const scoreB = (stB.proxyCreditsEarned || 0) + (stB.missedClasses || 0);
+                    return scoreB - scoreA;
+                });
+
+                sortedTeachers.forEach(t => {
+                    const st = teacherStats[t.id] || { proxyCreditsEarned: 0, missedClasses: 0, settledViaCredit: 0 };
+                    const available = Math.max(0, st.proxyCreditsEarned - st.settledViaCredit);
+                    const pendingForTch = Math.max(0, st.missedClasses - st.settledViaCredit);
+
+                    let statusBadge = '';
+                    if (available > 0) {
+                        statusBadge = `<span class="bg-emerald-100 text-emerald-800 text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fas fa-check-circle mr-1"></i>+${available} Credit Available</span>`;
+                    } else if (pendingForTch > 0) {
+                        statusBadge = `<span class="bg-amber-100 text-amber-800 text-[10px] font-bold px-2 py-0.5 rounded-full"><i class="fas fa-hourglass-start mr-1"></i>${pendingForTch} Pending Make-up</span>`;
+                    } else {
+                        statusBadge = `<span class="bg-slate-100 text-slate-600 text-[10px] font-bold px-2 py-0.5 rounded-full">Balanced / No Dues</span>`;
+                    }
+
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                    tr.innerHTML = `
+                        <td class="px-4 py-2.5 font-bold text-slate-800">
+                            <div>${t.name}</div>
+                            <div class="text-[10px] text-slate-400 font-mono">${t.shortName}</div>
+                        </td>
+                        <td class="px-3 py-2.5 text-center font-bold text-indigo-700">${st.proxyCreditsEarned}</td>
+                        <td class="px-3 py-2.5 text-center font-bold text-rose-600">${st.missedClasses}</td>
+                        <td class="px-3 py-2.5 text-center font-bold text-emerald-600">${st.settledViaCredit}</td>
+                        <td class="px-3 py-2.5 text-center font-extrabold text-slate-900">${available}</td>
+                        <td class="px-3 py-2.5 text-center">${statusBadge}</td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            }
+
+            // Render Sub Logs
+            const logTbody = document.getElementById('substitution-log-tbody');
+            if (logTbody) {
+                logTbody.innerHTML = '';
+                if (subLogs.length === 0) {
+                    logTbody.innerHTML = `
+                        <tr>
+                            <td colspan="5" class="p-6 text-center text-slate-400 italic">
+                                <i class="fas fa-info-circle text-lg text-slate-300 mb-1 block"></i>
+                                ഇതുവരെ സബ്സ്റ്റിറ്റ്യൂട്ട് ക്ലാസുകൾ രേഖപ്പെടുത്തിയിട്ടില്ല (No substitution classes recorded yet).
+                            </td>
+                        </tr>
+                    `;
+                } else {
+                    subLogs.sort((a, b) => b.date.localeCompare(a.date));
+                    subLogs.forEach(lg => {
+                        const tr = document.createElement('tr');
+                        tr.className = "hover:bg-slate-50 transition border-b border-slate-100";
+                        tr.innerHTML = `
+                            <td class="px-3 py-2.5 font-bold text-slate-800 whitespace-nowrap">${lg.date}</td>
+                            <td class="px-3 py-2.5 whitespace-nowrap">
+                                <span class="font-bold text-slate-800">${lg.className}</span>
+                                <span class="text-[10px] text-slate-500 block font-mono">Period ${lg.period + 1} (${lg.subject})</span>
+                            </td>
+                            <td class="px-3 py-2.5 text-slate-700">${lg.origTeacher}</td>
+                            <td class="px-3 py-2.5 font-bold text-indigo-700">${lg.subTeacher}</td>
+                            <td class="px-3 py-2.5 text-center">
+                                <span class="bg-indigo-100 text-indigo-800 text-[10px] font-bold px-2 py-0.5 rounded-full">
+                                    <i class="fas fa-award mr-1"></i>+1 Credit Earned
+                                </span>
+                            </td>
+                        `;
+                        logTbody.appendChild(tr);
+                    });
+                }
+            }
+
+            const modal = document.getElementById('substitution-ledger-modal');
+            if (modal) {
+                modal.classList.remove('hidden');
+                modal.classList.add('flex');
+            }
+        }
+
+        function closeSubstitutionLedgerModal() {
+            const modal = document.getElementById('substitution-ledger-modal');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.classList.remove('flex');
+            }
+        }
+
+        function runManualAutoCompensation() {
+            const count = processAutoCompensationWithCredits();
+            localStorage.setItem(getStorageKey(currentYear), JSON.stringify(appState));
+            saveToCloud(true);
+            renderMissedSection();
+            const modal = document.getElementById('substitution-ledger-modal');
+            if (modal && !modal.classList.contains('hidden')) {
+                openSubstitutionLedgerModal();
+            }
+            showToast("Auto-Compensation Synced", `All substitution credits synced successfully. (${count} period(s) actively compensated)`);
         }
 
         function toggleCompensatedStatus(missedId) {
@@ -23981,6 +24538,10 @@
         window.confirmClearCompensatedMissed = confirmClearCompensatedMissed;
         window.confirmClearFilteredMissed = confirmClearFilteredMissed;
         window.confirmClearAllMissed = confirmClearAllMissed;
+        window.processAutoCompensationWithCredits = processAutoCompensationWithCredits;
+        window.openSubstitutionLedgerModal = openSubstitutionLedgerModal;
+        window.closeSubstitutionLedgerModal = closeSubstitutionLedgerModal;
+        window.runManualAutoCompensation = runManualAutoCompensation;
 
         // Special Timetable Window Handlers
         window.renderSpecialSection = renderSpecialSection;
