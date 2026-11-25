@@ -9543,7 +9543,7 @@
                     statusBadge.className = 'text-[10px] font-bold px-2.5 py-0.5 rounded-full bg-rose-500/20 text-rose-300 border border-rose-400/40';
                 }
                 if (unplacedBox && unplacedList) {
-                    unplacedList.innerHTML = unscheduledList.map(u => `<li><b>${u.subject}</b> (${u.className} - ${u.college})</li>`).join('');
+                    unplacedList.innerHTML = unscheduledList.map(u => `<li><b>${u.subject}</b> (${u.className} - ${u.college})${u._reason ? ` <span class="text-slate-500">— ${u._reason}</span>` : ''}</li>`).join('');
                     unplacedBox.classList.remove('hidden');
                 }
             }
@@ -18838,10 +18838,56 @@
             const shouldPreserveManual = (appState.preserveManualSlots !== false);
             const lockedManualSlots = [];
 
+            // Period 9 (06:15 / 03:30 recovery & additional periods) is OUTSIDE the official 8-period
+            // timetable. The generator never touches it: every slot there is kept exactly as it is and
+            // copied back into the generated timetable. It is never deducted from subject allocations.
+            const extraPeriodSlots = [];
+            const extraPeriodDayLengths = {};
+            if (appState.timetable) {
+                for (let d = 0; d < days; d++) {
+                    const dayRow = appState.timetable[d];
+                    if (!dayRow) continue;
+                    if (dayRow.length > periods) extraPeriodDayLengths[d] = dayRow.length;
+                    for (let p = periods; p < dayRow.length; p++) {
+                        if (!dayRow[p]) continue;
+                        for (let cls in dayRow[p]) {
+                            if (dayRow[p][cls]) extraPeriodSlots.push({ d, p, cls, slot: dayRow[p][cls] });
+                        }
+                    }
+                }
+            }
+
+            // Helper: get list of all assigned teacher IDs for a slot token
+            // (declared before first use; previously used before declaration and crashed generation)
+            const getSlotTeachers = (slot) => {
+                if (!slot) return [];
+                if (slot.allocationType === 'split') {
+                    return (slot.splitSlots || []).map(s => s.teacherId).filter(Boolean);
+                }
+                if (slot.allocationType === 'shared') {
+                    const ids = slot.teacherIds || [slot.teacherId, slot.secondaryTeacherId];
+                    return ids.filter(Boolean);
+                }
+                return [slot.teacherId].filter(Boolean);
+            };
+
+            // Helper: check if a slot involves a specific teacher ID
+            const slotContainsTeacher = (slot, tId) => {
+                if (!slot || !tId) return false;
+                if (slot.allocationType === 'split') {
+                    return (slot.splitSlots || []).some(s => s.teacherId === tId);
+                }
+                if (slot.allocationType === 'shared') {
+                    return (slot.teacherIds && slot.teacherIds.includes(tId)) ||
+                           slot.teacherId === tId || slot.secondaryTeacherId === tId;
+                }
+                return slot.teacherId === tId;
+            };
+
             if (shouldPreserveManual && appState.timetable) {
                 for (let d = 0; d < days; d++) {
                     if (!appState.timetable[d]) continue;
-                    for (let p = 0; p <= periods; p++) {
+                    for (let p = 0; p < periods; p++) {
                         if (!appState.timetable[d][p]) continue;
                         for (let cls in appState.timetable[d][p]) {
                             const sl = appState.timetable[d][p][cls];
@@ -18944,6 +18990,8 @@
 
             if (lockedManualSlots.length > 0) {
                 for (let ms of lockedManualSlots) {
+                    // Additional periods are beyond the syllabus allotment: keep them, but do not deduct.
+                    if (ms.slot.isAdditional) continue;
                     const msNorm = normalizeSubjectForMatching(ms.slot.subject);
                     const msTeachers = getSlotTeachers(ms.slot);
 
@@ -19070,32 +19118,6 @@
                 const teacher = teachers.find(t => t.id === tId);
                 if (!teacher) return false;
                 return (teacher.constraints || []).some(c => c.day === d && (c.period === 'all' || c.period === p));
-            };
-
-            // Helper: get list of all assigned teacher IDs for a slot token
-            const getSlotTeachers = (slot) => {
-                if (!slot) return [];
-                if (slot.allocationType === 'split') {
-                    return (slot.splitSlots || []).map(s => s.teacherId).filter(Boolean);
-                }
-                if (slot.allocationType === 'shared') {
-                    const ids = slot.teacherIds || [slot.teacherId, slot.secondaryTeacherId];
-                    return ids.filter(Boolean);
-                }
-                return [slot.teacherId].filter(Boolean);
-            };
-
-            // Helper: check if a slot involves a specific teacher ID
-            const slotContainsTeacher = (slot, tId) => {
-                if (!slot || !tId) return false;
-                if (slot.allocationType === 'split') {
-                    return (slot.splitSlots || []).some(s => s.teacherId === tId);
-                }
-                if (slot.allocationType === 'shared') {
-                    return (slot.teacherIds && slot.teacherIds.includes(tId)) ||
-                           slot.teacherId === tId || slot.secondaryTeacherId === tId;
-                }
-                return slot.teacherId === tId;
             };
 
             // Helper: check if a teacher is already teaching ANY class in schedule at (d, p)
@@ -19640,6 +19662,7 @@
                                     for (let cls in currentSchedule[d][p]) {
                                         const occ = currentSchedule[d][p][cls];
                                         if (occ && slotContainsTeacher(occ, tId)) {
+                                            if (occ.isManualOverride || occ.isPinned) continue; // Locked manual slot cannot be moved
                                             blockerClass1 = cls;
                                             blockerSlot1 = occ;
                                             break;
@@ -19665,6 +19688,7 @@
                                                 for (let cls2 in currentSchedule[d2][p2]) {
                                                     const occ2 = currentSchedule[d2][p2][cls2];
                                                     if (occ2 && slotContainsTeacher(occ2, tId2)) {
+                                                        if (occ2.isManualOverride || occ2.isPinned) continue; // Locked manual slot cannot be moved
                                                         blockerClass2 = cls2;
                                                         blockerSlot2 = occ2;
                                                         break;
@@ -19758,7 +19782,7 @@
                                     for (let p_old = 0; p_old < periods; p_old++) {
                                         if (d_old === d && p_old === p) continue;
                                         const sOld = currentSchedule[d_old][p_old][slot.className];
-                                        if (!sOld) continue;
+                                        if (!sOld || sOld.isManualOverride || sOld.isPinned) continue; // Locked manual slot cannot be moved
 
                                         delete currentSchedule[d_old][p_old][slot.className];
                                         if (canPlaceSlot(sOld, d, p, currentSchedule, 4, false, false, 6, false) &&
@@ -19782,7 +19806,7 @@
                 // PASS 7: Final Zero-Blank-Period Guarantee with Deep Ejection & Capacity Relaxation
                 // "പിരീഡ് ഒഴിഞ്ഞ് കിടക്കുന്ന അവസ്ഥയാണ് വരുന്നതെങ്കിൽ മാത്രമെ 5 ൽ നിന്ന് 6 വരെ അനുവദിക്കാം."
                 // When slots would otherwise remain unscheduled (leaving periods blank), allow teacher daily limits
-                // up to their physical day capacity (up to 7 or 8 for compact teachers like Math/CS)
+                // up to 6 only (rule: 5 per day, relaxed to 6 ONLY when a period would otherwise stay blank)
                 if (unscheduled.length > 0) {
                     let stillUnscheduled = [];
                     for (let slot of unscheduled) {
@@ -19796,7 +19820,7 @@
                             if (placed) break;
                             for (let p = 0; p < periods; p++) {
                                 if (currentSchedule[d][p][slot.className]) continue;
-                                if (canPlaceSlot(slot, d, p, currentSchedule, 8, false, false, 8, true)) {
+                                if (canPlaceSlot(slot, d, p, currentSchedule, 8, false, false, 6, true)) {
                                     assignSlotToSchedule(currentSchedule, d, p, slot, false);
                                     placed = true;
                                     break;
@@ -19821,19 +19845,19 @@
                                             if (!sOld || sOld.isManualOverride || sOld.isPinned) continue;
 
                                             delete currentSchedule[d_old][p_old][slot.className];
-                                            if (canPlaceSlot(sOld, d, p, currentSchedule, 8, false, false, 8, true) &&
-                                                canPlaceSlot(slot, d_old, p_old, currentSchedule, 8, false, false, 8, true)) {
+                                            if (canPlaceSlot(sOld, d, p, currentSchedule, 8, false, false, 6, true) &&
+                                                canPlaceSlot(slot, d_old, p_old, currentSchedule, 8, false, false, 6, true)) {
                                                 assignSlotToSchedule(currentSchedule, d, p, sOld, false);
                                                 assignSlotToSchedule(currentSchedule, d_old, p_old, slot, false);
                                                 placed = true;
                                                 break;
-                                            } else if (canPlaceSlot(sOld, d, p, currentSchedule, 8, false, false, 8, true)) {
+                                            } else if (canPlaceSlot(sOld, d, p, currentSchedule, 8, false, false, 6, true)) {
                                                 // 2-step ripple: sOld moves to empty spot (d, p), freeing d_old for slot
                                                 assignSlotToSchedule(currentSchedule, d, p, sOld, false);
                                                 let chainPlaced = false;
                                                 for (let p_try = 0; p_try < periods; p_try++) {
                                                     if (!currentSchedule[d_old][p_try][slot.className]) {
-                                                        if (canPlaceSlot(slot, d_old, p_try, currentSchedule, 8, false, false, 8, true)) {
+                                                        if (canPlaceSlot(slot, d_old, p_try, currentSchedule, 8, false, false, 6, true)) {
                                                             assignSlotToSchedule(currentSchedule, d_old, p_try, slot, false);
                                                             chainPlaced = true;
                                                             break;
@@ -19892,9 +19916,9 @@
 
                                                     delete currentSchedule[d][p][blockerClass];
 
-                                                    if (canPlaceSlot(blockerSlot, d2, p2, currentSchedule, 8, false, false, 8, true)) {
+                                                    if (canPlaceSlot(blockerSlot, d2, p2, currentSchedule, 8, false, false, 6, true)) {
                                                         assignSlotToSchedule(currentSchedule, d2, p2, blockerSlot, false);
-                                                        if (canPlaceSlot(slot, d, p, currentSchedule, 8, false, false, 8, true)) {
+                                                        if (canPlaceSlot(slot, d, p, currentSchedule, 8, false, false, 6, true)) {
                                                             assignSlotToSchedule(currentSchedule, d, p, slot, false);
                                                             placed = true;
                                                             break;
@@ -20015,6 +20039,130 @@
                 }
             }
 
+            // PASS 8: Ejection-chain repair (min-conflicts local search) on the best attempt.
+            // Fills periods that the greedy passes left blank by moving other (unlocked) periods around.
+            // Hard rules are never broken: teacher unavailability, teacher double-booking, class working
+            // days, locked manual periods, and the teacher daily limit (max 6, only when filling blanks).
+            if (bestSchedule && bestUnscheduledList.length > 0) {
+                const cloneSchedule = (sch) => sch.map(day => day.map(per => ({ ...per })));
+                const isLocked = (sl) => !!(sl && (sl.isManualOverride || sl.isPinned));
+                let uidCounter = 0;
+                const uidOf = (tok) => { if (tok._ruid === undefined) Object.defineProperty(tok, '_ruid', { value: ++uidCounter, enumerable: false }); return tok._ruid; };
+                // Tiers: 1) keep travel buffer, 2) relax travel buffer, 3) relax consecutive/Saturday preferences (as Pass 7)
+                const repairTiers = [
+                    [4, true, true, 6, false],
+                    [4, false, true, 6, false],
+                    [8, false, false, 6, true]
+                ];
+                let workSchedule = cloneSchedule(bestSchedule);
+                let workUnscheduled = bestUnscheduledList.slice();
+                for (const tier of repairTiers) {
+                    if (workUnscheduled.length === 0) break;
+                    const [mSub, buf, chkSub, dLim, consFb] = tier;
+                    let cur = cloneSchedule(workSchedule);
+                    let un = workUnscheduled.slice();
+                    let bestCur = cloneSchedule(cur);
+                    let bestUn = un.slice();
+                    const tabu = new Map();
+                    const maxSteps = 20000;
+                    for (let step = 0; step < maxSteps && un.length > 0; step++) {
+                        if (step % 500 === 0) await new Promise(r => setTimeout(r, 0));
+                        const idx = Math.floor(Math.random() * un.length);
+                        const tok = un[idx];
+                        const tokTeachers = getSlotTeachers(tok);
+                        let bestMoves = [];
+                        let bestCost = Infinity;
+                        for (let d = 0; d < days; d++) {
+                            if (typeof isClassActiveOnDay === 'function' && !isClassActiveOnDay(tok.className, d)) continue;
+                            for (let p = 0; p < periods; p++) {
+                                if ((tabu.get(uidOf(tok) + '@' + d + ',' + p) || -1) > step) continue;
+                                if (tokTeachers.some(t => isTeacherUnavailable(t, d, p))) continue;
+                                const ejected = [];
+                                const own = cur[d][p][tok.className];
+                                if (own) { if (isLocked(own)) continue; ejected.push({ cls: tok.className, slot: own }); }
+                                let blocked = false;
+                                for (const cls in cur[d][p]) {
+                                    if (cls === tok.className) continue;
+                                    const occ = cur[d][p][cls];
+                                    if (occ && tokTeachers.some(t => slotContainsTeacher(occ, t))) {
+                                        if (isLocked(occ)) { blocked = true; break; }
+                                        ejected.push({ cls, slot: occ });
+                                    }
+                                }
+                                if (blocked) continue;
+                                if (ejected.length > bestCost) continue;
+                                ejected.forEach(e => { delete cur[d][p][e.cls]; });
+                                const ok = canPlaceSlot(tok, d, p, cur, mSub, buf, chkSub, dLim, consFb);
+                                ejected.forEach(e => { cur[d][p][e.cls] = e.slot; });
+                                if (!ok) continue;
+                                if (ejected.length < bestCost) { bestCost = ejected.length; bestMoves = []; }
+                                bestMoves.push({ d, p, ejected });
+                            }
+                        }
+                        if (bestMoves.length === 0) continue;
+                        const mv = bestMoves[Math.floor(Math.random() * bestMoves.length)];
+                        mv.ejected.forEach(e => {
+                            delete cur[mv.d][mv.p][e.cls];
+                            un.push(e.slot);
+                            tabu.set(uidOf(e.slot) + '@' + mv.d + ',' + mv.p, step + 8 + Math.floor(Math.random() * 6));
+                        });
+                        cur[mv.d][mv.p][tok.className] = tok;
+                        un.splice(un.indexOf(tok), 1);
+                        if (un.length < bestUn.length) { bestUn = un.slice(); bestCur = cloneSchedule(cur); }
+                    }
+                    workSchedule = bestCur;
+                    workUnscheduled = bestUn;
+                }
+                if (workUnscheduled.length < bestUnscheduledList.length) {
+                    bestSchedule = workSchedule;
+                    bestUnscheduledList = workUnscheduled;
+                }
+            }
+
+            // Explain any period that still could not be placed.
+            if (bestSchedule && bestUnscheduledList.length > 0) {
+                const classDemand = {};
+                rawSlots.forEach(s => { classDemand[s.className] = (classDemand[s.className] || 0) + 1; });
+                lockedManualSlots.forEach(ms => { classDemand[ms.cls] = (classDemand[ms.cls] || 0) + 1; });
+                // Teacher capacity check: available periods (after blocked periods) and the daily limit of 6.
+                const teacherNeed = {};
+                const addNeed = (tok) => getSlotTeachers(tok).forEach(t => {
+                    if (!teacherNeed[t]) teacherNeed[t] = { total: 0, counted: 0 };
+                    teacherNeed[t].total++;
+                    if (!isTeacherDailyLimitExemptSubject(getSubjectForTeacherInSlot(tok, t))) teacherNeed[t].counted++;
+                });
+                rawSlots.forEach(addNeed);
+                lockedManualSlots.forEach(ms => addNeed(ms.slot));
+                const teacherShortage = (tId) => {
+                    const need = teacherNeed[tId];
+                    if (!need) return null;
+                    let avail = 0, countedCap = 0;
+                    for (let d = 0; d < days; d++) {
+                        let a = 0;
+                        for (let p = 0; p < periods; p++) if (!isTeacherUnavailable(tId, d, p)) a++;
+                        avail += a;
+                        countedCap += Math.min(a, 6);
+                    }
+                    const tName = (teachers.find(t => t.id === tId) || {}).name || tId;
+                    if (need.total > avail) return `${tName}: ലഭ്യമായ പിരീഡുകൾ ${avail}, ആവശ്യം ${need.total}`;
+                    if (need.counted > countedCap) return `${tName}: ദിവസം പരമാവധി 6 എന്ന നിബന്ധനയും ബ്ലോക്ക് ചെയ്ത സമയവും പ്രകാരം പരമാവധി ${countedCap} പിരീഡ്, ആവശ്യം ${need.counted}`;
+                    return null;
+                };
+                bestUnscheduledList = bestUnscheduledList.map(u => {
+                    if (u._reason) return u;
+                    const shortages = getSlotTeachers(u).map(teacherShortage).filter(Boolean);
+                    if (shortages.length) return { ...u, _reason: shortages.join('; ') };
+                    let activeDays = 0;
+                    for (let d = 0; d < days; d++) if (typeof isClassActiveOnDay !== 'function' || isClassActiveOnDay(u.className, d)) activeDays++;
+                    const capacity = activeDays * periods;
+                    const demand = classDemand[u.className] || 0;
+                    const reason = demand > capacity
+                        ? `ക്ലാസിന് ആകെ ${capacity} പിരീഡ് മാത്രം; അലോട്ട് ചെയ്തത് ${demand}`
+                        : 'അധ്യാപകരുടെ ലഭ്യത / നിബന്ധനകൾ അനുസരിച്ച് ഒഴിവുള്ള പിരീഡ് ഇല്ല';
+                    return { ...u, _reason: reason };
+                });
+            }
+
             // Absolute Quota Verification & Guarantee: Under NO circumstance should any subject or class exceed its allotted hours
             if (bestSchedule) {
                 const classAllotmentCounters = {};
@@ -20043,6 +20191,18 @@
                         }
                     }
                 }
+            }
+
+            // Restore Period 9 (and any extra period rows) exactly as they were before generation.
+            if (bestSchedule) {
+                for (let d = 0; d < days; d++) {
+                    const targetLen = extraPeriodDayLengths[d] || 0;
+                    while (bestSchedule[d].length < targetLen) bestSchedule[d].push({});
+                }
+                extraPeriodSlots.forEach(ex => {
+                    while (bestSchedule[ex.d].length <= ex.p) bestSchedule[ex.d].push({});
+                    bestSchedule[ex.d][ex.p][ex.cls] = ex.slot;
+                });
             }
 
             // No periods are added after optimization. Every scheduled lesson must come
