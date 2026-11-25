@@ -16380,6 +16380,11 @@
         }
 
         // PDF Download Engine (Ultra-HD A3 Master / A4 PDF with Zero Clipping & Perfect Arabic Typography)
+        // PDF export through the browser's own print engine (Save as PDF).
+        // Produces a VECTOR PDF: sharp text at any zoom/print size, correct Arabic shaping,
+        // small file size, and very little memory use (no giant canvas image), so phones do not crash.
+        // Previous html2pdf/html2canvas method rendered the whole timetable into ~20-megapixel
+        // images (≈75 MB PDF), which closed the app on phones and printed blurry text.
         async function downloadTimetablePDF(specificCollege = null, paperSize = 'a3') {
             if (!appState.timetable) {
                 showAlert("Notice", "Please click 'Generate Timetable' first before exporting.");
@@ -16390,31 +16395,25 @@
             if (!container) return;
 
             const isA3 = (paperSize || 'a3').toLowerCase() === 'a3';
-            showToast("Generating PDF", `Compiling ultra-clarity ${isA3 ? 'A3 Master Noticeboard' : 'A4 Compact'} timetable PDF...`);
 
-            // Guarantee Google Web Fonts (Cairo, Noto Sans Arabic) are fully rendered before canvas capture
             if (document.fonts && document.fonts.ready) {
-                try {
-                    await document.fonts.ready;
-                } catch(e) {}
+                try { await document.fonts.ready; } catch(e) {}
             }
 
-            let filename = 'TIMETABLE_' + (isA3 ? 'A3_' : 'A4_') + currentYear + '.pdf';
-            let targetEl = container;
-            let hadPageBreak = false;
-            let hiddenCards = [];
-
+            let filename = 'TIMETABLE_' + (isA3 ? 'A3_' : 'A4_') + currentYear;
+            const hiddenCards = [];
+            let pageBreakCard = null;
             const cards = Array.from(container.querySelectorAll('.timetable-print-card'));
 
             if (specificCollege) {
                 const isWafy = specificCollege.toLowerCase().includes('wafy') && !specificCollege.toLowerCase().includes('wafiyya');
-                filename = (isWafy ? 'KKHM_WAFY' : 'AL_GAITH_WAFIYYA') + '_TIMETABLE_' + (isA3 ? 'A3_' : 'A4_') + currentYear + '.pdf';
-
+                filename = (isWafy ? 'KKHM_WAFY' : 'AL_GAITH_WAFIYYA') + '_TIMETABLE_' + (isA3 ? 'A3_' : 'A4_') + currentYear;
                 for (let card of cards) {
                     if (card.textContent.includes(specificCollege)) {
-                        targetEl = card;
-                        hadPageBreak = card.classList.contains('campus-page-break');
-                        if (hadPageBreak) card.classList.remove('campus-page-break');
+                        if (card.classList.contains('campus-page-break')) {
+                            card.classList.remove('campus-page-break');
+                            pageBreakCard = card;
+                        }
                     } else {
                         card.style.display = 'none';
                         hiddenCards.push(card);
@@ -16422,86 +16421,62 @@
                 }
             }
 
-            // Save user scroll position for window and inner containers
-            const origScrollX = window.scrollX || window.pageXOffset || 0;
-            const origScrollY = window.scrollY || window.pageYOffset || 0;
-
-            const scrollContainer = document.querySelector('main > div.overflow-y-auto') || document.querySelector('main > div.flex-1');
-            const origContainerY = scrollContainer ? scrollContainer.scrollTop : 0;
-            const origContainerX = scrollContainer ? scrollContainer.scrollLeft : 0;
-
-            // Reset all scrollbars to 0 to prevent canvas cropping and edge shifting
-            window.scrollTo(0, 0);
-            if (scrollContainer) {
-                scrollContainer.scrollTop = 0;
-                scrollContainer.scrollLeft = 0;
-            }
-            container.querySelectorAll('.overflow-x-auto').forEach(el => {
-                el.scrollLeft = 0;
-            });
-
-            // Apply PDF printing temporary clean state to remove sidebar offset
+            // Paper size for this export (overrides the default A4 @page rule while printing)
+            const pageStyle = document.createElement('style');
+            pageStyle.id = 'pdf-page-size-style';
+            pageStyle.textContent = isA3
+                ? '@page { size: A3 landscape; margin: 6mm; } @media print { html, body { font-size: 12px !important; } }'
+                : '@page { size: A4 landscape; margin: 5mm 6mm; }';
+            pageStyle.textContent += ' @media print { #toast { display: none !important; } }';
+            document.head.appendChild(pageStyle);
+            // Hide sidebar / header / navigation so only the timetable is printed
             document.body.classList.add('pdf-printing-in-progress');
-            targetEl.classList.add('pdf-export-mode');
-            if (isA3) {
-                targetEl.classList.add('pdf-export-a3');
-            } else {
-                targetEl.classList.add('pdf-export-a4');
-            }
 
-            // Hide any no-print elements inside target
-            const noPrintEls = targetEl.querySelectorAll('.no-print');
-            noPrintEls.forEach(el => el.style.display = 'none');
+            // Browsers use the page title as the suggested PDF file name
+            const prevTitle = document.title;
+            document.title = String(filename).replace(/[^A-Za-z0-9_\-]+/g, '_');
 
-            const opt = {
-                margin: isA3 ? [5, 5, 5, 5] : [4, 4, 4, 4],
-                filename: filename,
-                image: { type: 'png' }, // Lossless PNG for razor-sharp text clarity (No JPEG compression artifacts)
-                html2canvas: {
-                    scale: isA3 ? 2.0 : 2.2, // Ultra-high resolution crispness
-                    useCORS: true,
-                    logging: false,
-                    letterRendering: false, // CRITICAL: NEVER true! Fixes detached Arabic cursive letters
-                    scrollX: 0,
-                    scrollY: 0
-                },
-                jsPDF: { unit: 'mm', format: isA3 ? 'a3' : 'a4', orientation: 'landscape' },
-                pagebreak: { 
-                    mode: ['css', 'legacy'], 
-                    before: ['.campus-page-break']
-                }
-            };
-
-            const cleanup = () => {
-                document.body.classList.remove('pdf-printing-in-progress');
-                targetEl.classList.remove('pdf-export-mode');
-                targetEl.classList.remove('pdf-export-a3');
-                targetEl.classList.remove('pdf-export-a4');
+            let restored = false;
+            const restore = () => {
+                if (restored) return;
+                restored = true;
                 hiddenCards.forEach(c => c.style.display = '');
-                noPrintEls.forEach(el => el.style.display = '');
-                if (hadPageBreak && targetEl) {
-                    targetEl.classList.add('campus-page-break');
-                }
-                window.scrollTo(origScrollX, origScrollY);
-                if (scrollContainer) {
-                    scrollContainer.scrollTop = origContainerY;
-                    scrollContainer.scrollLeft = origContainerX;
-                }
+                if (pageBreakCard) pageBreakCard.classList.add('campus-page-break');
+                if (pageStyle.parentNode) pageStyle.parentNode.removeChild(pageStyle);
+                document.body.classList.remove('pdf-printing-in-progress');
+                document.title = prevTitle;
+                window.removeEventListener('afterprint', restore);
             };
+            window.addEventListener('afterprint', restore);
 
-            if (typeof html2pdf !== 'undefined') {
-                html2pdf().set(opt).from(targetEl).save().then(() => {
-                    cleanup();
-                    showToast("PDF Downloaded", `Academic timetable downloaded successfully in high-definition ${isA3 ? 'A3' : 'A4'} format.`);
-                }).catch(err => {
-                    console.error("PDF generation failed:", err);
-                    cleanup();
+            showToast("PDF", "പ്രിന്റ് വിൻഡോയിൽ Destination / Printer ആയി 'Save as PDF' തിരഞ്ഞെടുത്ത് സേവ് ചെയ്യുക.");
+
+            setTimeout(() => {
+                const t0 = Date.now();
+                try {
                     window.print();
-                });
-            } else {
-                cleanup();
-                window.print();
-            }
+                } catch (e) {
+                    console.error('Print failed:', e);
+                    restore();
+                    return;
+                }
+                if (Date.now() - t0 > 400) {
+                    // Desktop browsers block until the print dialog closes
+                    restore();
+                } else {
+                    // Mobile / Android app print dialogs are asynchronous:
+                    // restore when the page regains focus, with a safety timeout.
+                    const onFocus = () => { window.removeEventListener('focus', onFocus); setTimeout(restore, 1000); };
+                    setTimeout(() => window.addEventListener('focus', onFocus), 2000);
+                    setTimeout(restore, 180000);
+                }
+            }, 250);
+        }
+
+        // Android app: WebView ignores window.print(); route every print / PDF button
+        // to the native Android print service (which also offers "Save as PDF").
+        if (typeof window.AndroidPrinter !== 'undefined' && window.AndroidPrinter && typeof window.AndroidPrinter.print === 'function') {
+            window.print = function () { window.AndroidPrinter.print(); };
         }
 
 
