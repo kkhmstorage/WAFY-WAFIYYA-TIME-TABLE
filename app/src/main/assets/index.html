@@ -16432,6 +16432,92 @@
             // Hide sidebar / header / navigation so only the timetable is printed
             document.body.classList.add('pdf-printing-in-progress');
 
+            // Fit each college's timetable onto ONE page.
+            // Each card is laid out in a hidden frame exactly as wide as the printable page, using the
+            // page's own print CSS, and a print-only zoom is chosen so the whole card fits on one page.
+            // Text stays vector-sharp at any zoom.
+            const fitStyle = document.createElement('style');
+            fitStyle.id = 'pdf-fit-style';
+            let measureFrame = null;
+            try {
+                const mmToPx = mm => mm * 96 / 25.4;
+                const printableW = Math.floor(mmToPx(isA3 ? 420 - 12 : 297 - 12));
+                const printableH = Math.floor(mmToPx(isA3 ? 297 - 12 : 210 - 10));
+                let printRulesText = '';
+                const collectPrintRules = (rules) => {
+                    for (const r of Array.from(rules || [])) {
+                        if (r.media && r.cssRules && /print/i.test(r.media.mediaText) && !/screen/i.test(r.media.mediaText)) {
+                            for (const inner of Array.from(r.cssRules)) {
+                                if (!(window.CSSPageRule && inner instanceof CSSPageRule)) printRulesText += inner.cssText + '\n';
+                            }
+                        } else if (r.cssRules && !(window.CSSStyleRule && r instanceof CSSStyleRule)) {
+                            collectPrintRules(r.cssRules);
+                        }
+                    }
+                };
+                for (const sheet of Array.from(document.styleSheets)) {
+                    try { collectPrintRules(sheet.cssRules); } catch (e) { /* cross-origin sheet */ }
+                }
+
+                measureFrame = document.createElement('iframe');
+                measureFrame.setAttribute('aria-hidden', 'true');
+                measureFrame.style.cssText = `position:fixed;left:-20000px;top:0;width:${printableW}px;height:${printableH}px;border:0;visibility:hidden;pointer-events:none;`;
+                document.body.appendChild(measureFrame);
+                const idoc = measureFrame.contentDocument;
+                idoc.open();
+                idoc.write('<!DOCTYPE html><html><head></head><body></body></html>');
+                idoc.close();
+                document.querySelectorAll('style, link[rel="stylesheet"]').forEach(n => {
+                    idoc.head.appendChild(idoc.importNode(n, true));
+                });
+                const sim = idoc.createElement('style');
+                sim.textContent = printRulesText;
+                idoc.head.appendChild(sim);
+                idoc.body.className = document.body.className;
+                const main = idoc.createElement('main');
+                main.innerHTML = '<div class="flex-1"><div id="timetable-section"><div id="timetable-container"></div></div></div>';
+                idoc.body.appendChild(main);
+                const holder = idoc.getElementById('timetable-container');
+
+                const visibleCards = cards.filter(c => c.style.display !== 'none');
+                const clones = visibleCards.map(c => {
+                    const cl = idoc.importNode(c, true);
+                    cl.style.display = '';
+                    holder.appendChild(cl);
+                    return cl;
+                });
+                if (idoc.fonts && idoc.fonts.ready) {
+                    await Promise.race([idoc.fonts.ready, new Promise(r => setTimeout(r, 1500))]);
+                }
+
+                let fitRules = '';
+                clones.forEach((cl, i) => {
+                    let zoom = 1;
+                    for (let iter = 0; iter < 8; iter++) {
+                        cl.style.zoom = String(zoom);
+                        const r = cl.getBoundingClientRect();
+                        // Include content wider than the card (e.g. the Period 9 column of a wide table)
+                        let contentRight = r.right;
+                        cl.querySelectorAll('table, .overflow-x-auto > *').forEach(el => {
+                            const er = el.getBoundingClientRect();
+                            if (er.right > contentRight) contentRight = er.right;
+                        });
+                        const contentW = Math.max(r.width, contentRight - r.left);
+                        const ratio = Math.min((printableH * 0.98) / r.height, (printableW * 0.995) / Math.max(contentW, 1));
+                        if (ratio >= 1 && (zoom >= 1 || ratio < 1.02)) break;
+                        zoom = Math.min(1, zoom * ratio * 0.995);
+                    }
+                    visibleCards[i].setAttribute('data-pdf-fit', String(i));
+                    if (zoom < 1) fitRules += `[data-pdf-fit="${i}"] { zoom: ${zoom.toFixed(4)}; }\n`;
+                });
+                fitStyle.textContent = '@media print { ' + fitRules +
+                    ' .timetable-print-card { page-break-inside: avoid !important; break-inside: avoid !important; } }';
+            } catch (e) {
+                console.error('PDF fit-to-page measurement failed:', e);
+            }
+            if (measureFrame && measureFrame.parentNode) measureFrame.parentNode.removeChild(measureFrame);
+            document.head.appendChild(fitStyle);
+
             // Browsers use the page title as the suggested PDF file name
             const prevTitle = document.title;
             document.title = String(filename).replace(/[^A-Za-z0-9_\-]+/g, '_');
@@ -16443,6 +16529,8 @@
                 hiddenCards.forEach(c => c.style.display = '');
                 if (pageBreakCard) pageBreakCard.classList.add('campus-page-break');
                 if (pageStyle.parentNode) pageStyle.parentNode.removeChild(pageStyle);
+                if (fitStyle.parentNode) fitStyle.parentNode.removeChild(fitStyle);
+                cards.forEach(c => c.removeAttribute('data-pdf-fit'));
                 document.body.classList.remove('pdf-printing-in-progress');
                 document.title = prevTitle;
                 window.removeEventListener('afterprint', restore);
